@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UIElements;
+using UnityEngine.InputSystem;
 
 public class BirdScript : MonoBehaviour
 {
@@ -9,6 +11,27 @@ public class BirdScript : MonoBehaviour
     public float flapStrength = 5;
     public logicManager logic;
     public bool birdIsAlive = true;
+    private PlayerInputAction inputActions;
+
+    void Awake()
+    {
+        inputActions = new PlayerInputAction();
+    }
+    void OnEnable()
+    {
+        // 【新增】启用 Player Action Map
+        inputActions.Player.Enable();
+
+        // 【新增】订阅 Jump 事件
+        inputActions.Player.Jump.performed += OnJump;
+    }
+
+    void OnDisable()
+    {
+        // 【新增】取消订阅（非常重要）
+        inputActions.Player.Jump.performed -= OnJump;
+        inputActions.Player.Disable();
+    }
 
     void Start()
     {
@@ -23,7 +46,17 @@ public class BirdScript : MonoBehaviour
         {
             myRigidbody.velocity = Vector2.up * flapStrength;
         }
+        if (transform.position.y < -12)
+        {
+            logic.gameOver();
+        }
 
+    }
+    private void OnJump(InputAction.CallbackContext context)
+    {
+        if (!birdIsAlive) return;
+
+        myRigidbody.velocity = Vector2.up * flapStrength;
     }
     private void OnCollisionEnter2D(Collision2D collision)
     {
