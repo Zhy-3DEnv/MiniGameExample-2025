@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: DS9NsX+lUHIxoMGt/uTtQMIgS3PgFZ1Ay/jKXAgZsB3zGWGo4gzbecw=
+guid: CigavC2lUXvE2425TW1OuO/7k5E+S5ovsnpJgdNSjMJo+vWulGmWXOg=
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -40,13 +40,13 @@ TextureImporter:
     filterMode: 1
     aniso: 1
     mipBias: 0
-    wrapU: 1
-    wrapV: 1
+    wrapU: 0
+    wrapV: 0
     wrapW: 0
-  nPOTScale: 0
+  nPOTScale: 1
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 0
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -55,9 +55,9 @@ TextureImporter:
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
-  alphaIsTransparency: 1
+  alphaIsTransparency: 0
   spriteTessellationDetail: -1
-  textureType: 8
+  textureType: 0
   textureShape: 1
   singleChannelComponent: 0
   flipbookRows: 1
@@ -117,7 +117,7 @@ TextureImporter:
     maxTextureSize: 512
     maxPlaceholderSize: 32
     resizeAlgorithm: 0
-    textureFormat: 12
+    textureFormat: -1
     textureCompression: 1
     compressionQuality: 50
     crunchedCompression: 0
@@ -127,7 +127,7 @@ TextureImporter:
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 3
-    buildTarget: WeixinMiniGame
+    buildTarget: Android
     maxTextureSize: 2048
     maxPlaceholderSize: 32
     resizeAlgorithm: 0
@@ -141,7 +141,7 @@ TextureImporter:
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 3
-    buildTarget: Android
+    buildTarget: WeixinMiniGame
     maxTextureSize: 2048
     maxPlaceholderSize: 32
     resizeAlgorithm: 0
@@ -174,7 +174,7 @@ TextureImporter:
     outline: []
     physicsShape: []
     bones: []
-    spriteID: 5e97eb03825dee720800000000000000
+    spriteID: 
     internalID: 0
     vertices: []
     indices: 
