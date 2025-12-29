@@ -19,7 +19,7 @@ MonoBehaviour:
   backgroundSprite: {fileID: 0}
   backgroundMusic: {fileID: 8300000, guid: da444804228dd0e4fa5d1076266f5f37, type: 3}
   spawnRateMultiplier: 1.2
-  moveSpeedMultiplier: 1.2
+  moveSpeedMultiplier: 0.85
   heightOffset: 9
   pipePassScore: 4
   useLevelItemSettings: 1
@@ -45,4 +45,41 @@ MonoBehaviour:
     itemName: 
     scoreColor: {r: 0.9819608, g: 0.8, b: 1, a: 0}
   completionBonus: 40
+  useLevelMonsterSettings: 1
+  monsterSpawnChance: 0.4
+  monsterSpawnOffsetX: 0
+  monsterSpawnOffsetY: 0
+  monsterTypes:
+  - monsterPrefab: {fileID: 8020377222933994122, guid: f320f02f9c8f6eb49a016be02620a22c,
+      type: 3}
+    monsterName: 
+    maxHP: 2
+    dropCoins: 2
+    spawnWeight: 0.505
+    followPipeMovement: 1
+    customMoveSpeed: 0
+  - monsterPrefab: {fileID: 8020377222933994122, guid: 0d9a47d195f6346488136d56d1b0128b,
+      type: 3}
+    monsterName: 
+    maxHP: 5
+    dropCoins: 5
+    spawnWeight: 0.457
+    followPipeMovement: 1
+    customMoveSpeed: 0
+  - monsterPrefab: {fileID: 8020377222933994122, guid: 599b15e2ab0311f44a8576935f80d4de,
+      type: 3}
+    monsterName: 
+    maxHP: 8
+    dropCoins: 8
+    spawnWeight: 0.237
+    followPipeMovement: 1
+    customMoveSpeed: 0
+  - monsterPrefab: {fileID: 8020377222933994122, guid: ae1731b8937bd89418a944bcc9d9648f,
+      type: 3}
+    monsterName: 
+    maxHP: 10
+    dropCoins: 10
+    spawnWeight: 0.344
+    followPipeMovement: 1
+    customMoveSpeed: 0
   levelDescription: "\u7B2C8\u5173"

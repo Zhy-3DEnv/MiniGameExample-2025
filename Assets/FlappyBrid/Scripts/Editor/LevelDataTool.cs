@@ -43,7 +43,11 @@ public class LevelDataTool : EditorWindow
         { "关卡描述", "levelDescription" },
         { "使用关卡道具设置", "useLevelItemSettings" },
         { "道具生成概率", "itemSpawnChance" },
-        { "道具X轴偏移", "itemSpawnOffsetX" }
+        { "道具X轴偏移", "itemSpawnOffsetX" },
+        { "使用关卡怪物设置", "useLevelMonsterSettings" },
+        { "怪物生成概率", "monsterSpawnChance" },
+        { "怪物X轴偏移", "monsterSpawnOffsetX" },
+        { "怪物Y轴偏移", "monsterSpawnOffsetY" }
     };
     
     [MenuItem("Tools/FlappyBird/关卡数据工具")]
@@ -674,6 +678,26 @@ public class LevelDataTool : EditorWindow
                 if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out float offsetX))
                     levelData.itemSpawnOffsetX = offsetX;
                 break;
+            case "useLevelMonsterSettings":
+                if (bool.TryParse(value, out bool useMonster))
+                    levelData.useLevelMonsterSettings = useMonster;
+                else if (value == "1" || value.ToLower() == "true" || value == "是" || value == "Y" || value == "y")
+                    levelData.useLevelMonsterSettings = true;
+                else if (value == "0" || value.ToLower() == "false" || value == "否" || value == "N" || value == "n")
+                    levelData.useLevelMonsterSettings = false;
+                break;
+            case "monsterSpawnChance":
+                if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out float monsterChance))
+                    levelData.monsterSpawnChance = monsterChance;
+                break;
+            case "monsterSpawnOffsetX":
+                if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out float monsterOffsetX))
+                    levelData.monsterSpawnOffsetX = monsterOffsetX;
+                break;
+            case "monsterSpawnOffsetY":
+                if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out float monsterOffsetY))
+                    levelData.monsterSpawnOffsetY = monsterOffsetY;
+                break;
         }
     }
     
@@ -767,7 +791,7 @@ public class LevelDataTool : EditorWindow
             // 表头
             if (includeHeader)
             {
-                csvContent.AppendLine("关卡编号,关卡名称,目标时间,生成率倍数,移动速度倍数,高度偏移,管道通过分数,完成奖励,关卡描述,使用关卡道具设置,道具生成概率,道具X轴偏移");
+                csvContent.AppendLine("关卡编号,关卡名称,目标时间,生成率倍数,移动速度倍数,高度偏移,管道通过分数,完成奖励,关卡描述,使用关卡道具设置,道具生成概率,道具X轴偏移,使用关卡怪物设置,怪物生成概率,怪物X轴偏移,怪物Y轴偏移");
             }
             
             // 数据行
@@ -784,7 +808,11 @@ public class LevelDataTool : EditorWindow
                     $"\"{EscapeCSV(levelData.levelDescription)}\"," +
                     $"{(levelData.useLevelItemSettings ? "是" : "否")}," +
                     $"{levelData.itemSpawnChance}," +
-                    $"{levelData.itemSpawnOffsetX}";
+                    $"{levelData.itemSpawnOffsetX}," +
+                    $"{(levelData.useLevelMonsterSettings ? "是" : "否")}," +
+                    $"{levelData.monsterSpawnChance}," +
+                    $"{levelData.monsterSpawnOffsetX}," +
+                    $"{levelData.monsterSpawnOffsetY}";
                 
                 csvContent.AppendLine(line);
             }

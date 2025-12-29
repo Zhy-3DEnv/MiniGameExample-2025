@@ -24,6 +24,20 @@ public class PipeSpawner : MonoBehaviour
     [Tooltip("道具生成概率（0-1之间，0.3表示30%概率生成道具）\n这是第一层概率：决定是否生成道具\n如果关卡设置了道具生成，则使用关卡设置")]
     public float defaultItemSpawnChance = 0.3f;
     
+    [Header("怪物生成默认设置（当关卡未设置时使用）")]
+    [Range(0f, 1f)]
+    [Tooltip("怪物生成概率（0-1之间，0.2表示20%概率生成怪物）\n这是第一层概率：决定是否生成怪物\n如果关卡设置了怪物生成，则使用关卡设置")]
+    public float defaultMonsterSpawnChance = 0.2f;
+    
+    [Tooltip("怪物相对管道的X轴偏移（可以放在管道附近位置）\n如果关卡设置了怪物生成，则使用关卡设置")]
+    public float defaultMonsterSpawnOffsetX = 0f;
+    
+    [Tooltip("怪物相对管道的Y轴偏移（可以放在管道上方或下方）\n如果关卡设置了怪物生成，则使用关卡设置")]
+    public float defaultMonsterSpawnOffsetY = 0f;
+    
+    [Tooltip("默认怪物类型列表（当关卡未设置怪物列表时使用）\n每个怪物的Spawn Weight控制相对生成概率\n实际概率 = (该怪物权重/总权重) × Monster Spawn Chance")]
+    public List<MonsterData> defaultMonsterTypes = new List<MonsterData>();
+    
     [Tooltip("道具相对管道的X轴偏移（可以放在管道中间位置）\n如果关卡设置了道具生成，则使用关卡设置")]
     public float defaultItemSpawnOffsetX = 0f;
     
@@ -39,6 +53,19 @@ public class PipeSpawner : MonoBehaviour
     
     [SerializeField, Tooltip("当前使用的道具类型列表")]
     private List<ItemData> currentItemTypes = new List<ItemData>();
+    
+    [Header("当前使用的怪物设置（运行时自动更新，只读）")]
+    [SerializeField, Tooltip("当前使用的怪物生成概率")]
+    private float currentMonsterSpawnChance = 0.2f;
+    
+    [SerializeField, Tooltip("当前使用的怪物X轴偏移")]
+    private float currentMonsterSpawnOffsetX = 0f;
+    
+    [SerializeField, Tooltip("当前使用的怪物Y轴偏移")]
+    private float currentMonsterSpawnOffsetY = 0f;
+    
+    [SerializeField, Tooltip("当前使用的怪物类型列表")]
+    private List<MonsterData> currentMonsterTypes = new List<MonsterData>();
     
     [Header("概率预览（只读）")]
     [SerializeField, Tooltip("显示每个道具的实际生成概率（自动计算）")]
@@ -158,6 +185,33 @@ public class PipeSpawner : MonoBehaviour
                     currentItemTypes = new List<ItemData>(defaultItemTypes);
                 }
                 
+                // 应用怪物生成设置（如果关卡启用了关卡怪物设置）
+                if (levelData.useLevelMonsterSettings)
+                {
+                    // 使用关卡的怪物设置
+                    currentMonsterSpawnChance = levelData.monsterSpawnChance;
+                    currentMonsterSpawnOffsetX = levelData.monsterSpawnOffsetX;
+                    currentMonsterSpawnOffsetY = levelData.monsterSpawnOffsetY;
+                    
+                    // 如果关卡有怪物列表，使用关卡的怪物列表；否则使用默认列表
+                    if (levelData.monsterTypes != null && levelData.monsterTypes.Count > 0)
+                    {
+                        currentMonsterTypes = new List<MonsterData>(levelData.monsterTypes);
+                    }
+                    else
+                    {
+                        currentMonsterTypes = new List<MonsterData>(defaultMonsterTypes);
+                    }
+                }
+                else
+                {
+                    // 使用默认设置
+                    currentMonsterSpawnChance = defaultMonsterSpawnChance;
+                    currentMonsterSpawnOffsetX = defaultMonsterSpawnOffsetX;
+                    currentMonsterSpawnOffsetY = defaultMonsterSpawnOffsetY;
+                    currentMonsterTypes = new List<MonsterData>(defaultMonsterTypes);
+                }
+                
                 // 更新概率预览
                 UpdateProbabilityPreview();
             }
@@ -176,6 +230,12 @@ public class PipeSpawner : MonoBehaviour
             currentItemSpawnChance = defaultItemSpawnChance;
             currentItemSpawnOffsetX = defaultItemSpawnOffsetX;
             currentItemTypes = new List<ItemData>(defaultItemTypes);
+            
+            currentMonsterSpawnChance = defaultMonsterSpawnChance;
+            currentMonsterSpawnOffsetX = defaultMonsterSpawnOffsetX;
+            currentMonsterSpawnOffsetY = defaultMonsterSpawnOffsetY;
+            currentMonsterTypes = new List<MonsterData>(defaultMonsterTypes);
+            
             UpdateProbabilityPreview();
         }
     }
@@ -322,6 +382,55 @@ public class PipeSpawner : MonoBehaviour
                 }
             }
         }
+        
+        // 根据概率生成怪物（使用当前设置）
+        if (currentMonsterTypes.Count > 0 && Random.Range(0f, 1f) < currentMonsterSpawnChance)
+        {
+            // 随机选择一个怪物类型（基于权重）
+            MonsterData selectedMonster = GetRandomMonsterByWeight();
+            if (selectedMonster != null && selectedMonster.monsterPrefab != null)
+            {
+                // 在管道附近位置生成怪物（X和Y坐标都可以偏移）
+                float monsterX = transform.position.x + currentMonsterSpawnOffsetX;
+                float monsterY = pipeY + currentMonsterSpawnOffsetY;
+                GameObject spawnedMonster = Instantiate(selectedMonster.monsterPrefab, new Vector3(monsterX, monsterY, 0), transform.rotation);
+                
+                // 设置怪物的数据
+                MonsterScript monsterScript = spawnedMonster.GetComponent<MonsterScript>();
+                if (monsterScript != null)
+                {
+                    monsterScript.monsterData = selectedMonster;
+                    monsterScript.maxHP = selectedMonster.maxHP;
+                    monsterScript.currentHP = selectedMonster.maxHP;  // 重要：同步设置当前血量为最大血量
+                    monsterScript.dropCoins = selectedMonster.dropCoins;
+                    monsterScript.followPipeMovement = selectedMonster.followPipeMovement;
+                    
+                    // 设置基础移动速度（用于后续计算）
+                    if (selectedMonster.followPipeMovement)
+                    {
+                        // 跟随管道：从 PipeMoveScript 获取基础速度
+                        PipeMoveScript pipeMover = FindObjectOfType<PipeMoveScript>();
+                        if (pipeMover != null)
+                        {
+                            monsterScript.baseMoveSpeed = pipeMover.baseMoveSpeed;
+                        }
+                    }
+                    else
+                    {
+                        // 不跟随管道：使用自定义速度
+                        monsterScript.moveSpeed = selectedMonster.customMoveSpeed;
+                        monsterScript.baseMoveSpeed = selectedMonster.customMoveSpeed;
+                    }
+                    
+                    // 应用关卡设置（确保移动速度正确）
+                    // 注意：这里调用 ApplyLevelSettings() 会在 Start() 之前执行
+                    // 但 Start() 中也会调用一次，所以这里先设置基础值
+                    monsterScript.ApplyLevelSettings();
+                    
+                    Debug.Log($"PipeSpawner: 生成怪物 - maxHP={monsterScript.maxHP}, currentHP={monsterScript.currentHP}, followPipeMovement={monsterScript.followPipeMovement}, moveSpeed={monsterScript.moveSpeed:F2}, 来自MonsterData: {selectedMonster.monsterName}");
+                }
+            }
+        }
     }
     
     /// <summary>
@@ -365,6 +474,53 @@ public class PipeSpawner : MonoBehaviour
             if (item != null && item.itemPrefab != null)
             {
                 return item;
+            }
+        }
+        
+        return null;
+    }
+    
+    /// <summary>
+    /// 根据权重随机选择一个怪物类型
+    /// </summary>
+    private MonsterData GetRandomMonsterByWeight()
+    {
+        if (currentMonsterTypes == null || currentMonsterTypes.Count == 0) return null;
+        
+        // 计算总权重
+        float totalWeight = 0f;
+        foreach (MonsterData monster in currentMonsterTypes)
+        {
+            if (monster != null && monster.monsterPrefab != null)
+            {
+                totalWeight += monster.spawnWeight;
+            }
+        }
+        
+        if (totalWeight <= 0f) return null;
+        
+        // 随机一个0到总权重之间的值
+        float randomValue = Random.Range(0f, totalWeight);
+        float currentWeight = 0f;
+        
+        // 遍历怪物列表，找到对应的怪物
+        foreach (MonsterData monster in currentMonsterTypes)
+        {
+            if (monster == null || monster.monsterPrefab == null) continue;
+            
+            currentWeight += monster.spawnWeight;
+            if (randomValue <= currentWeight)
+            {
+                return monster;
+            }
+        }
+        
+        // 如果没找到（理论上不会发生），返回第一个有效怪物
+        foreach (MonsterData monster in currentMonsterTypes)
+        {
+            if (monster != null && monster.monsterPrefab != null)
+            {
+                return monster;
             }
         }
         

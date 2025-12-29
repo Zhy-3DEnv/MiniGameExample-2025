@@ -13,6 +13,14 @@ public class BirdScript : MonoBehaviour
     public bool birdIsAlive = true;
     private PlayerInputAction inputActions;
     
+    [Header("血量系统")]
+    [Tooltip("小鸟最大血量（可升级）")]
+    public int maxHP = 1;
+    
+    [Tooltip("小鸟当前血量（运行时）")]
+    [SerializeField]
+    private int currentHP = 1;
+    
     [Header("翅膀设置")]
     public GameObject wingUp; // 向上飞的翅膀（跳跃时显示）
     public GameObject wingDown; // 向下掉的翅膀（掉落时显示）
@@ -59,6 +67,41 @@ public class BirdScript : MonoBehaviour
     [Tooltip("拖尾颜色（从起始到结束的渐变）")]
     public Gradient trailColorGradient;
     
+    [Header("子弹发射设置")]
+    [Tooltip("子弹预制体")]
+    public GameObject bulletPrefab;
+    
+    [Tooltip("发射间隔（秒，值越小发射越快）")]
+    [Range(0.1f, 5f)]
+    public float fireInterval = 1f;
+    
+    [Tooltip("子弹发射位置偏移（相对于小鸟位置）")]
+    public Vector2 fireOffset = new Vector2(0.5f, 0f);
+    
+    [Tooltip("子弹伤害值（可升级）")]
+    public int bulletDamage = 1;
+    
+    [Tooltip("子弹速度")]
+    public float bulletSpeed = 10f;
+    
+    [Tooltip("同时发射的子弹数量（可升级）")]
+    [Range(1, 5)]
+    public int bulletCount = 1;
+    
+    [Tooltip("多发子弹时的Y轴间距（仅在bulletCount>1时有效）")]
+    public float bulletSpacing = 0.5f;
+    
+    [Header("攻击范围设置")]
+    [Tooltip("自动攻击范围（圆形半径，怪物在此范围内才会自动发射）")]
+    [Range(1f, 50f)]
+    public float attackRange = 10f;
+    
+    [Tooltip("攻击范围检测图层（用于检测怪物）")]
+    public LayerMask monsterLayer;
+    
+    [Tooltip("是否显示攻击范围（调试用）")]
+    public bool showAttackRange = false;
+    
     [Header("调试设置")]
     [Tooltip("启用调试可视化（在Scene视图中显示拖尾预览）")]
     public bool enableDebugVisualization = false; // 默认关闭调试模式
@@ -76,6 +119,8 @@ public class BirdScript : MonoBehaviour
     }
     private List<TrailPoint> trailHistory = new List<TrailPoint>(); // 拖尾历史记录
     private Coroutine startGameCoroutine;  // 游戏开始协程
+    private Coroutine fireCoroutine;       // 发射子弹协程
+    private float fireTimer = 0f;          // 发射计时器
 
     void Awake()
     {
@@ -204,6 +249,13 @@ public class BirdScript : MonoBehaviour
             case GameState.Playing:
                 // 游戏开始：延迟1秒后解冻小鸟，开始掉落，启用拖尾
                 Debug.Log($"BirdScript: 游戏开始，准备延迟 {startDelay} 秒");
+                
+                // 应用升级属性（确保属性在关卡间保持）
+                if (BirdUpgradeManager.Instance != null)
+                {
+                    BirdUpgradeManager.Instance.ApplyAllUpgrades();
+                }
+                
                 if (trailRenderer != null)
                 {
                     trailRenderer.enabled = true;
@@ -215,15 +267,18 @@ public class BirdScript : MonoBehaviour
                     InitializeTrail();
                 }
                 StartGameWithDelay();
+                // 开始自动发射子弹
+                StartFiring();
                 break;
                 
             case GameState.LevelComplete:
             case GameState.GameOver:
-                // 游戏结束：冻结小鸟，保持拖尾显示
+                // 游戏结束：冻结小鸟，保持拖尾显示，停止发射子弹
                 if (myRigidbody != null)
                 {
                     myRigidbody.constraints = RigidbodyConstraints2D.FreezeAll;
                 }
+                StopFiring();
                 break;
         }
     }
@@ -344,9 +399,9 @@ public class BirdScript : MonoBehaviour
         // 只有在游戏中才检查掉落
         if (GameStateManager.Instance != null && GameStateManager.Instance.IsPlaying())
         {
-            if (transform.position.y < -12)
-            {
-                logic.gameOver();
+        if (transform.position.y < -12)
+        {
+            logic.gameOver();
             }
         }
 
@@ -361,6 +416,12 @@ public class BirdScript : MonoBehaviour
         {
             trailRenderer.startWidth = trailWidth;
             trailRenderer.endWidth = trailWidth * trailEndWidthRatio;
+        }
+        
+        // 更新子弹发射（如果游戏进行中）
+        if (GameStateManager.Instance != null && GameStateManager.Instance.IsPlaying() && bulletPrefab != null)
+        {
+            UpdateFiring();
         }
     }
     
@@ -797,7 +858,7 @@ public class BirdScript : MonoBehaviour
 
         // 播放小鸟飞行音效
         PlayFlapSound();
-        
+
         myRigidbody.velocity = Vector2.up * flapStrength;
     }
     
@@ -815,9 +876,130 @@ public class BirdScript : MonoBehaviour
     {
         // 只有在游戏中才处理碰撞
         if (GameStateManager.Instance != null && !GameStateManager.Instance.IsPlaying()) return;
+        if (!birdIsAlive) return;
+        
+        // 检查是否是怪物
+        MonsterScript monster = collision.gameObject.GetComponent<MonsterScript>();
+        if (monster != null)
+        {
+            Debug.Log($"BirdScript: 小鸟碰撞到怪物！怪物: {monster.gameObject.name}");
+            TakeDamage(1);
+            return;
+        }
+        
+        // 其他碰撞（管道等）造成伤害
+        TakeDamage(1);
+    }
+    
+    /// <summary>
+    /// 触发器碰撞检测（用于检测怪物，如果怪物使用触发器）
+    /// </summary>
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        // 只有在游戏中才处理碰撞
+        if (GameStateManager.Instance != null && !GameStateManager.Instance.IsPlaying()) return;
+        if (!birdIsAlive) return;
+        
+        // 检查是否是怪物
+        MonsterScript monster = collision.GetComponent<MonsterScript>();
+        if (monster != null)
+        {
+            Debug.Log($"BirdScript: 小鸟触发到怪物！怪物: {monster.gameObject.name}");
+            TakeDamage(1);
+        }
+    }
+    
+    /// <summary>
+    /// 小鸟受到伤害
+    /// </summary>
+    /// <param name="damage">伤害值</param>
+    public void TakeDamage(int damage)
+    {
+        if (!birdIsAlive) return;
+        
+        currentHP -= damage;
+        Debug.Log($"BirdScript: 小鸟受到 {damage} 点伤害，当前血量: {currentHP}/{maxHP}");
+        
+        // 检查是否死亡
+        if (currentHP <= 0)
+        {
+            Die();
+        }
+    }
+    
+    /// <summary>
+    /// 小鸟死亡
+    /// </summary>
+    private void Die()
+    {
+        if (!birdIsAlive) return;
+        
+        birdIsAlive = false;
+        Debug.Log("BirdScript: 小鸟死亡！");
         
         logic.gameOver();
-        birdIsAlive = false;
+    }
+    
+    /// <summary>
+    /// 应用升级属性（由升级管理器调用）
+    /// </summary>
+    public void ApplyUpgrade(BirdUpgradeData.UpgradeType upgradeType, int valueIncrease, float percentIncrease)
+    {
+        switch (upgradeType)
+        {
+            case BirdUpgradeData.UpgradeType.Health:
+                maxHP += valueIncrease;
+                currentHP = maxHP; // 升级时恢复满血
+                Debug.Log($"BirdScript: 血量升级 - maxHP={maxHP}, currentHP={currentHP}");
+                break;
+                
+            case BirdUpgradeData.UpgradeType.BulletDamage:
+                bulletDamage += valueIncrease;
+                Debug.Log($"BirdScript: 子弹伤害升级 - bulletDamage={bulletDamage}");
+                break;
+                
+            case BirdUpgradeData.UpgradeType.BulletCount:
+                bulletCount += valueIncrease;
+                if (bulletCount > 5) bulletCount = 5; // 限制最大数量
+                Debug.Log($"BirdScript: 子弹数量升级 - bulletCount={bulletCount}");
+                break;
+                
+            case BirdUpgradeData.UpgradeType.FireSpeed:
+                if (percentIncrease > 0)
+                {
+                    // 减少发射间隔（提高发射速度）
+                    fireInterval = Mathf.Max(0.1f, fireInterval * (1f - percentIncrease));
+                }
+                else
+                {
+                    // 使用固定值减少
+                    fireInterval = Mathf.Max(0.1f, fireInterval - valueIncrease * 0.1f);
+                }
+                Debug.Log($"BirdScript: 发射速度升级 - fireInterval={fireInterval}");
+                break;
+                
+            case BirdUpgradeData.UpgradeType.AttackRange:
+                attackRange += valueIncrease;
+                if (attackRange > 50f) attackRange = 50f; // 限制最大范围
+                Debug.Log($"BirdScript: 攻击范围升级 - attackRange={attackRange}");
+                break;
+        }
+    }
+    
+    /// <summary>
+    /// 获取当前血量
+    /// </summary>
+    public int GetCurrentHP()
+    {
+        return currentHP;
+    }
+    
+    /// <summary>
+    /// 获取最大血量
+    /// </summary>
+    public int GetMaxHP()
+    {
+        return maxHP;
     }
     
     /// <summary>
@@ -835,6 +1017,61 @@ public class BirdScript : MonoBehaviour
         
         // 绘制调试信息（可选）
         DrawDebugInfo();
+        
+        // 绘制攻击范围（如果启用）
+        if (showAttackRange)
+        {
+            DrawAttackRange();
+        }
+    }
+    
+    /// <summary>
+    /// 绘制攻击范围（调试用）
+    /// </summary>
+    private void DrawAttackRange()
+    {
+        Vector2 birdPosition = transform.position;
+        
+        // 绘制圆形攻击范围
+        Gizmos.color = Color.yellow;
+        
+        // 绘制圆形（使用多个线段模拟）
+        int segments = 32;
+        float angleStep = 360f / segments;
+        Vector2 lastPoint = birdPosition + new Vector2(attackRange, 0);
+        
+        for (int i = 1; i <= segments; i++)
+        {
+            float angle = i * angleStep;
+            float rad = angle * Mathf.Deg2Rad;
+            Vector2 point = birdPosition + new Vector2(Mathf.Cos(rad), Mathf.Sin(rad)) * attackRange;
+            Gizmos.DrawLine(lastPoint, point);
+            lastPoint = point;
+        }
+        
+        // 绘制前方扇形区域（只显示前方180度，更清晰）
+        Gizmos.color = Color.yellow;
+        int forwardSegments = 20;
+        float forwardAngleStep = 180f / forwardSegments;
+        Vector2 forwardLastPoint = birdPosition + new Vector2(attackRange, 0);
+        
+        for (int i = 1; i <= forwardSegments; i++)
+        {
+            float angle = -90f + i * forwardAngleStep;
+            float rad = angle * Mathf.Deg2Rad;
+            Vector2 point = birdPosition + new Vector2(Mathf.Cos(rad), Mathf.Sin(rad)) * attackRange;
+            Gizmos.DrawLine(birdPosition, point);
+            if (i > 1)
+            {
+                Gizmos.DrawLine(forwardLastPoint, point);
+            }
+            forwardLastPoint = point;
+        }
+        
+        // 绘制中心线（从小鸟到前方）
+        Gizmos.color = Color.red;
+        Vector2 forwardPoint = birdPosition + new Vector2(attackRange, 0);
+        Gizmos.DrawLine(birdPosition, forwardPoint);
     }
     
     /// <summary>
@@ -999,6 +1236,150 @@ public class BirdScript : MonoBehaviour
             // 编辑模式：使用调试总分数
             float t = Mathf.Clamp01((float)debugTotalScore / maxTrailScore);
             return Mathf.Lerp(minTrailLength, maxTrailLength, t);
+        }
+    }
+    
+    /// <summary>
+    /// 开始自动发射子弹
+    /// </summary>
+    private void StartFiring()
+    {
+        fireTimer = 0f;
+    }
+    
+    /// <summary>
+    /// 停止发射子弹
+    /// </summary>
+    private void StopFiring()
+    {
+        fireTimer = 0f;
+    }
+    
+    /// <summary>
+    /// 更新子弹发射逻辑
+    /// </summary>
+    private void UpdateFiring()
+    {
+        if (bulletPrefab == null) return;
+        
+        // 检查攻击范围内是否有怪物
+        bool hasMonster = HasMonsterInRange();
+        
+        // 调试信息（每60帧输出一次，避免刷屏）
+        if (Time.frameCount % 60 == 0)
+        {
+            Debug.Log($"BirdScript: 攻击范围检测 - attackRange={attackRange:F2}, hasMonster={hasMonster}, fireTimer={fireTimer:F2}");
+        }
+        
+        if (!hasMonster)
+        {
+            // 范围内没有怪物，重置计时器但不发射
+            fireTimer = 0f;
+            return;
+        }
+        
+        fireTimer += Time.deltaTime;
+        
+        // 检查是否到了发射时间
+        if (fireTimer >= fireInterval)
+        {
+            FireBullet();
+            fireTimer = 0f;
+        }
+    }
+    
+    /// <summary>
+    /// 检查攻击范围内是否有怪物
+    /// </summary>
+    private bool HasMonsterInRange()
+    {
+        Vector2 birdPosition = transform.position;
+        
+        // 直接查找所有 MonsterScript 组件（不依赖 Collider2D）
+        // 这样可以避免 Collider2D 设置问题
+        MonsterScript[] allMonsters = FindObjectsOfType<MonsterScript>();
+        
+        foreach (MonsterScript monster in allMonsters)
+        {
+            if (monster == null || monster.gameObject == null) continue;
+            
+            Vector2 monsterPos = monster.transform.position;
+            
+            // 检查怪物是否在小鸟前方（X坐标大于小鸟）
+            if (monsterPos.x > birdPosition.x)
+            {
+                // 计算距离
+                float distance = Vector2.Distance(birdPosition, monsterPos);
+                
+                // 检查距离是否在攻击范围内
+                if (distance <= attackRange)
+                {
+                    // 调试信息（每60帧输出一次，避免刷屏）
+                    if (Time.frameCount % 60 == 0)
+                    {
+                        Debug.Log($"BirdScript: 检测到怪物在攻击范围内 - 距离: {distance:F2}, 攻击范围: {attackRange:F2}, 怪物位置: {monsterPos}");
+                    }
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+    
+    /// <summary>
+    /// 发射子弹
+    /// </summary>
+    private void FireBullet()
+    {
+        if (bulletPrefab == null) return;
+        
+        // 计算发射位置
+        Vector3 firePosition = transform.position + new Vector3(fireOffset.x, fireOffset.y, 0);
+        
+        // 根据子弹数量发射
+        if (bulletCount == 1)
+        {
+            // 单发：直接发射
+            CreateBullet(firePosition);
+        }
+        else
+        {
+            // 多发：按Y轴间距发射
+            float totalSpacing = (bulletCount - 1) * bulletSpacing;
+            float startY = firePosition.y - totalSpacing / 2f;
+            
+            for (int i = 0; i < bulletCount; i++)
+            {
+                Vector3 bulletPos = new Vector3(firePosition.x, startY + i * bulletSpacing, firePosition.z);
+                CreateBullet(bulletPos);
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 创建子弹实例
+    /// </summary>
+    private void CreateBullet(Vector3 position)
+    {
+        GameObject bulletObj = Instantiate(bulletPrefab, position, Quaternion.identity);
+        BulletScript bullet = bulletObj.GetComponent<BulletScript>();
+        
+        if (bullet != null)
+        {
+            // 设置子弹属性
+            bullet.SetDamage(bulletDamage);
+            bullet.SetSpeed(bulletSpeed);
+            
+            // 如果子弹支持自动追踪，确保启用
+            if (bullet.autoTrackMonster)
+            {
+                // 子弹会自动寻找目标，不需要手动设置
+            }
+        }
+        else
+        {
+            Debug.LogWarning("BirdScript: 子弹预制体没有 BulletScript 组件！");
         }
     }
 }

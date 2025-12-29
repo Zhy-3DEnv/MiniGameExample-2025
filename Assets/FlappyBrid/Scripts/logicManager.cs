@@ -27,10 +27,22 @@ public class logicManager : MonoBehaviour
     public GameObject gameHUD;
     [Tooltip("显示当前关卡的文本（位于HUD顶部）")]
     public Text levelText;
-    [Tooltip("显示时间的文本（格式：x/n秒，位于HUD顶部）")]
-    public Text scoreTex;  // 保留原名，但用于显示时间
+    [Tooltip("显示时间的文本（格式：x/n，位于HUD顶部）")]
+    public Text timeText;  // 显示时间
     [Tooltip("显示总金币的文本（位于HUD顶部）")]
-    public Text totalScoreText;  // 保留原名，但用于显示金币
+    public Text totalCoinsText;  // 显示总金币
+    
+    [Header("小鸟属性显示（HUD）")]
+    [Tooltip("显示小鸟血量的文本（格式：HP: x/y）")]
+    public Text birdHPText;
+    [Tooltip("显示子弹伤害的文本")]
+    public Text bulletDamageText;
+    [Tooltip("显示子弹数量的文本")]
+    public Text bulletCountText;
+    [Tooltip("显示发射速度的文本（显示发射间隔，越小越快）")]
+    public Text fireSpeedText;
+    [Tooltip("显示攻击范围的文本")]
+    public Text attackRangeText;
 
     [Header("UI界面")]
     [Tooltip("游戏结束界面")]
@@ -53,6 +65,14 @@ public class logicManager : MonoBehaviour
     public GameObject levelCompleteResultPanel;
     [Tooltip("结果信息文本（显示关卡名称、分数等详细信息）")]
     public Text levelCompleteResultText;
+    
+    [Header("升级/商店界面")]
+    [Tooltip("升级界面面板（显示在结算画面后）")]
+    public GameObject upgradePanel;
+    [Tooltip("升级界面容器（用于放置升级按钮）")]
+    public Transform upgradeButtonContainer;
+    [Tooltip("升级按钮预制体")]
+    public GameObject upgradeButtonPrefab;
 
     [Header("关卡完成设置")]
     [Tooltip("Next Level按钮显示延迟（秒），结算画面会一直显示")]
@@ -181,6 +201,7 @@ public class logicManager : MonoBehaviour
         {
             case GameState.Menu:
                 ShowStartMenu();
+                HideUpgradePanel(); // 隐藏升级界面
                 // 返回菜单时重置总金币和关卡
                 totalCoins = 0;
                 ResetToFirstLevel();
@@ -194,6 +215,8 @@ public class logicManager : MonoBehaviour
                 StartTiming();
                 // 更新拖尾长度（确保拖尾显示正确）
                 UpdateBirdTrail();
+                // 更新小鸟属性显示（游戏开始时显示初始属性）
+                UpdateBirdAttributesDisplay();
                 break;
             case GameState.LevelComplete:
                 StopTiming();  // 停止计时
@@ -204,6 +227,7 @@ public class logicManager : MonoBehaviour
                 StopTiming();  // 停止计时
                 ShowGameOver();
                 StopAllPipes();
+                HideUpgradePanel(); // 隐藏升级界面
                 // 死亡后重置关卡到第1关，重置总金币
                 ResetToFirstLevel();
                 totalCoins = 0;
@@ -230,6 +254,7 @@ public class logicManager : MonoBehaviour
         if (startMenuScene != null) startMenuScene.SetActive(false);
         if (gameOverScene != null) gameOverScene.SetActive(false);
         if (levelCompletePanel != null) levelCompletePanel.SetActive(false);
+        if (upgradePanel != null) upgradePanel.SetActive(false);  // 隐藏升级界面
         if (gameHUD != null) gameHUD.SetActive(true);  // 游戏进行中显示HUD
     }
 
@@ -246,6 +271,7 @@ public class logicManager : MonoBehaviour
         if (startMenuScene != null) startMenuScene.SetActive(false);
         if (gameOverScene != null) gameOverScene.SetActive(false);
         if (gameHUD != null) gameHUD.SetActive(false);  // 关卡完成时隐藏HUD
+        HideUpgradePanel(); // 隐藏升级界面
 
         // 显示关卡完成主面板
         if (levelCompletePanel != null)
@@ -262,13 +288,14 @@ public class logicManager : MonoBehaviour
     
     /// <summary>
     /// 将当前关卡金币累加到总金币（包括完成奖励）
+    /// 注意：由于金币已经实时累加到totalCoins，这里只需要添加完成奖励
     /// </summary>
     private void AddCurrentLevelCoinsToTotal()
     {
         // 1. 保存当前关卡获得的金币（不包括完成奖励，用于显示）
         currentLevelCoinsForDisplay = playerCoins;
         
-        // 2. 先添加完成奖励到当前关卡金币
+        // 2. 添加完成奖励到总金币（金币已经实时累加，这里只需要添加奖励）
         int bonus = 0;
         if (levelManager != null)
         {
@@ -276,12 +303,15 @@ public class logicManager : MonoBehaviour
             if (levelData != null && levelData.completionBonus > 0)
             {
                 bonus = levelData.completionBonus;
+                // 完成奖励直接加到总金币
+                totalCoins += bonus;
+                // 也加到当前关卡金币（用于显示）
                 playerCoins += bonus;
             }
         }
         
-        // 3. 将当前关卡金币累加到总金币（包括完成奖励）
-        totalCoins += playerCoins;
+        // 注意：playerCoins 已经实时累加到 totalCoins 了，这里不需要再次累加
+        // 只需要添加完成奖励即可
     }
 
     /// <summary>
@@ -337,9 +367,188 @@ public class logicManager : MonoBehaviour
         // 启动一个协程来持续更新（直到状态改变）
         StartCoroutine(UpdateResultInfoContinuously());
         
+        // 显示升级界面（在结果界面之后）
+        yield return new WaitForSecondsRealtime(0.5f); // 稍微延迟一下
+        
+        ShowUpgradePanel();
+        
         levelCompleteCoroutine = null;  // 清除协程引用
     }
-
+    
+    /// <summary>
+    /// 显示升级界面
+    /// </summary>
+    private void ShowUpgradePanel()
+    {
+        if (upgradePanel != null)
+        {
+            upgradePanel.SetActive(true);
+            RefreshUpgradeButtons();
+        }
+    }
+    
+    /// <summary>
+    /// 隐藏升级界面
+    /// </summary>
+    private void HideUpgradePanel()
+    {
+        if (upgradePanel != null)
+        {
+            upgradePanel.SetActive(false);
+        }
+    }
+    
+    /// <summary>
+    /// 刷新升级按钮（更新价格和状态）
+    /// </summary>
+    private void RefreshUpgradeButtons()
+    {
+        if (upgradeButtonContainer == null || BirdUpgradeManager.Instance == null) return;
+        
+        RectTransform containerRect = upgradeButtonContainer.GetComponent<RectTransform>();
+        ContentSizeFitter sizeFitter = upgradeButtonContainer.GetComponent<ContentSizeFitter>();
+        
+        // 临时禁用 Content Size Fitter，以便设置初始高度
+        bool wasSizeFitterEnabled = false;
+        if (sizeFitter != null)
+        {
+            wasSizeFitterEnabled = sizeFitter.enabled;
+            sizeFitter.enabled = false;
+        }
+        
+        // 设置容器的最小高度（确保有足够的空间显示按钮）
+        if (containerRect != null)
+        {
+            // 计算需要的高度：按钮数量 * (按钮高度 + 间距) + 上下边距
+            int buttonCount = 5; // 固定5个升级类型
+            float buttonHeight = 120f; // 按钮高度
+            float spacing = 10f; // Vertical Layout Group 的间距
+            float padding = 20f; // 上下边距
+            float minHeight = buttonCount * (buttonHeight + spacing) + padding;
+            
+            // 确保最小高度至少为 200
+            minHeight = Mathf.Max(minHeight, 200f);
+            
+            // 设置高度（使用 SetSizeWithCurrentAnchors 来强制设置）
+            containerRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, minHeight);
+        }
+        
+        // 清除现有按钮
+        foreach (Transform child in upgradeButtonContainer)
+        {
+            Destroy(child.gameObject);
+        }
+        
+        // 创建升级按钮
+        if (BirdUpgradeManager.Instance == null || BirdUpgradeManager.Instance.upgradeConfig == null)
+        {
+            Debug.LogError("logicManager: BirdUpgradeManager 或 upgradeConfig 为空！");
+            return;
+        }
+        
+        BirdUpgradeConfig config = BirdUpgradeManager.Instance.upgradeConfig;
+        
+        // 创建5个升级按钮（对应5种升级类型）
+        CreateUpgradeButton(BirdUpgradeData.UpgradeType.Health, config.healthUpgradeName, config.healthDescription);
+        CreateUpgradeButton(BirdUpgradeData.UpgradeType.BulletDamage, config.damageUpgradeName, config.damageDescription);
+        CreateUpgradeButton(BirdUpgradeData.UpgradeType.BulletCount, config.countUpgradeName, config.countDescription);
+        CreateUpgradeButton(BirdUpgradeData.UpgradeType.FireSpeed, config.fireSpeedUpgradeName, config.fireSpeedDescription);
+        CreateUpgradeButton(BirdUpgradeData.UpgradeType.AttackRange, config.rangeUpgradeName, config.rangeDescription);
+        
+        // 重新启用 Content Size Fitter，让它根据实际内容自动调整
+        if (sizeFitter != null && wasSizeFitterEnabled)
+        {
+            // 延迟一帧后重新启用，确保布局已经更新
+            StartCoroutine(ReenableContentSizeFitter(sizeFitter));
+        }
+    }
+    
+    /// <summary>
+    /// 创建升级按钮（使用新配置系统）
+    /// </summary>
+    private void CreateUpgradeButton(BirdUpgradeData.UpgradeType upgradeType, string upgradeName, string description)
+    {
+        if (upgradeButtonPrefab == null) return;
+        
+        // 实例化按钮预制体（预制体的 RectTransform 应该在编辑器中手动设置好）
+        GameObject buttonObj = Instantiate(upgradeButtonPrefab, upgradeButtonContainer);
+        
+        // 初始化按钮脚本（只设置数据，不修改 RectTransform）
+        UpgradeButtonScript buttonScript = buttonObj.GetComponent<UpgradeButtonScript>();
+        if (buttonScript != null)
+        {
+            buttonScript.Initialize(upgradeType, upgradeName, description, this);
+        }
+    }
+    
+    /// <summary>
+    /// 延迟重新启用 Content Size Fitter
+    /// </summary>
+    private System.Collections.IEnumerator ReenableContentSizeFitter(ContentSizeFitter sizeFitter)
+    {
+        yield return null; // 等待一帧，让布局系统更新
+        if (sizeFitter != null)
+        {
+            sizeFitter.enabled = true;
+        }
+    }
+    
+    /// <summary>
+    /// 购买升级（由升级按钮调用）
+    /// </summary>
+    public void PurchaseUpgrade(BirdUpgradeData.UpgradeType upgradeType)
+    {
+        if (BirdUpgradeManager.Instance == null) return;
+        
+        int coins = totalCoins;
+        if (BirdUpgradeManager.Instance.PurchaseUpgrade(upgradeType, ref coins))
+        {
+            totalCoins = coins;
+            UpdateTimeDisplay(); // 更新显示
+            UpdateBirdAttributesDisplay(); // 更新小鸟属性显示
+            RefreshUpgradeButtons(); // 刷新按钮
+        }
+    }
+    
+    /// <summary>
+    /// 更新小鸟属性显示（在HUD上显示）
+    /// </summary>
+    public void UpdateBirdAttributesDisplay()
+    {
+        BirdScript bird = FindObjectOfType<BirdScript>();
+        if (bird == null) return;
+        
+        // 更新血量显示
+        if (birdHPText != null)
+        {
+            birdHPText.text = $"血量: {bird.GetCurrentHP()}/{bird.GetMaxHP()}";
+        }
+        
+        // 更新子弹伤害显示
+        if (bulletDamageText != null)
+        {
+            bulletDamageText.text = $"伤害: {bird.bulletDamage}";
+        }
+        
+        // 更新子弹数量显示
+        if (bulletCountText != null)
+        {
+            bulletCountText.text = $"子弹数: {bird.bulletCount}";
+        }
+        
+        // 更新发射速度显示（显示发射间隔，越小越快）
+        if (fireSpeedText != null)
+        {
+            fireSpeedText.text = $"发射间隔: {bird.fireInterval:F2}s";
+        }
+        
+        // 更新攻击范围显示
+        if (attackRangeText != null)
+        {
+            attackRangeText.text = $"攻击范围: {bird.attackRange:F1}";
+        }
+    }
+    
     /// <summary>
     /// 更新结果信息文本（显示关卡详情）
     /// </summary>
@@ -407,7 +616,11 @@ public class logicManager : MonoBehaviour
     {
         if (!gameStateManager.IsPlaying()) return;
 
+        // 同时更新当前关卡金币和总金币（实时累加）
         playerCoins = playerCoins + coinsToAdd;
+        totalCoins = totalCoins + coinsToAdd;
+        
+        // 立即更新显示
         UpdateTimeDisplay();
 
         // 注意：不再通过分数检查关卡完成，改为通过时间检查
@@ -427,19 +640,20 @@ public class logicManager : MonoBehaviour
     /// </summary>
     private void UpdateTimeDisplay()
     {
-        if (scoreTex != null)
+        // 更新时间显示
+        if (timeText != null)
         {
             float targetTime = GetCurrentLevelTargetTime();
             // 显示已用时间/目标时间，取整
             int currentTimeInt = Mathf.FloorToInt(currentLevelTime);
             int targetTimeInt = Mathf.FloorToInt(targetTime);
-            scoreTex.text = $"{currentTimeInt}/{targetTimeInt}";
+            timeText.text = $"{currentTimeInt}/{targetTimeInt}";
         }
 
-        // 更新当前关卡金币显示
-        if (totalScoreText != null)
+        // 更新总金币显示
+        if (totalCoinsText != null)
         {
-            totalScoreText.text = $"金币: {playerCoins}";
+            totalCoinsText.text = $"金币: {totalCoins}";
         }
 
         // 更新关卡显示
@@ -447,6 +661,9 @@ public class logicManager : MonoBehaviour
 
         // 通知小鸟更新拖尾长度（使用总金币）
         UpdateBirdTrail();
+        
+        // 更新小鸟属性显示
+        UpdateBirdAttributesDisplay();
     }
     
     /// <summary>
@@ -568,13 +785,16 @@ public class logicManager : MonoBehaviour
     /// </summary>
     public void NextLevel()
     {
-        // 1. 清理所有现有的管道和道具（重要：防止残留物体导致立即碰撞）
+        // 1. 隐藏升级界面（确保进入下一关时升级界面已关闭）
+        HideUpgradePanel();
+        
+        // 2. 清理所有现有的管道和道具（重要：防止残留物体导致立即碰撞）
         ClearAllPipesAndItems();
 
         // 注意：金币已经在 ShowLevelComplete() 时累加到 totalCoins 了
         // 这里只需要重置当前关卡的金币即可
 
-        // 2. 更新关卡信息
+        // 3. 更新关卡信息
         if (levelManager != null)
         {
             levelManager.NextLevel();
@@ -585,7 +805,7 @@ public class logicManager : MonoBehaviour
             currentLevel++;
         }
 
-        // 3. 重置当前关卡金币和时间（总金币已在关卡完成时累加）
+        // 4. 重置当前关卡金币和时间（总金币已在关卡完成时累加）
         playerCoins = 0;
         currentLevelCoinsForDisplay = 0;  // 重置显示用的金币
         currentLevelTime = 0f;

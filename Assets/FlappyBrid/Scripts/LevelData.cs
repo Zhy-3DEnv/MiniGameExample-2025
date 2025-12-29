@@ -62,6 +62,23 @@ public class LevelData : ScriptableObject
     [Tooltip("完成关卡后获得的额外分数")]
     public int completionBonus = 0;
     
+    [Header("怪物生成设置")]
+    [Tooltip("是否使用关卡的怪物生成设置（如果为false，则使用PipeSpawner的默认设置）")]
+    public bool useLevelMonsterSettings = true;
+    
+    [Tooltip("怪物生成概率（0-1之间，0.2表示20%概率生成怪物）\n这是第一层概率：决定是否生成怪物")]
+    [Range(0f, 1f)]
+    public float monsterSpawnChance = 0.2f;
+    
+    [Tooltip("怪物相对管道的X轴偏移（可以放在管道附近位置）")]
+    public float monsterSpawnOffsetX = 0f;
+    
+    [Tooltip("怪物相对管道的Y轴偏移（可以放在管道上方或下方）")]
+    public float monsterSpawnOffsetY = 0f;
+    
+    [Tooltip("怪物类型列表\n每个怪物的Spawn Weight控制相对生成概率\n实际概率 = (该怪物权重/总权重) × Monster Spawn Chance\n如果列表为空，则使用PipeSpawner的默认怪物列表")]
+    public List<MonsterData> monsterTypes = new List<MonsterData>();
+    
     [Header("关卡描述")]
     [TextArea(2, 4)]
     [Tooltip("关卡描述（用于UI显示）")]
