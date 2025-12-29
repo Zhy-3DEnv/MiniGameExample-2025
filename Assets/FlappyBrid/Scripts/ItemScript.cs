@@ -30,6 +30,9 @@ public class ItemScript : MonoBehaviour
         // 检查是否是鸟（Layer 3）
         if (collision.gameObject.layer == 3)
         {
+            // 播放道具收集音效
+            PlayItemCollectSound();
+            
             // 显示分数弹跳效果
             ShowScorePopup();
             
@@ -41,6 +44,17 @@ public class ItemScript : MonoBehaviour
             
             // 销毁道具
             Destroy(gameObject);
+        }
+    }
+    
+    /// <summary>
+    /// 播放道具收集音效
+    /// </summary>
+    private void PlayItemCollectSound()
+    {
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayItemCollectSound();
         }
     }
     

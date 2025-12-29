@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:yousandi.cn,2023:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ef834ace0c9783458ac0fc07e1947f7, type: 3}
+  m_Name: LevelDatabase
+  m_EditorClassIdentifier: 
+  levels:
+  - {fileID: 11400000, guid: d0f2431d6d6b74143b986cf913e58d39, type: 2}
+  - {fileID: 11400000, guid: 4c3d8595996e40943b2250d1d279ac7f, type: 2}
+  - {fileID: 11400000, guid: 2a475cc5f72adf24bad7b96b882317a3, type: 2}
+  - {fileID: 11400000, guid: c31e7936e35592c458dfb922dce2b4a6, type: 2}
+  - {fileID: 11400000, guid: 7468b62321081b540ae6f486405a8eda, type: 2}
+  - {fileID: 11400000, guid: 7f4c2b69f642baf4fb087dbc9237f53e, type: 2}
+  - {fileID: 11400000, guid: 2fd25a693da9db04a997e3221125156b, type: 2}
+  - {fileID: 11400000, guid: effff94a539174544914156abe01afbf, type: 2}
+  defaultLevelTemplate: {fileID: 0}
