@@ -89,7 +89,8 @@ public class LevelManager : MonoBehaviour
         // 应用关卡设置
         ApplyLevelSettings(currentLevelData);
 
-        Debug.Log($"已加载关卡: {currentLevelData.levelName} (目标分数: {currentLevelData.targetScore})");
+        float targetTime = GetCurrentTargetTime();
+        Debug.Log($"已加载关卡: {currentLevelData.levelName} (目标时间: {targetTime:F1}秒)");
     }
 
     /// <summary>
@@ -179,15 +180,23 @@ public class LevelManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 获取当前关卡的目标分数
+    /// 获取当前关卡的目标时间（秒）
+    /// 如果LevelData中targetTime为0，则自动计算：15 + (关卡编号-1) * 5
     /// </summary>
-    public int GetCurrentTargetScore()
+    public float GetCurrentTargetTime()
     {
         if (currentLevelData != null)
         {
-            return currentLevelData.targetScore;
+            // 如果设置了目标时间，使用设置的值
+            if (currentLevelData.targetTime > 0f)
+            {
+                return currentLevelData.targetTime;
+            }
+            // 否则自动计算：第一关15秒，第二关20秒，第三关25秒...
+            return 15f + (currentLevelNumber - 1) * 5f;
         }
-        return 10; // 默认值
+        // 兜底方案：如果没有LevelData，使用关卡编号计算
+        return 15f + (currentLevelNumber - 1) * 5f;
     }
 
     /// <summary>

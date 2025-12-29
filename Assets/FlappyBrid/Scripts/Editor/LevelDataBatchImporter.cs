@@ -30,7 +30,7 @@ public class LevelDataBatchImporter : EditorWindow
     {
         { "关卡编号", "levelNumber" },
         { "关卡名称", "levelName" },
-        { "目标分数", "targetScore" },
+        { "目标时间", "targetTime" },
         { "生成率倍数", "spawnRateMultiplier" },
         { "移动速度倍数", "moveSpeedMultiplier" },
         { "高度偏移", "heightOffset" },
@@ -413,9 +413,9 @@ public class LevelDataBatchImporter : EditorWindow
                     case "levelName":
                         levelData.levelName = value;
                         break;
-                    case "targetScore":
-                        if (int.TryParse(value, out int target))
-                            levelData.targetScore = target;
+                    case "targetTime":
+                        if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out float targetTime))
+                            levelData.targetTime = targetTime;
                         break;
                     case "spawnRateMultiplier":
                         if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out float spawnRate))
@@ -754,9 +754,9 @@ public class LevelDataBatchImporter : EditorWindow
             case "levelName":
                 levelData.levelName = value;
                 break;
-            case "targetScore":
-                if (int.TryParse(value, out int target))
-                    levelData.targetScore = target;
+            case "targetTime":
+                if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out float targetTime))
+                    levelData.targetTime = targetTime;
                 break;
             case "spawnRateMultiplier":
                 if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out float spawnRate))

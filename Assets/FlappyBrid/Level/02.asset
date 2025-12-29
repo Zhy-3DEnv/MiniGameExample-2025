@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   levelNumber: 2
   levelName: "\u5173\u53612"
-  targetScore: 20
+  targetTime: 20
   backgroundColor: {r: 0.9056604, g: 0.49127805, b: 0.49127805, a: 1}
   backgroundSprite: {fileID: 0}
   backgroundMusic: {fileID: 8300000, guid: da444804228dd0e4fa5d1076266f5f37, type: 3}
@@ -44,5 +44,5 @@ MonoBehaviour:
     spawnWeight: 0
     itemName: 
     scoreColor: {r: 0.9819608, g: 0.8, b: 1, a: 0}
-  completionBonus: 2
+  completionBonus: 10
   levelDescription: "\u7B2C2\u5173"

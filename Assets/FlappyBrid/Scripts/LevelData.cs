@@ -15,8 +15,8 @@ public class LevelData : ScriptableObject
     public string levelName = "关卡1";
     
     [Header("关卡目标")]
-    [Tooltip("完成关卡所需的目标分数")]
-    public int targetScore = 10;
+    [Tooltip("完成关卡所需的目标时间（秒），如果为0则自动计算：15 + (关卡编号-1) * 5")]
+    public float targetTime = 0f;
     
     [Header("背景环境设置")]
     [Tooltip("背景颜色（如果没有背景图片）")]

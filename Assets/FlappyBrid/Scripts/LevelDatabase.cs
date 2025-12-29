@@ -55,7 +55,15 @@ public class LevelDatabase : ScriptableObject
             LevelData newLevel = CreateInstance<LevelData>();
             newLevel.levelNumber = levelNumber;
             newLevel.levelName = $"关卡{levelNumber}";
-            newLevel.targetScore = defaultLevelTemplate.targetScore + (levelNumber - 1) * 10;
+            // 如果默认模板设置了目标时间，使用它；否则自动计算：15 + (关卡编号-1) * 5
+            if (defaultLevelTemplate.targetTime > 0f)
+            {
+                newLevel.targetTime = defaultLevelTemplate.targetTime;
+            }
+            else
+            {
+                newLevel.targetTime = 15f + (levelNumber - 1) * 5f;
+            }
             newLevel.backgroundColor = defaultLevelTemplate.backgroundColor;
             newLevel.backgroundSprite = defaultLevelTemplate.backgroundSprite;
             newLevel.backgroundMusic = defaultLevelTemplate.backgroundMusic;

@@ -751,9 +751,9 @@ public class BirdScript : MonoBehaviour
             return minTrailLength;
         }
         
-        // 使用总分数 + 当前关卡分数来计算拖尾长度
-        int totalScore = logic.totalScore;
-        int currentLevelScore = logic.playerScore;
+        // 使用总金币 + 当前关卡金币来计算拖尾长度
+        int totalScore = logic.totalCoins;
+        int currentLevelScore = logic.playerCoins;
         int combinedScore = totalScore + currentLevelScore;
         
         float t = Mathf.Clamp01((float)combinedScore / maxTrailScore);
@@ -780,9 +780,9 @@ public class BirdScript : MonoBehaviour
     }
     
     /// <summary>
-    /// 根据总分数更新拖尾长度（由 logicManager 调用）
+    /// 根据总金币更新拖尾长度（由 logicManager 调用）
     /// </summary>
-    /// <param name="totalScore">总分数</param>
+    /// <param name="totalScore">总金币</param>
     public void UpdateTrailLength(int totalScore)
     {
         // 这个方法现在由 UpdateHorizontalTrail 自动处理
@@ -987,9 +987,9 @@ public class BirdScript : MonoBehaviour
     {
         if (Application.isPlaying && logic != null)
         {
-            // 运行时：使用总分数 + 当前关卡分数
-            int totalScore = logic.totalScore;
-            int currentLevelScore = logic.playerScore;
+            // 运行时：使用总金币 + 当前关卡金币
+            int totalScore = logic.totalCoins;
+            int currentLevelScore = logic.playerCoins;
             int combinedScore = totalScore + currentLevelScore;
             float t = Mathf.Clamp01((float)combinedScore / maxTrailScore);
             return Mathf.Lerp(minTrailLength, maxTrailLength, t);

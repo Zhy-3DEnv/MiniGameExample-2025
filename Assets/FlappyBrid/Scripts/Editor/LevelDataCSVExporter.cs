@@ -261,7 +261,7 @@ public class LevelDataCSVExporter : EditorWindow
             // 表头
             if (includeHeader)
             {
-                csvContent.AppendLine("关卡编号,关卡名称,目标分数,生成率倍数,移动速度倍数,高度偏移,管道通过分数,完成奖励,关卡描述,使用关卡道具设置,道具生成概率,道具X轴偏移");
+                csvContent.AppendLine("关卡编号,关卡名称,目标时间,生成率倍数,移动速度倍数,高度偏移,管道通过分数,完成奖励,关卡描述,使用关卡道具设置,道具生成概率,道具X轴偏移");
             }
             
             // 数据行
@@ -269,7 +269,7 @@ public class LevelDataCSVExporter : EditorWindow
             {
                 string line = $"{levelData.levelNumber}," +
                     $"\"{EscapeCSV(levelData.levelName)}\"," +
-                    $"{levelData.targetScore}," +
+                    $"{levelData.targetTime:F2}," +
                     $"{levelData.spawnRateMultiplier}," +
                     $"{levelData.moveSpeedMultiplier}," +
                     $"{levelData.heightOffset}," +

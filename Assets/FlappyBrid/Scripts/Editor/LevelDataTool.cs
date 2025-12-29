@@ -34,7 +34,7 @@ public class LevelDataTool : EditorWindow
     {
         { "关卡编号", "levelNumber" },
         { "关卡名称", "levelName" },
-        { "目标分数", "targetScore" },
+        { "目标时间", "targetTime" },
         { "生成率倍数", "spawnRateMultiplier" },
         { "移动速度倍数", "moveSpeedMultiplier" },
         { "高度偏移", "heightOffset" },
@@ -631,9 +631,9 @@ public class LevelDataTool : EditorWindow
             case "levelName":
                 levelData.levelName = value;
                 break;
-            case "targetScore":
-                if (int.TryParse(value, out int target))
-                    levelData.targetScore = target;
+            case "targetTime":
+                if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out float targetTime))
+                    levelData.targetTime = targetTime;
                 break;
             case "spawnRateMultiplier":
                 if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out float spawnRate))
@@ -767,7 +767,7 @@ public class LevelDataTool : EditorWindow
             // 表头
             if (includeHeader)
             {
-                csvContent.AppendLine("关卡编号,关卡名称,目标分数,生成率倍数,移动速度倍数,高度偏移,管道通过分数,完成奖励,关卡描述,使用关卡道具设置,道具生成概率,道具X轴偏移");
+                csvContent.AppendLine("关卡编号,关卡名称,目标时间,生成率倍数,移动速度倍数,高度偏移,管道通过分数,完成奖励,关卡描述,使用关卡道具设置,道具生成概率,道具X轴偏移");
             }
             
             // 数据行
@@ -775,7 +775,7 @@ public class LevelDataTool : EditorWindow
             {
                 string line = $"{levelData.levelNumber}," +
                     $"\"{EscapeCSV(levelData.levelName)}\"," +
-                    $"{levelData.targetScore}," +
+                    $"{levelData.targetTime:F2}," +
                     $"{levelData.spawnRateMultiplier}," +
                     $"{levelData.moveSpeedMultiplier}," +
                     $"{levelData.heightOffset}," +

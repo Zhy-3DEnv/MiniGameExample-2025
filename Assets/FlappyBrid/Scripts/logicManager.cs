@@ -7,20 +7,30 @@ using UnityEngine.SceneManagement;
 public class logicManager : MonoBehaviour
 {
     [Header("游戏数据")]
-    [Tooltip("当前关卡分数")]
-    public int playerScore;
-    [Tooltip("总分数（累计所有关卡的分数）")]
-    public int totalScore = 0;
+    [Tooltip("当前关卡金币（当前关卡获得的金币）")]
+    public int playerCoins = 0;
+    [Tooltip("总金币（累计所有关卡的金币）")]
+    public int totalCoins = 0;
+    
+    [Header("时间系统")]
+    [Tooltip("当前关卡已用时间（秒）")]
+    private float currentLevelTime = 0f;
+    [Tooltip("是否正在计时")]
+    private bool isTiming = false;
+    
+    [Header("金币显示")]
+    [Tooltip("当前关卡获得的金币（不包括完成奖励，用于显示）")]
+    private int currentLevelCoinsForDisplay = 0;
 
     [Header("游戏HUD（游戏进行中显示的UI）")]
-    [Tooltip("游戏HUD面板（包含关卡信息和分数信息，游戏进行中显示）")]
+    [Tooltip("游戏HUD面板（包含关卡信息和时间信息，游戏进行中显示）")]
     public GameObject gameHUD;
     [Tooltip("显示当前关卡的文本（位于HUD顶部）")]
     public Text levelText;
-    [Tooltip("显示分数的文本（格式：x/n，位于HUD顶部）")]
-    public Text scoreTex;
-    [Tooltip("显示总分数的文本（位于HUD顶部）")]
-    public Text totalScoreText;
+    [Tooltip("显示时间的文本（格式：x/n秒，位于HUD顶部）")]
+    public Text scoreTex;  // 保留原名，但用于显示时间
+    [Tooltip("显示总金币的文本（位于HUD顶部）")]
+    public Text totalScoreText;  // 保留原名，但用于显示金币
 
     [Header("UI界面")]
     [Tooltip("游戏结束界面")]
@@ -103,12 +113,14 @@ public class logicManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 重置游戏数据（只重置当前关卡分数，不重置关卡）
+    /// 重置游戏数据（只重置当前关卡金币和时间，不重置关卡）
     /// </summary>
     private void ResetGame()
     {
-        playerScore = 0;
-        // 注意：totalScore 不在这里重置，只在重新开始游戏或死亡时重置
+        playerCoins = 0;
+        currentLevelTime = 0f;
+        isTiming = false;
+        // 注意：totalCoins 不在这里重置，只在重新开始游戏或死亡时重置
         // 注意：关卡不在这里重置，保持当前关卡
         if (levelManager != null)
         {
@@ -118,7 +130,7 @@ public class logicManager : MonoBehaviour
         {
             currentLevel = 1;
         }
-        UpdateScoreDisplay();
+        UpdateTimeDisplay();
         UpdateLevelDisplay();
     }
     
@@ -169,8 +181,8 @@ public class logicManager : MonoBehaviour
         {
             case GameState.Menu:
                 ShowStartMenu();
-                // 返回菜单时重置总分数和关卡
-                totalScore = 0;
+                // 返回菜单时重置总金币和关卡
+                totalCoins = 0;
                 ResetToFirstLevel();
                 break;
             case GameState.Playing:
@@ -178,19 +190,23 @@ public class logicManager : MonoBehaviour
                 ResetGame();
                 ResetBird();
                 ResumeAllPipes();
+                // 开始计时
+                StartTiming();
                 // 更新拖尾长度（确保拖尾显示正确）
                 UpdateBirdTrail();
                 break;
             case GameState.LevelComplete:
+                StopTiming();  // 停止计时
                 ShowLevelComplete();
                 StopAllPipes();
                 break;
             case GameState.GameOver:
+                StopTiming();  // 停止计时
                 ShowGameOver();
                 StopAllPipes();
-                // 死亡后重置关卡到第1关，重置总分数
+                // 死亡后重置关卡到第1关，重置总金币
                 ResetToFirstLevel();
-                totalScore = 0;
+                totalCoins = 0;
                 break;
         }
     }
@@ -222,6 +238,10 @@ public class logicManager : MonoBehaviour
     /// </summary>
     private void ShowLevelComplete()
     {
+        // 在显示结算画面之前，先累加当前关卡的金币到总金币
+        // 这样结算画面就能显示正确的总金币数
+        AddCurrentLevelCoinsToTotal();
+        
         // 隐藏其他界面
         if (startMenuScene != null) startMenuScene.SetActive(false);
         if (gameOverScene != null) gameOverScene.SetActive(false);
@@ -238,6 +258,30 @@ public class logicManager : MonoBehaviour
 
         // 启动协程：延迟显示第二阶段（结果界面）
         levelCompleteCoroutine = StartCoroutine(ShowResultScreenAfterDelay());
+    }
+    
+    /// <summary>
+    /// 将当前关卡金币累加到总金币（包括完成奖励）
+    /// </summary>
+    private void AddCurrentLevelCoinsToTotal()
+    {
+        // 1. 保存当前关卡获得的金币（不包括完成奖励，用于显示）
+        currentLevelCoinsForDisplay = playerCoins;
+        
+        // 2. 先添加完成奖励到当前关卡金币
+        int bonus = 0;
+        if (levelManager != null)
+        {
+            LevelData levelData = levelManager.GetCurrentLevelData();
+            if (levelData != null && levelData.completionBonus > 0)
+            {
+                bonus = levelData.completionBonus;
+                playerCoins += bonus;
+            }
+        }
+        
+        // 3. 将当前关卡金币累加到总金币（包括完成奖励）
+        totalCoins += playerCoins;
     }
 
     /// <summary>
@@ -289,6 +333,10 @@ public class logicManager : MonoBehaviour
         // 更新结果信息文本
         UpdateResultInfoText();
         
+        // 持续更新结果信息文本，确保总金币实时显示
+        // 启动一个协程来持续更新（直到状态改变）
+        StartCoroutine(UpdateResultInfoContinuously());
+        
         levelCompleteCoroutine = null;  // 清除协程引用
     }
 
@@ -299,14 +347,6 @@ public class logicManager : MonoBehaviour
     {
         if (levelCompleteResultText != null)
         {
-            // 自动生成关卡名：关卡 + 关卡编号
-            int levelNumber = currentLevel;
-            if (levelManager != null)
-            {
-                levelNumber = levelManager.GetCurrentLevelNumber();
-            }
-            string levelName = $"关卡 {levelNumber}";
-
             // 获取关卡数据
             LevelData levelData = null;
             if (levelManager != null)
@@ -314,16 +354,40 @@ public class logicManager : MonoBehaviour
                 levelData = levelManager.GetCurrentLevelData();
             }
 
-            int targetScore = levelData != null ? levelData.targetScore : 10;
             int bonus = levelData != null ? levelData.completionBonus : 0;
 
-            string text = $"{levelName} 完成！\n目标分数: {targetScore}\n获得分数: {playerScore}";
+            string text = "";
+            
+            // 显示获得金币（当前关卡获得的金币，不包括完成奖励）
+            if (currentLevelCoinsForDisplay > 0)
+            {
+                text += $"获得金币：+{currentLevelCoinsForDisplay} 金币";
+            }
+            
+            // 显示通关奖励
             if (bonus > 0)
             {
-                text += $"\n完成奖励: +{bonus}";
+                if (text.Length > 0) text += "\n";
+                text += $"通关奖励：+{bonus} 金币";
             }
+            
+            // 显示当前拥有的总金币（持续显示）
+            if (text.Length > 0) text += "\n";
+            text += $"当前金币：{totalCoins}";
 
             levelCompleteResultText.text = text;
+        }
+    }
+    
+    /// <summary>
+    /// 持续更新结果信息文本（确保总金币实时显示）
+    /// </summary>
+    private System.Collections.IEnumerator UpdateResultInfoContinuously()
+    {
+        while (gameStateManager != null && gameStateManager.CurrentState == GameState.LevelComplete)
+        {
+            UpdateResultInfoText();
+            yield return new WaitForSecondsRealtime(0.1f);  // 每0.1秒更新一次
         }
     }
 
@@ -338,51 +402,92 @@ public class logicManager : MonoBehaviour
         if (gameHUD != null) gameHUD.SetActive(false);  // 游戏结束时隐藏HUD
     }
 
-    [ContextMenu("Increase Score")]
-    public void addScore(int scoreToAdd)//增加分数的代码块
+    [ContextMenu("Add Coins")]
+    public void addCoins(int coinsToAdd)//增加金币的代码块
     {
         if (!gameStateManager.IsPlaying()) return;
 
-        playerScore = playerScore + scoreToAdd;
-        UpdateScoreDisplay();
+        playerCoins = playerCoins + coinsToAdd;
+        UpdateTimeDisplay();
 
-        // 检查是否完成关卡
-        CheckLevelComplete();
+        // 注意：不再通过分数检查关卡完成，改为通过时间检查
+    }
+    
+    /// <summary>
+    /// 增加金币（保留旧方法名以兼容现有代码）
+    /// </summary>
+    [System.Obsolete("请使用 addCoins 方法")]
+    public void addScore(int scoreToAdd)
+    {
+        addCoins(scoreToAdd);
     }
 
     /// <summary>
-    /// 更新分数显示（格式：x/n）
+    /// 更新时间显示（格式：x/n，取整）
     /// </summary>
-    private void UpdateScoreDisplay()
+    private void UpdateTimeDisplay()
     {
         if (scoreTex != null)
         {
-            int targetScore = GetCurrentLevelTargetScore();
-            scoreTex.text = $"{playerScore}/{targetScore}";
+            float targetTime = GetCurrentLevelTargetTime();
+            // 显示已用时间/目标时间，取整
+            int currentTimeInt = Mathf.FloorToInt(currentLevelTime);
+            int targetTimeInt = Mathf.FloorToInt(targetTime);
+            scoreTex.text = $"{currentTimeInt}/{targetTimeInt}";
         }
 
-        // 更新总分数显示
+        // 更新当前关卡金币显示
         if (totalScoreText != null)
         {
-            totalScoreText.text = $"总分: {totalScore}";
+            totalScoreText.text = $"金币: {playerCoins}";
         }
 
         // 更新关卡显示
         UpdateLevelDisplay();
 
-        // 通知小鸟更新拖尾长度
+        // 通知小鸟更新拖尾长度（使用总金币）
         UpdateBirdTrail();
+    }
+    
+    /// <summary>
+    /// 开始计时
+    /// </summary>
+    private void StartTiming()
+    {
+        isTiming = true;
+        currentLevelTime = 0f;
+    }
+    
+    /// <summary>
+    /// 停止计时
+    /// </summary>
+    private void StopTiming()
+    {
+        isTiming = false;
+    }
+    
+    void Update()
+    {
+        // 如果正在游戏中且正在计时，更新时间
+        if (isTiming && gameStateManager != null && gameStateManager.IsPlaying())
+        {
+            currentLevelTime += Time.deltaTime;
+            UpdateTimeDisplay();
+            
+            // 检查是否完成关卡（达到目标时间）
+            CheckLevelComplete();
+        }
     }
 
     /// <summary>
-    /// 通知小鸟更新拖尾长度
+    /// 通知小鸟更新拖尾长度（使用总金币）
     /// </summary>
     private void UpdateBirdTrail()
     {
         BirdScript bird = FindObjectOfType<BirdScript>();
         if (bird != null)
         {
-            bird.UpdateTrailLength(totalScore);
+            bird.UpdateTrailLength(totalCoins);
         }
     }
 
@@ -404,28 +509,28 @@ public class logicManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 检查是否完成关卡
+    /// 检查是否完成关卡（达到目标时间）
     /// </summary>
     private void CheckLevelComplete()
     {
-        int targetScore = GetCurrentLevelTargetScore();
-        if (playerScore >= targetScore)
+        float targetTime = GetCurrentLevelTargetTime();
+        if (currentLevelTime >= targetTime)
         {
             CompleteLevel();
         }
     }
 
     /// <summary>
-    /// 获取当前关卡的目标分数
+    /// 获取当前关卡的目标时间（秒）
     /// </summary>
-    private int GetCurrentLevelTargetScore()
+    private float GetCurrentLevelTargetTime()
     {
         if (levelManager != null)
         {
-            return levelManager.GetCurrentTargetScore();
+            return levelManager.GetCurrentTargetTime();
         }
         // 兜底方案：如果没有LevelManager，使用简单的计算
-        return 10 + (currentLevel - 1) * 10;
+        return 15f + (currentLevel - 1) * 5f;
     }
 
     /// <summary>
@@ -466,20 +571,10 @@ public class logicManager : MonoBehaviour
         // 1. 清理所有现有的管道和道具（重要：防止残留物体导致立即碰撞）
         ClearAllPipesAndItems();
 
-        // 2. 添加完成奖励（在累加分数之前）
-        if (levelManager != null)
-        {
-            LevelData levelData = levelManager.GetCurrentLevelData();
-            if (levelData != null && levelData.completionBonus > 0)
-            {
-                playerScore += levelData.completionBonus;
-            }
-        }
+        // 注意：金币已经在 ShowLevelComplete() 时累加到 totalCoins 了
+        // 这里只需要重置当前关卡的金币即可
 
-        // 3. 将当前关卡分数累加到总分数（在重置当前关卡分数之前）
-        totalScore += playerScore;
-
-        // 4. 更新关卡信息
+        // 2. 更新关卡信息
         if (levelManager != null)
         {
             levelManager.NextLevel();
@@ -490,16 +585,18 @@ public class logicManager : MonoBehaviour
             currentLevel++;
         }
 
-        // 5. 重置当前关卡分数（总分数已累加，现在重置当前关卡分数）
-        playerScore = 0;
+        // 3. 重置当前关卡金币和时间（总金币已在关卡完成时累加）
+        playerCoins = 0;
+        currentLevelCoinsForDisplay = 0;  // 重置显示用的金币
+        currentLevelTime = 0f;
 
-        // 6. 重置管道生成器计时器
+        // 4. 重置管道生成器计时器
         ResetPipeSpawner();
 
-        // 7. 更新分数显示（包括总分数）
-        UpdateScoreDisplay();
+        // 5. 更新时间显示（包括总金币）
+        UpdateTimeDisplay();
 
-        // 8. 开始新关卡（这会触发OnGameStateChanged，重置小鸟和恢复管道生成）
+        // 6. 开始新关卡（这会触发OnGameStateChanged，重置小鸟和恢复管道生成）
         gameStateManager.StartGame();
     }
 
