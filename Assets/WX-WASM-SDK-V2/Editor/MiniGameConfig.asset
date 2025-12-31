@@ -15,14 +15,14 @@ MonoBehaviour:
   ProjectConf:
     projectName: "\u6C64\u5706\u7684\u5947\u5E7B\u5192\u9669"
     Appid: wxbab5e2baf682cf0e
-    CDN: 
-    assetLoadType: 1
+    CDN: https://a.unity.cn/client_api/v1/buckets/3db10f75-da0e-45ae-aedf-c8a89d47ad45/release_by_badge/FlappyBirdV1/content
+    assetLoadType: 0
     compressDataPackage: 1
     VideoUrl: 
     DST: D:/Project/MiniGameExample/Builds/WX
     StreamCDN: 
     bundleHashLength: 32
-    bundlePathIdentifier: StreamingAssets;
+    bundlePathIdentifier: StreamingAssets;AS;CUS/CustomAB
     bundleExcludeExtensions: json;
     AssetsUrl: 
     MemorySize: 256
@@ -30,7 +30,7 @@ MonoBehaviour:
     preloadFiles: 
     Orientation: 1
     bgImageSrc: Assets/WX-WASM-SDK-V2/Runtime/wechat-default/images/background.jpg
-    dataFileSubPrefix: 
+    dataFileSubPrefix: CUS
     maxStorage: 200
     defaultReleaseSize: 31457280
     texturesHashLength: 8
@@ -46,7 +46,7 @@ MonoBehaviour:
     UseMiniGameChat: 0
     PreloadWXFont: 0
   CompileOptions:
-    DevelopBuild: 1
+    DevelopBuild: 0
     AutoProfile: 0
     ScriptOnly: 0
     Il2CppOptimizeSize: 1

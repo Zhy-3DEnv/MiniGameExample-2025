@@ -2,6 +2,16 @@ using UnityEngine;
 using System.Collections.Generic;
 
 /// <summary>
+/// 金币产出控制曲线类型
+/// </summary>
+public enum CoinControlCurveType
+{
+    Linear,   // 线性衰减
+    Smooth,   // 平滑衰减（使用平滑曲线）
+    Fast      // 快速衰减
+}
+
+/// <summary>
 /// 单个关卡的数据配置
 /// </summary>
 [CreateAssetMenu(fileName = "NewLevel", menuName = "FlappyBird/Level Data", order = 1)]
@@ -61,6 +71,20 @@ public class LevelData : ScriptableObject
     [Header("关卡奖励")]
     [Tooltip("完成关卡后获得的额外分数")]
     public int completionBonus = 0;
+    
+    [Header("金币产出控制")]
+    [Tooltip("关卡金币产出下限（玩家至少能获得的金币数量）\n只统计道具和怪物掉落的金币，不包括管道通过分数")]
+    public int minCoins = 10;
+    
+    [Tooltip("关卡金币产出上限（玩家最多能获得的金币数量）\n只统计道具和怪物掉落的金币，不包括管道通过分数\n当接近上限时，道具和怪物的生成概率会逐渐降低")]
+    public int maxCoins = 50;
+    
+    [Tooltip("开始控制产出的比例（0-1之间）\n例如：0.7 表示当产出达到上限的70%时开始降低生成概率\n0.5 表示达到上限的50%时开始控制\n1.0 表示达到上限时才完全停止生成")]
+    [Range(0f, 1f)]
+    public float coinControlStartRatio = 0.7f;
+    
+    [Tooltip("产出控制曲线类型\nLinear: 线性衰减（均匀降低）\nSmooth: 平滑衰减（开始慢，接近上限时快速降低）\nFast: 快速衰减（开始快速降低）")]
+    public CoinControlCurveType coinControlCurve = CoinControlCurveType.Smooth;
     
     [Header("怪物生成设置")]
     [Tooltip("是否使用关卡的怪物生成设置（如果为false，则使用PipeSpawner的默认设置）")]

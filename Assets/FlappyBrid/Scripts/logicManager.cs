@@ -12,6 +12,9 @@ public class logicManager : MonoBehaviour
     [Tooltip("总金币（累计所有关卡的金币）")]
     public int totalCoins = 0;
     
+    [Tooltip("当前关卡已产出的金币（只统计道具和怪物，用于产出控制）")]
+    private int currentLevelCoinsEarned = 0;
+    
     [Header("时间系统")]
     [Tooltip("当前关卡已用时间（秒）")]
     private float currentLevelTime = 0f;
@@ -32,17 +35,13 @@ public class logicManager : MonoBehaviour
     [Tooltip("显示总金币的文本（位于HUD顶部）")]
     public Text totalCoinsText;  // 显示总金币
     
-    [Header("小鸟属性显示（HUD）")]
-    [Tooltip("显示小鸟血量的文本（格式：HP: x/y）")]
-    public Text birdHPText;
-    [Tooltip("显示子弹伤害的文本")]
-    public Text bulletDamageText;
-    [Tooltip("显示子弹数量的文本")]
-    public Text bulletCountText;
-    [Tooltip("显示发射速度的文本（显示发射间隔，越小越快）")]
-    public Text fireSpeedText;
-    [Tooltip("显示攻击范围的文本")]
-    public Text attackRangeText;
+    [Header("小鸟属性显示面板（预制体）")]
+    [Tooltip("属性显示面板预制体（可在HUD、商店等场景中实例化）")]
+    public GameObject attributesPanelPrefab;
+    
+    [Header("已实例化的属性显示面板列表")]
+    [Tooltip("所有已实例化的属性显示面板（自动管理，也可手动添加）")]
+    public List<BirdAttributesDisplayPanel> attributesPanels = new List<BirdAttributesDisplayPanel>();
 
     [Header("UI界面")]
     [Tooltip("游戏结束界面")]
@@ -138,6 +137,7 @@ public class logicManager : MonoBehaviour
     private void ResetGame()
     {
         playerCoins = 0;
+        currentLevelCoinsEarned = 0; // 重置产出跟踪
         currentLevelTime = 0f;
         isTiming = false;
         // 注意：totalCoins 不在这里重置，只在重新开始游戏或死亡时重置
@@ -384,6 +384,7 @@ public class logicManager : MonoBehaviour
         {
             upgradePanel.SetActive(true);
             RefreshUpgradeButtons();
+            UpdateBirdAttributesDisplay(); // 更新属性显示
         }
     }
     
@@ -505,47 +506,45 @@ public class logicManager : MonoBehaviour
         {
             totalCoins = coins;
             UpdateTimeDisplay(); // 更新显示
-            UpdateBirdAttributesDisplay(); // 更新小鸟属性显示
+            UpdateBirdAttributesDisplay(); // 更新属性显示
             RefreshUpgradeButtons(); // 刷新按钮
         }
     }
     
     /// <summary>
-    /// 更新小鸟属性显示（在HUD上显示）
+    /// 更新所有属性显示面板
     /// </summary>
     public void UpdateBirdAttributesDisplay()
     {
-        BirdScript bird = FindObjectOfType<BirdScript>();
-        if (bird == null) return;
-        
-        // 更新血量显示
-        if (birdHPText != null)
+        // 更新所有已注册的属性显示面板
+        foreach (var panel in attributesPanels)
         {
-            birdHPText.text = $"血量: {bird.GetCurrentHP()}/{bird.GetMaxHP()}";
+            if (panel != null)
+            {
+                panel.UpdateAttributes();
+            }
         }
-        
-        // 更新子弹伤害显示
-        if (bulletDamageText != null)
+    }
+    
+    /// <summary>
+    /// 注册属性显示面板（由面板在 Awake 时自动调用）
+    /// </summary>
+    public void RegisterAttributesPanel(BirdAttributesDisplayPanel panel)
+    {
+        if (panel != null && !attributesPanels.Contains(panel))
         {
-            bulletDamageText.text = $"伤害: {bird.bulletDamage}";
+            attributesPanels.Add(panel);
         }
-        
-        // 更新子弹数量显示
-        if (bulletCountText != null)
+    }
+    
+    /// <summary>
+    /// 注销属性显示面板（由面板在 OnDestroy 时自动调用）
+    /// </summary>
+    public void UnregisterAttributesPanel(BirdAttributesDisplayPanel panel)
+    {
+        if (panel != null)
         {
-            bulletCountText.text = $"子弹数: {bird.bulletCount}";
-        }
-        
-        // 更新发射速度显示（显示发射间隔，越小越快）
-        if (fireSpeedText != null)
-        {
-            fireSpeedText.text = $"发射间隔: {bird.fireInterval:F2}s";
-        }
-        
-        // 更新攻击范围显示
-        if (attackRangeText != null)
-        {
-            attackRangeText.text = $"攻击范围: {bird.attackRange:F1}";
+            attributesPanels.Remove(panel);
         }
     }
     
@@ -614,11 +613,27 @@ public class logicManager : MonoBehaviour
     [ContextMenu("Add Coins")]
     public void addCoins(int coinsToAdd)//增加金币的代码块
     {
+        addCoins(coinsToAdd, false); // 默认不计入产出控制（兼容旧代码，管道通过分数等）
+    }
+    
+    /// <summary>
+    /// 增加金币（带产出控制标识）
+    /// </summary>
+    /// <param name="coinsToAdd">要增加的金币数量</param>
+    /// <param name="countForCoinControl">是否计入产出控制（true=道具/怪物掉落，false=管道通过等）</param>
+    public void addCoins(int coinsToAdd, bool countForCoinControl)
+    {
         if (!gameStateManager.IsPlaying()) return;
 
         // 同时更新当前关卡金币和总金币（实时累加）
         playerCoins = playerCoins + coinsToAdd;
         totalCoins = totalCoins + coinsToAdd;
+        
+        // 如果计入产出控制，更新已产出金币
+        if (countForCoinControl)
+        {
+            currentLevelCoinsEarned += coinsToAdd;
+        }
         
         // 立即更新显示
         UpdateTimeDisplay();
@@ -632,7 +647,76 @@ public class logicManager : MonoBehaviour
     [System.Obsolete("请使用 addCoins 方法")]
     public void addScore(int scoreToAdd)
     {
-        addCoins(scoreToAdd);
+        addCoins(scoreToAdd, false);
+    }
+    
+    /// <summary>
+    /// 获取当前产出控制调整系数（0-1之间）
+    /// 用于调整道具和怪物的生成概率
+    /// </summary>
+    /// <returns>调整系数，1.0表示不限制，0.0表示完全停止生成</returns>
+    public float GetCoinControlMultiplier()
+    {
+        if (levelManager == null) return 1f;
+        
+        LevelData levelData = levelManager.GetCurrentLevelData();
+        if (levelData == null) return 1f;
+        
+        // 如果未设置上限或下限无效，不进行控制
+        if (levelData.maxCoins <= 0 || levelData.maxCoins <= levelData.minCoins)
+        {
+            return 1f;
+        }
+        
+        // 计算当前产出比例（相对于产出范围）
+        int coinRange = levelData.maxCoins - levelData.minCoins;
+        if (coinRange <= 0) return 1f;
+        
+        int coinsInRange = currentLevelCoinsEarned - levelData.minCoins;
+        float progressRatio = (float)coinsInRange / coinRange;
+        
+        // 如果还未达到开始控制的阈值，不限制
+        if (progressRatio < levelData.coinControlStartRatio)
+        {
+            return 1f;
+        }
+        
+        // 计算控制范围内的进度（0-1）
+        float controlProgress = (progressRatio - levelData.coinControlStartRatio) / (1f - levelData.coinControlStartRatio);
+        controlProgress = Mathf.Clamp01(controlProgress);
+        
+        // 根据曲线类型计算调整系数
+        float multiplier = 1f;
+        switch (levelData.coinControlCurve)
+        {
+            case CoinControlCurveType.Linear:
+                // 线性衰减：从1线性降到0
+                multiplier = 1f - controlProgress;
+                break;
+                
+            case CoinControlCurveType.Smooth:
+                // 平滑衰减：使用平滑曲线（SmoothStep）
+                multiplier = 1f - Mathf.SmoothStep(0f, 1f, controlProgress);
+                break;
+                
+            case CoinControlCurveType.Fast:
+                // 快速衰减：使用平方曲线
+                multiplier = 1f - (controlProgress * controlProgress);
+                break;
+        }
+        
+        // 确保系数在0-1之间
+        multiplier = Mathf.Clamp01(multiplier);
+        
+        return multiplier;
+    }
+    
+    /// <summary>
+    /// 获取当前关卡已产出的金币（用于调试）
+    /// </summary>
+    public int GetCurrentLevelCoinsEarned()
+    {
+        return currentLevelCoinsEarned;
     }
 
     /// <summary>
@@ -807,6 +891,7 @@ public class logicManager : MonoBehaviour
 
         // 4. 重置当前关卡金币和时间（总金币已在关卡完成时累加）
         playerCoins = 0;
+        currentLevelCoinsEarned = 0; // 重置产出跟踪
         currentLevelCoinsForDisplay = 0;  // 重置显示用的金币
         currentLevelTime = 0f;
 
@@ -821,7 +906,7 @@ public class logicManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 清理所有管道和道具
+    /// 清理所有管道、道具和怪物
     /// </summary>
     private void ClearAllPipesAndItems()
     {
@@ -844,8 +929,28 @@ public class logicManager : MonoBehaviour
                 Destroy(item.gameObject);
             }
         }
+        
+        // 清理所有怪物
+        MonsterScript[] monsters = FindObjectsOfType<MonsterScript>();
+        foreach (var monster in monsters)
+        {
+            if (monster != null && monster.gameObject != null)
+            {
+                Destroy(monster.gameObject);
+            }
+        }
+        
+        // 清理所有子弹（可选，防止残留子弹）
+        BulletScript[] bullets = FindObjectsOfType<BulletScript>();
+        foreach (var bullet in bullets)
+        {
+            if (bullet != null && bullet.gameObject != null)
+            {
+                Destroy(bullet.gameObject);
+            }
+        }
 
-        Debug.Log("LogicManager: 已清理所有管道和道具");
+        Debug.Log("LogicManager: 已清理所有管道、道具、怪物和子弹");
     }
 
     /// <summary>
@@ -872,7 +977,42 @@ public class logicManager : MonoBehaviour
     /// </summary>
     public void restartGame()
     {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        // 1. 清理所有游戏对象（管道、道具、怪物、子弹）
+        ClearAllPipesAndItems();
+        
+        // 2. 重置游戏数据
+        totalCoins = 0;
+        playerCoins = 0;
+        currentLevelCoinsEarned = 0;
+        currentLevelCoinsForDisplay = 0;
+        currentLevelTime = 0f;
+        isTiming = false;
+        
+        // 3. 重置关卡到第一关
+        ResetToFirstLevel();
+        
+        // 4. 重置小鸟升级（清除所有升级）
+        if (BirdUpgradeManager.Instance != null)
+        {
+            BirdUpgradeManager.Instance.ResetAllUpgrades();
+        }
+        
+        // 5. 重置管道生成器
+        ResetPipeSpawner();
+        
+        // 6. 更新显示
+        UpdateTimeDisplay();
+        UpdateLevelDisplay();
+        
+        // 7. 重置小鸟状态
+        ResetBird();
+        
+        // 8. 开始新游戏（这会触发OnGameStateChanged，显示菜单或直接开始游戏）
+        gameStateManager.ReturnToMenu();
+        
+        // 9. 立即开始游戏（从菜单状态直接开始）
+        // 如果需要先显示菜单，可以注释掉下面这行
+        gameStateManager.StartGame();
     }
 
     /// <summary>

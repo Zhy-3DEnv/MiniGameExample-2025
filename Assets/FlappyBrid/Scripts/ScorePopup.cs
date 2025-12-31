@@ -177,7 +177,27 @@ public class ScorePopup : MonoBehaviour
     {
         if (scoreText != null)
         {
-            scoreText.text = "+" + score.ToString();
+            // 如果分数为正数，显示 +；如果为负数，显示 -（负数本身已经带负号）
+            if (score > 0)
+            {
+                scoreText.text = "+" + score.ToString();
+            }
+            else
+            {
+                scoreText.text = score.ToString(); // 负数已经包含负号，如 -1, -2
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 设置显示的伤害值（负数）
+    /// </summary>
+    public void SetDamage(int damage)
+    {
+        if (scoreText != null)
+        {
+            // 伤害值始终显示为负数
+            scoreText.text = "-" + Mathf.Abs(damage).ToString();
         }
     }
     

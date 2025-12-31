@@ -20,7 +20,7 @@ MonoBehaviour:
   backgroundMusic: {fileID: 8300000, guid: da444804228dd0e4fa5d1076266f5f37, type: 3}
   spawnRateMultiplier: 0.5
   moveSpeedMultiplier: 0.5
-  heightOffset: 2
+  heightOffset: 1
   pipePassScore: 1
   useLevelItemSettings: 1
   itemSpawnChance: 0.1
@@ -45,6 +45,10 @@ MonoBehaviour:
     itemName: 
     scoreColor: {r: 0.9819608, g: 0.8, b: 1, a: 0}
   completionBonus: 5
+  minCoins: 10
+  maxCoins: 20
+  coinControlStartRatio: 0.7
+  coinControlCurve: 1
   useLevelMonsterSettings: 1
   monsterSpawnChance: 0
   monsterSpawnOffsetX: 0

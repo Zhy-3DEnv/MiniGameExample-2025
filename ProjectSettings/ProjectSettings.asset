@@ -93,13 +93,13 @@ PlayerSettings:
   hideHomeButton: 0
   submitAnalytics: 1
   usePlayerLog: 1
-  autoStreaming: 0
+  autoStreaming: 1
   useFontStreaming: 0
   cacheASTextureAB: 0
   maxCacheSize: 0
   maxConcurrentLoad: 0
-  autoStreamingId: 
-  instantGameAppId: 
+  autoStreamingId: /v1/buckets/3db10f75-da0e-45ae-aedf-c8a89d47ad45/release_by_badge/FlappyBirdV1/content
+  instantGameAppId: d2482446-49ee-4f4d-9125-062163345228
   dedicatedServerOptimizations: 0
   bakeCollisionMeshes: 0
   forceSingleInstance: 0
@@ -842,7 +842,14 @@ PlayerSettings:
   webGLMemoryGeometricGrowthCap: 96
   webGLPowerPreference: 2
   scriptingDefineSymbols:
-    WeixinMiniGame: UEE
+    Android: UNITY_UOS_SECURITY
+    HMIAndroid: UNITY_UOS_SECURITY
+    OpenHarmony: UNITY_UOS_SECURITY
+    Server: UNITY_UOS_SECURITY
+    Standalone: UNITY_UOS_SECURITY
+    WebGL: UNITY_UOS_SECURITY
+    WeixinMiniGame: UEE;UNITY_UOS_SECURITY
+    iPhone: UNITY_UOS_SECURITY
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend: {}

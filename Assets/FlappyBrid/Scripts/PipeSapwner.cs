@@ -19,6 +19,9 @@ public class PipeSpawner : MonoBehaviour
     [Tooltip("基础高度偏移（管道生成位置的Y轴随机范围）")]
     public float baseHeightOffset = 10f;
     
+    [Tooltip("生成位置偏移（从屏幕右边界向外偏移的距离，确保管道从屏幕外生成）")]
+    public float spawnOffsetX = 2f;
+    
     [Header("道具生成默认设置（当关卡未设置时使用）")]
     [Range(0f, 1f)]
     [Tooltip("道具生成概率（0-1之间，0.3表示30%概率生成道具）\n这是第一层概率：决定是否生成道具\n如果关卡设置了道具生成，则使用关卡设置")]
@@ -321,6 +324,28 @@ public class PipeSpawner : MonoBehaviour
     {
         timer = 0;
     }
+    /// <summary>
+    /// 获取屏幕右边界的世界坐标
+    /// </summary>
+    private float GetScreenRightBound()
+    {
+        Camera mainCamera = Camera.main;
+        if (mainCamera == null)
+        {
+            mainCamera = FindObjectOfType<Camera>();
+        }
+        
+        if (mainCamera != null)
+        {
+            // 获取屏幕右上角的世界坐标
+            Vector3 screenRightTop = mainCamera.ScreenToWorldPoint(new Vector3(Screen.width, Screen.height / 2, mainCamera.nearClipPlane));
+            return screenRightTop.x;
+        }
+        
+        // 如果没有找到相机，使用默认值或 PipeSpawner 的位置
+        return transform.position.x;
+    }
+    
     void spawnPipe()//instance方式生成管道，void是执行逻辑，不需要返回结果
     {
         // 计算管道生成位置的Y坐标范围
@@ -333,8 +358,12 @@ public class PipeSpawner : MonoBehaviour
         // 生成随机Y坐标（在范围内）
         float pipeY = Random.Range(lowestPoint, highestPoint);
         
+        // 获取屏幕右边界的世界坐标，并添加偏移，确保管道从屏幕外生成
+        float screenRightBound = GetScreenRightBound();
+        float spawnX = screenRightBound + spawnOffsetX;
+        
         // 调试信息（每次生成都输出，方便排查问题）
-        Debug.Log($"PipeSpawner: 生成管道 - 中心Y={centerY:F2}, heightoffset={heightoffset:F2}, 范围=[{lowestPoint:F2}, {highestPoint:F2}], 生成Y={pipeY:F2}");
+        Debug.Log($"PipeSpawner: 生成管道 - 中心Y={centerY:F2}, heightoffset={heightoffset:F2}, 范围=[{lowestPoint:F2}, {highestPoint:F2}], 生成Y={pipeY:F2}, 屏幕右边界={screenRightBound:F2}, 生成X={spawnX:F2}");
         
         // 验证生成的Y坐标是否在范围内（安全检查）
         if (pipeY < lowestPoint || pipeY > highestPoint)
@@ -343,8 +372,8 @@ public class PipeSpawner : MonoBehaviour
             pipeY = Mathf.Clamp(pipeY, lowestPoint, highestPoint);
         }
         
-        // 生成管道
-        GameObject spawnedPipe = Instantiate(pipe, new Vector3(transform.position.x, pipeY, 0), transform.rotation);
+        // 生成管道（从屏幕右侧外生成）
+        GameObject spawnedPipe = Instantiate(pipe, new Vector3(spawnX, pipeY, 0), transform.rotation);
         
         // 验证生成的管道位置
         if (spawnedPipe != null)
@@ -362,15 +391,16 @@ public class PipeSpawner : MonoBehaviour
             }
         }
         
-        // 根据概率生成道具（使用当前设置）
-        if (currentItemTypes.Count > 0 && Random.Range(0f, 1f) < currentItemSpawnChance)
+        // 根据概率生成道具（使用当前设置，并应用产出控制）
+        float itemSpawnChanceWithControl = currentItemSpawnChance * GetCoinControlMultiplier();
+        if (currentItemTypes.Count > 0 && Random.Range(0f, 1f) < itemSpawnChanceWithControl)
         {
             // 随机选择一个道具类型（基于权重）
             ItemData selectedItem = GetRandomItemByWeight();
             if (selectedItem != null && selectedItem.itemPrefab != null)
             {
-                // 在管道中间位置生成道具（Y坐标与管道相同，X坐标稍微偏移）
-                float itemX = transform.position.x + currentItemSpawnOffsetX;
+                // 在管道中间位置生成道具（Y坐标与管道相同，X坐标相对于管道位置偏移）
+                float itemX = spawnX + currentItemSpawnOffsetX;
                 GameObject spawnedItem = Instantiate(selectedItem.itemPrefab, new Vector3(itemX, pipeY, 0), transform.rotation);
                 
                 // 设置道具的分数值和颜色
@@ -383,15 +413,16 @@ public class PipeSpawner : MonoBehaviour
             }
         }
         
-        // 根据概率生成怪物（使用当前设置）
-        if (currentMonsterTypes.Count > 0 && Random.Range(0f, 1f) < currentMonsterSpawnChance)
+        // 根据概率生成怪物（使用当前设置，并应用产出控制）
+        float monsterSpawnChanceWithControl = currentMonsterSpawnChance * GetCoinControlMultiplier();
+        if (currentMonsterTypes.Count > 0 && Random.Range(0f, 1f) < monsterSpawnChanceWithControl)
         {
             // 随机选择一个怪物类型（基于权重）
             MonsterData selectedMonster = GetRandomMonsterByWeight();
             if (selectedMonster != null && selectedMonster.monsterPrefab != null)
             {
                 // 在管道附近位置生成怪物（X和Y坐标都可以偏移）
-                float monsterX = transform.position.x + currentMonsterSpawnOffsetX;
+                float monsterX = spawnX + currentMonsterSpawnOffsetX;
                 float monsterY = pipeY + currentMonsterSpawnOffsetY;
                 GameObject spawnedMonster = Instantiate(selectedMonster.monsterPrefab, new Vector3(monsterX, monsterY, 0), transform.rotation);
                 
@@ -525,6 +556,19 @@ public class PipeSpawner : MonoBehaviour
         }
         
         return null;
+    }
+    
+    /// <summary>
+    /// 获取金币产出控制调整系数
+    /// </summary>
+    private float GetCoinControlMultiplier()
+    {
+        logicManager logic = FindObjectOfType<logicManager>();
+        if (logic != null)
+        {
+            return logic.GetCoinControlMultiplier();
+        }
+        return 1f; // 如果没有找到 logicManager，不进行控制
     }
     
     /// <summary>

@@ -36,10 +36,10 @@ public class ItemScript : MonoBehaviour
             // 显示分数弹跳效果
             ShowScorePopup();
             
-            // 加分
+            // 加分（计入产出控制）
             if (logic != null)
             {
-                logic.addScore(scoreValue);
+                logic.addCoins(scoreValue, true); // true 表示计入产出控制
             }
             
             // 销毁道具

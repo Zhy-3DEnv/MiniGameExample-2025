@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:yousandi.cn,2023:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 520704a68a1b89b438ce1d632e469e57, type: 3}
+  m_Name: 09
+  m_EditorClassIdentifier: 
+  levelNumber: 9
+  levelName: "\u5173\u53619"
+  targetTime: 55
+  backgroundColor: {r: 0, g: 1, b: 1, a: 1}
+  backgroundSprite: {fileID: 0}
+  backgroundMusic: {fileID: 0}
+  spawnRateMultiplier: 1.3
+  moveSpeedMultiplier: 0.66
+  heightOffset: 4
+  pipePassScore: 4
+  useLevelItemSettings: 1
+  itemSpawnChance: 0.4
+  itemSpawnOffsetX: 1
+  itemTypes: []
+  completionBonus: 45
+  minCoins: 160
+  maxCoins: 180
+  coinControlStartRatio: 0.7
+  coinControlCurve: 1
+  useLevelMonsterSettings: 1
+  monsterSpawnChance: 0.22
+  monsterSpawnOffsetX: 0
+  monsterSpawnOffsetY: 0
+  monsterTypes: []
+  levelDescription: "\u7B2C9\u5173"

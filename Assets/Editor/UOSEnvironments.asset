@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:yousandi.cn,2023:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e5f1c0254cc6f415396fab55e2b1a880, type: 3}
+  m_Name: UOSEnvironments
+  m_EditorClassIdentifier: 
+  environments:
+  - environmentName: FlappyBird
+    appID: d2482446-49ee-4f4d-9125-062163345228
+    appSecret: 63a4027fa55d49dd8738bd53fa24d6e2
+    appServiceSecret: 13376dcedcfe4b9a8d80ff8f635c42a5
+    roomProfileUUID: 
+    matchmakingConfigID: 
+    configPairs: []
+  selectedAppID: d2482446-49ee-4f4d-9125-062163345228

@@ -21,6 +21,10 @@ public class BirdScript : MonoBehaviour
     [SerializeField]
     private int currentHP = 1;
     
+    [Tooltip("小鸟初始最大血量（用于重置）")]
+    [SerializeField]
+    private int initialMaxHP = 1;
+    
     [Header("翅膀设置")]
     public GameObject wingUp; // 向上飞的翅膀（跳跃时显示）
     public GameObject wingDown; // 向下掉的翅膀（掉落时显示）
@@ -102,6 +106,14 @@ public class BirdScript : MonoBehaviour
     [Tooltip("是否显示攻击范围（调试用）")]
     public bool showAttackRange = false;
     
+    [Header("伤害显示设置")]
+    [Tooltip("伤害数字弹跳显示预制体（可选，如果不指定则自动查找）")]
+    public GameObject scorePopupPrefab; // 使用ScorePopup预制体显示伤害
+    [Tooltip("伤害数字显示位置偏移（相对于小鸟位置）")]
+    public Vector3 damagePopupOffset = new Vector3(0, 0.5f, 0);
+    [Tooltip("伤害数字颜色（红色）")]
+    public Color damageColor = Color.red;
+    
     [Header("调试设置")]
     [Tooltip("启用调试可视化（在Scene视图中显示拖尾预览）")]
     public bool enableDebugVisualization = false; // 默认关闭调试模式
@@ -121,6 +133,12 @@ public class BirdScript : MonoBehaviour
     private Coroutine startGameCoroutine;  // 游戏开始协程
     private Coroutine fireCoroutine;       // 发射子弹协程
     private float fireTimer = 0f;          // 发射计时器
+    
+    // 初始属性值（用于重置）
+    private int initialBulletDamage;
+    private int initialBulletCount;
+    private float initialFireInterval;
+    private float initialAttackRange;
 
     void Awake()
     {
@@ -166,6 +184,9 @@ public class BirdScript : MonoBehaviour
             initialPosition = transform.position;
         }
         
+        // 保存初始属性值（用于重置）
+        SaveInitialAttributes();
+        
         // 订阅游戏状态变化
         if (GameStateManager.Instance != null)
         {
@@ -177,6 +198,33 @@ public class BirdScript : MonoBehaviour
         
         // 初始化拖尾效果
         InitializeTrail();
+    }
+    
+    /// <summary>
+    /// 保存初始属性值
+    /// </summary>
+    private void SaveInitialAttributes()
+    {
+        initialMaxHP = maxHP;
+        initialBulletDamage = bulletDamage;
+        initialBulletCount = bulletCount;
+        initialFireInterval = fireInterval;
+        initialAttackRange = attackRange;
+    }
+    
+    /// <summary>
+    /// 重置所有属性到初始值
+    /// </summary>
+    public void ResetToInitialAttributes()
+    {
+        maxHP = initialMaxHP;
+        currentHP = initialMaxHP;
+        bulletDamage = initialBulletDamage;
+        bulletCount = initialBulletCount;
+        fireInterval = initialFireInterval;
+        attackRange = initialAttackRange;
+        
+        Debug.Log($"BirdScript: 已重置属性到初始值 - maxHP={maxHP}, bulletDamage={bulletDamage}, bulletCount={bulletCount}, fireInterval={fireInterval}, attackRange={attackRange}");
     }
     
     void OnDestroy()
@@ -254,6 +302,8 @@ public class BirdScript : MonoBehaviour
                 if (BirdUpgradeManager.Instance != null)
                 {
                     BirdUpgradeManager.Instance.ApplyAllUpgrades();
+                    // 确保属性已同步到小鸟
+                    BirdUpgradeManager.Instance.SyncAttributesToBird();
                 }
                 
                 if (trailRenderer != null)
@@ -918,13 +968,116 @@ public class BirdScript : MonoBehaviour
         if (!birdIsAlive) return;
         
         currentHP -= damage;
-        Debug.Log($"BirdScript: 小鸟受到 {damage} 点伤害，当前血量: {currentHP}/{maxHP}");
+        Debug.Log($"BirdScript: 小鸟受到 {damage} 点伤害，当前生命值: {currentHP}/{maxHP}");
+        
+        // 显示伤害数字
+        ShowDamagePopup(damage);
         
         // 检查是否死亡
         if (currentHP <= 0)
         {
             Die();
         }
+    }
+    
+    /// <summary>
+    /// 显示伤害数字弹跳效果
+    /// </summary>
+    private void ShowDamagePopup(int damage)
+    {
+        // 如果没有设置预制体，尝试从其他地方获取
+        if (scorePopupPrefab == null)
+        {
+            // 尝试从 ItemScript 获取（如果场景中有道具）
+            ItemScript itemScript = FindObjectOfType<ItemScript>();
+            if (itemScript != null && itemScript.scorePopupPrefab != null)
+            {
+                scorePopupPrefab = itemScript.scorePopupPrefab;
+            }
+            else
+            {
+                // 尝试从 MonsterScript 获取（如果场景中有怪物）
+                MonsterScript monsterScript = FindObjectOfType<MonsterScript>();
+                if (monsterScript != null && monsterScript.scorePopupPrefab != null)
+                {
+                    scorePopupPrefab = monsterScript.scorePopupPrefab;
+                }
+            }
+        }
+        
+        if (scorePopupPrefab != null)
+        {
+            // 查找Canvas（优先查找世界空间的Canvas）
+            Canvas canvas = FindCanvas();
+            if (canvas == null)
+            {
+                Debug.LogWarning("BirdScript: 未找到Canvas，伤害数字弹跳可能无法正确显示！");
+            }
+            
+            // 计算显示位置（小鸟位置 + 偏移）
+            Vector3 popupPosition = transform.position + damagePopupOffset;
+            
+            // 实例化伤害数字显示
+            GameObject popup;
+            if (canvas != null)
+            {
+                // 如果找到Canvas，将其作为父对象
+                popup = Instantiate(scorePopupPrefab, canvas.transform);
+            }
+            else
+            {
+                // 如果没有Canvas，在世界空间创建
+                popup = Instantiate(scorePopupPrefab, popupPosition, Quaternion.identity);
+            }
+            
+            // 设置伤害值
+            ScorePopup scorePopup = popup.GetComponent<ScorePopup>();
+            if (scorePopup != null)
+            {
+                scorePopup.SetDamage(damage); // 使用SetDamage方法显示负数
+                scorePopup.SetPosition(popupPosition);
+                // 设置伤害颜色（红色）
+                scorePopup.SetColor(damageColor);
+            }
+            else
+            {
+                // 如果没有ScorePopup组件，尝试直接设置Text组件
+                UnityEngine.UI.Text text = popup.GetComponent<UnityEngine.UI.Text>();
+                if (text != null)
+                {
+                    text.text = "-" + damage.ToString();
+                    text.color = damageColor;
+                }
+            }
+        }
+        else
+        {
+            Debug.LogWarning("BirdScript: 未设置ScorePopup预制体，无法显示伤害数字弹跳效果！");
+        }
+    }
+    
+    /// <summary>
+    /// 查找场景中的Canvas
+    /// </summary>
+    private Canvas FindCanvas()
+    {
+        // 优先查找世界空间的Canvas
+        Canvas[] canvases = FindObjectsOfType<Canvas>();
+        foreach (Canvas canvas in canvases)
+        {
+            if (canvas.renderMode == RenderMode.WorldSpace)
+            {
+                return canvas;
+            }
+        }
+        
+        // 如果没有世界空间的Canvas，返回第一个找到的Canvas
+        if (canvases.Length > 0)
+        {
+            return canvases[0];
+        }
+        
+        return null;
     }
     
     /// <summary>
@@ -992,6 +1145,14 @@ public class BirdScript : MonoBehaviour
     public int GetCurrentHP()
     {
         return currentHP;
+    }
+    
+    /// <summary>
+    /// 设置当前血量
+    /// </summary>
+    public void SetCurrentHP(int hp)
+    {
+        currentHP = Mathf.Clamp(hp, 0, maxHP);
     }
     
     /// <summary>

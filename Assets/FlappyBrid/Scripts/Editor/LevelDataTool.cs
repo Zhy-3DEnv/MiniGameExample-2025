@@ -47,7 +47,11 @@ public class LevelDataTool : EditorWindow
         { "使用关卡怪物设置", "useLevelMonsterSettings" },
         { "怪物生成概率", "monsterSpawnChance" },
         { "怪物X轴偏移", "monsterSpawnOffsetX" },
-        { "怪物Y轴偏移", "monsterSpawnOffsetY" }
+        { "怪物Y轴偏移", "monsterSpawnOffsetY" },
+        { "金币产出下限", "minCoins" },
+        { "金币产出上限", "maxCoins" },
+        { "产出控制开始比例", "coinControlStartRatio" },
+        { "产出控制曲线类型", "coinControlCurve" }
     };
     
     [MenuItem("Tools/FlappyBird/关卡数据工具")]
@@ -698,6 +702,45 @@ public class LevelDataTool : EditorWindow
                 if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out float monsterOffsetY))
                     levelData.monsterSpawnOffsetY = monsterOffsetY;
                 break;
+            case "minCoins":
+                if (int.TryParse(value, out int minCoins))
+                    levelData.minCoins = minCoins;
+                break;
+            case "maxCoins":
+                if (int.TryParse(value, out int maxCoins))
+                    levelData.maxCoins = maxCoins;
+                break;
+            case "coinControlStartRatio":
+                if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out float ratio))
+                    levelData.coinControlStartRatio = Mathf.Clamp01(ratio);
+                break;
+            case "coinControlCurve":
+                // 尝试解析枚举值
+                if (System.Enum.TryParse<CoinControlCurveType>(value, true, out CoinControlCurveType curveType))
+                    levelData.coinControlCurve = curveType;
+                else
+                {
+                    // 支持中文映射
+                    switch (value.ToLower())
+                    {
+                        case "linear":
+                        case "线性":
+                        case "0":
+                            levelData.coinControlCurve = CoinControlCurveType.Linear;
+                            break;
+                        case "smooth":
+                        case "平滑":
+                        case "1":
+                            levelData.coinControlCurve = CoinControlCurveType.Smooth;
+                            break;
+                        case "fast":
+                        case "快速":
+                        case "2":
+                            levelData.coinControlCurve = CoinControlCurveType.Fast;
+                            break;
+                    }
+                }
+                break;
         }
     }
     
@@ -791,7 +834,7 @@ public class LevelDataTool : EditorWindow
             // 表头
             if (includeHeader)
             {
-                csvContent.AppendLine("关卡编号,关卡名称,目标时间,生成率倍数,移动速度倍数,高度偏移,管道通过分数,完成奖励,关卡描述,使用关卡道具设置,道具生成概率,道具X轴偏移,使用关卡怪物设置,怪物生成概率,怪物X轴偏移,怪物Y轴偏移");
+                csvContent.AppendLine("关卡编号,关卡名称,目标时间,生成率倍数,移动速度倍数,高度偏移,管道通过分数,完成奖励,关卡描述,使用关卡道具设置,道具生成概率,道具X轴偏移,使用关卡怪物设置,怪物生成概率,怪物X轴偏移,怪物Y轴偏移,金币产出下限,金币产出上限,产出控制开始比例,产出控制曲线类型");
             }
             
             // 数据行
@@ -812,7 +855,11 @@ public class LevelDataTool : EditorWindow
                     $"{(levelData.useLevelMonsterSettings ? "是" : "否")}," +
                     $"{levelData.monsterSpawnChance}," +
                     $"{levelData.monsterSpawnOffsetX}," +
-                    $"{levelData.monsterSpawnOffsetY}";
+                    $"{levelData.monsterSpawnOffsetY}," +
+                    $"{levelData.minCoins}," +
+                    $"{levelData.maxCoins}," +
+                    $"{levelData.coinControlStartRatio}," +
+                    $"{levelData.coinControlCurve}";
                 
                 csvContent.AppendLine(line);
             }

@@ -17,10 +17,10 @@ MonoBehaviour:
   targetTime: 35
   backgroundColor: {r: 0.9173467, g: 0.60784316, b: 1, a: 1}
   backgroundSprite: {fileID: 0}
-  backgroundMusic: {fileID: 8300000, guid: da444804228dd0e4fa5d1076266f5f37, type: 3}
+  backgroundMusic: {fileID: 8300000, guid: 3c3d21f89aa737245983cb8efff76958, type: 3}
   spawnRateMultiplier: 0.9
-  moveSpeedMultiplier: 0.7
-  heightOffset: 6
+  moveSpeedMultiplier: 0.58
+  heightOffset: 3
   pipePassScore: 3
   useLevelItemSettings: 1
   itemSpawnChance: 0.3
@@ -45,8 +45,12 @@ MonoBehaviour:
     itemName: 
     scoreColor: {r: 0.9819608, g: 0.8, b: 1, a: 0}
   completionBonus: 25
+  minCoins: 80
+  maxCoins: 100
+  coinControlStartRatio: 0.7
+  coinControlCurve: 1
   useLevelMonsterSettings: 1
-  monsterSpawnChance: 0.2
+  monsterSpawnChance: 0.14
   monsterSpawnOffsetX: 0
   monsterSpawnOffsetY: 0
   monsterTypes:

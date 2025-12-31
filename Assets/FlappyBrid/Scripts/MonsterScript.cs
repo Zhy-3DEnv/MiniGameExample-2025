@@ -238,11 +238,11 @@ public class MonsterScript : MonoBehaviour
     {
         if (dropCoins <= 0) return;
         
-        // 通知 logicManager 增加金币
+        // 通知 logicManager 增加金币（计入产出控制）
         logicManager logic = FindObjectOfType<logicManager>();
         if (logic != null)
         {
-            logic.addCoins(dropCoins);
+            logic.addCoins(dropCoins, true); // true 表示计入产出控制
             Debug.Log($"MonsterScript: 掉落 {dropCoins} 金币，已通知 logicManager");
         }
         else

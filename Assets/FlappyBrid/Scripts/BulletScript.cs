@@ -210,7 +210,7 @@ public class BulletScript : MonoBehaviour
         
         hasHit = true;
         
-        Debug.Log($"BulletScript: 子弹击中怪物！怪物名称: {monster.gameObject.name}, 子弹伤害: {damage}, 怪物当前血量: {monster.GetCurrentHP()}/{monster.GetMaxHP()}");
+        Debug.Log($"BulletScript: 子弹击中怪物！怪物名称: {monster.gameObject.name}, 子弹伤害: {damage}, 怪物当前生命值: {monster.GetCurrentHP()}/{monster.GetMaxHP()}");
         
         // 对怪物造成伤害
         monster.TakeDamage(damage);

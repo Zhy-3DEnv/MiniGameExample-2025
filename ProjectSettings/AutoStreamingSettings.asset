@@ -4,22 +4,293 @@
 AutoStreamingSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  mSearchMode: 15
+  mSearchMode: 7
   mCustomSearchFile: 
   mTextureSearchString: 
   mMeshSearchString: 
-  mTextures: []
-  mAudios: []
+  mTextures:
+  - serializedVersion: 2
+    onDemandDownload: 1
+    assetPath: Assets/FlappyBrid/Sprites/Base/unitytut-cloud.png
+    localFileId: 2800000
+    rtMem: 41280
+    warningFlag: 0
+    refs:
+    - 0
+    maxPlaceholderSize: 196640
+    width: 512
+    height: 180
+    abSize: 32385
+  - serializedVersion: 2
+    onDemandDownload: 1
+    assetPath: Assets/FlappyBrid/Sprites/Base/unitytut-birdbody.png
+    localFileId: 2800000
+    rtMem: 101824
+    warningFlag: 0
+    refs:
+    - 0
+    maxPlaceholderSize: 196640
+    width: 439
+    height: 512
+    abSize: 69035
+  - serializedVersion: 2
+    onDemandDownload: 1
+    assetPath: Assets/FlappyBrid/Sprites/Base/unitytut-birdwingdown.png
+    localFileId: 2800000
+    rtMem: 17952
+    warningFlag: 0
+    refs:
+    - 0
+    maxPlaceholderSize: 196640
+    width: 194
+    height: 204
+    abSize: 13681
+  - serializedVersion: 2
+    onDemandDownload: 1
+    assetPath: Assets/FlappyBrid/Sprites/Base/unitytut-birdwingup.png
+    localFileId: 2800000
+    rtMem: 17952
+    warningFlag: 0
+    refs:
+    - 0
+    maxPlaceholderSize: 196640
+    width: 194
+    height: 204
+    abSize: 13806
+  - serializedVersion: 2
+    onDemandDownload: 1
+    assetPath: Assets/FlappyBrid/Sprites/Attack/Attack01.png
+    localFileId: 2800000
+    rtMem: 29584
+    warningFlag: 0
+    refs:
+    - 0
+    maxPlaceholderSize: 196640
+    width: 256
+    height: 256
+    abSize: 6525
+  - serializedVersion: 2
+    onDemandDownload: 1
+    assetPath: Assets/FlappyBrid/Sprites/Base/unitytut-pipe.png
+    localFileId: 2800000
+    rtMem: 28896
+    warningFlag: 0
+    refs:
+    - 0
+    maxPlaceholderSize: 196640
+    width: 125
+    height: 512
+    abSize: 23120
+  - serializedVersion: 2
+    onDemandDownload: 1
+    assetPath: Assets/FlappyBrid/Sprites/Monster/pet_p_0219.png
+    localFileId: 2800000
+    rtMem: 112896
+    warningFlag: 0
+    refs:
+    - 0
+    maxPlaceholderSize: 196640
+    width: 501
+    height: 500
+    abSize: 37837
+  - serializedVersion: 2
+    onDemandDownload: 1
+    assetPath: Assets/FlappyBrid/Sprites/Item/SNG1.png
+    localFileId: 2800000
+    rtMem: 29584
+    warningFlag: 0
+    refs:
+    - 0
+    maxPlaceholderSize: 196640
+    width: 256
+    height: 256
+    abSize: 11179
+  - serializedVersion: 2
+    onDemandDownload: 1
+    assetPath: Assets/FlappyBrid/Sprites/Item/ManG4.png
+    localFileId: 2800000
+    rtMem: 29584
+    warningFlag: 0
+    refs:
+    - 0
+    maxPlaceholderSize: 196640
+    width: 256
+    height: 256
+    abSize: 13004
+  - serializedVersion: 2
+    onDemandDownload: 1
+    assetPath: Assets/FlappyBrid/Sprites/Item/BL1.png
+    localFileId: 2800000
+    rtMem: 29584
+    warningFlag: 0
+    refs:
+    - 0
+    maxPlaceholderSize: 196640
+    width: 256
+    height: 256
+    abSize: 11403
+  - serializedVersion: 2
+    onDemandDownload: 1
+    assetPath: Assets/FlappyBrid/Sprites/Monster/pet_p_0093.png
+    localFileId: 2800000
+    rtMem: 1334856
+    warningFlag: 0
+    refs:
+    - 0
+    maxPlaceholderSize: 196640
+    width: 501
+    height: 500
+    abSize: 379142
+  - serializedVersion: 2
+    onDemandDownload: 1
+    assetPath: Assets/FlappyBrid/Sprites/Monster/pet_p_0095.png
+    localFileId: 2800000
+    rtMem: 1334856
+    warningFlag: 0
+    refs:
+    - 0
+    maxPlaceholderSize: 196640
+    width: 501
+    height: 500
+    abSize: 296958
+  - serializedVersion: 2
+    onDemandDownload: 1
+    assetPath: Assets/FlappyBrid/Sprites/Monster/pet_p_0251.png
+    localFileId: 2800000
+    rtMem: 1334856
+    warningFlag: 0
+    refs:
+    - 0
+    maxPlaceholderSize: 196640
+    width: 501
+    height: 500
+    abSize: 331540
+  - serializedVersion: 2
+    onDemandDownload: 1
+    assetPath: Packages/com.unity.render-pipelines.core/Runtime/Debugging/Prefabs/Textures/White1px.png
+    localFileId: 2800000
+    rtMem: 3
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 196640
+    width: 1
+    height: 1
+    abSize: 684
+  - serializedVersion: 2
+    onDemandDownload: 1
+    assetPath: Packages/com.unity.render-pipelines.core/Runtime/Debugging/Prefabs/Textures/UIElement8px.png
+    localFileId: 2800000
+    rtMem: 256
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 196640
+    width: 8
+    height: 8
+    abSize: 726
+  - serializedVersion: 2
+    onDemandDownload: 1
+    assetPath: Packages/com.unity.render-pipelines.core/Runtime/Debugging/Prefabs/Textures/UICheckMark.png
+    localFileId: 2800000
+    rtMem: 484
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 196640
+    width: 11
+    height: 11
+    abSize: 768
+  - serializedVersion: 2
+    onDemandDownload: 1
+    assetPath: Packages/com.unity.render-pipelines.core/Runtime/Debugging/Prefabs/Textures/UIFoldoutOpened.png
+    localFileId: 2800000
+    rtMem: 484
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 196640
+    width: 11
+    height: 11
+    abSize: 784
+  - serializedVersion: 2
+    onDemandDownload: 1
+    assetPath: Packages/com.unity.render-pipelines.core/Runtime/Debugging/Prefabs/Textures/UIFoldoutClosed.png
+    localFileId: 2800000
+    rtMem: 484
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 196640
+    width: 11
+    height: 11
+    abSize: 771
+  mAudios:
+  - onDemandDownload: 1
+    assetPath: Assets/FlappyBrid/Audio/Touch.mp3
+    localFileId: 8300000
+    rtMem: 5366
+    warningFlag: 0
+    refs:
+    - 0
+  - onDemandDownload: 1
+    assetPath: Assets/FlappyBrid/Audio/Collected.mp3
+    localFileId: 8300000
+    rtMem: 6009
+    warningFlag: 0
+    refs:
+    - 0
+  - onDemandDownload: 1
+    assetPath: Assets/FlappyBrid/Audio/Death.mp3
+    localFileId: 8300000
+    rtMem: 13470
+    warningFlag: 0
+    refs:
+    - 0
+  - onDemandDownload: 1
+    assetPath: Assets/FlappyBrid/Audio/Completed.mp3
+    localFileId: 8300000
+    rtMem: 26773
+    warningFlag: 0
+    refs:
+    - 0
+  - onDemandDownload: 1
+    assetPath: Assets/FlappyBrid/Audio/BackGround01.mp3
+    localFileId: 8300000
+    rtMem: 401944
+    warningFlag: 0
+    refs:
+    - 0
+  - onDemandDownload: 1
+    assetPath: Assets/FlappyBrid/Audio/BackGround02.mp3
+    localFileId: 8300000
+    rtMem: 1035749
+    warningFlag: 0
+    refs:
+    - 0
+  - onDemandDownload: 1
+    assetPath: Assets/FlappyBrid/Audio/BackGround03.mp3
+    localFileId: 8300000
+    rtMem: 944558
+    warningFlag: 0
+    refs:
+    - 0
   mMeshes: []
   mAnimations: []
   mSharedSceneAssets: []
-  mScenes: []
+  mScenes:
+  - onDemandDownload: 1
+    assetPath: Assets/Scenes/SampleScene.scene
+    localFileId: -1
+    rtMem: 6317185
+    warningFlag: 0
+    refs: []
   mConfigCCD:
     useCCD: 0
-    uosSecret: 
-    uosAppid: 
-    bucketUuid: 
-    bucketName: 
-    badgeName: 
+    uosSecret: 13376dcedcfe4b9a8d80ff8f635c42a5
+    uosAppid: d2482446-49ee-4f4d-9125-062163345228
+    bucketUuid: 3db10f75-da0e-45ae-aedf-c8a89d47ad45
+    bucketName: FlappyBirdBucket
+    badgeName: FlappyBirdV1
     ttAppid: 
     targetPlatfrom: 
