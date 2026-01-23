@@ -43,6 +43,7 @@ public class CharacterController : MonoBehaviour
 
     // 输入相关
     private Vector2 moveInput; // 当前移动输入（-1到1的向量）
+    private Vector2 joystickInput; // 摇杆输入（由 TouchInputHandler 设置）
     private Rigidbody rb;
     private Vector3 currentVelocity;
 
@@ -70,28 +71,45 @@ public class CharacterController : MonoBehaviour
 
     /// <summary>
     /// 在 Update 中读取键盘输入（WASD/方向键），用于编辑器和 PC 端调试。
-    /// 移动端：通常不会有键盘输入，不会影响摇杆设置的 moveInput。
+    /// 
+    /// 输入优先级：
+    /// - 移动端：只使用摇杆输入
+    /// - 编辑器/PC端（包括 Simulator 模式）：键盘输入优先，如果没有键盘输入则使用摇杆
     /// </summary>
     private void Update()
     {
-        if (Keyboard.current == null)
-            return;
-
-        Vector2 input = Vector2.zero;
-        var k = Keyboard.current;
-
-        if (k.wKey.isPressed || k.upArrowKey.isPressed)    input.y += 1f;
-        if (k.sKey.isPressed || k.downArrowKey.isPressed)  input.y -= 1f;
-        if (k.aKey.isPressed || k.leftArrowKey.isPressed)  input.x -= 1f;
-        if (k.dKey.isPressed || k.rightArrowKey.isPressed) input.x += 1f;
-
-        if (input.sqrMagnitude > 1f)
-            input = input.normalized;
-
-        // 只有在确实有键盘输入时才覆盖 moveInput，避免把摇杆设置的值清零
-        if (input.sqrMagnitude > 0.0001f)
+        // 移动端：直接使用摇杆输入
+        if (Application.isMobilePlatform)
         {
-            moveInput = input;
+            moveInput = joystickInput;
+            return;
+        }
+
+        // 编辑器/PC端/Simulator模式：键盘输入优先，如果没有键盘输入则使用摇杆
+        Vector2 keyboardInput = Vector2.zero;
+        
+        if (Keyboard.current != null)
+        {
+            var k = Keyboard.current;
+            
+            if (k.wKey.isPressed || k.upArrowKey.isPressed)    keyboardInput.y += 1f;
+            if (k.sKey.isPressed || k.downArrowKey.isPressed)  keyboardInput.y -= 1f;
+            if (k.aKey.isPressed || k.leftArrowKey.isPressed)  keyboardInput.x -= 1f;
+            if (k.dKey.isPressed || k.rightArrowKey.isPressed) keyboardInput.x += 1f;
+
+            if (keyboardInput.sqrMagnitude > 1f)
+                keyboardInput = keyboardInput.normalized;
+        }
+
+        // 键盘输入优先：如果有键盘输入，使用键盘；否则使用摇杆
+        // 这样在编辑器下可以用 WASD，在 Simulator 模式下如果没有键盘输入会自动使用摇杆
+        if (keyboardInput.sqrMagnitude > 0.01f)
+        {
+            moveInput = keyboardInput;
+        }
+        else
+        {
+            moveInput = joystickInput;
         }
     }
 
@@ -110,10 +128,17 @@ public class CharacterController : MonoBehaviour
 
     /// <summary>
     /// 手动设置移动输入（用于虚拟摇杆等外部输入源）
+    /// 注意：在编辑器下，键盘输入会优先于摇杆输入
     /// </summary>
     public void SetMoveInput(Vector2 input)
     {
-        moveInput = input;
+        joystickInput = input;
+        // 在移动端，直接使用摇杆输入
+        // 在编辑器/PC端，Update 中会根据键盘输入决定使用键盘还是摇杆
+        if (Application.isMobilePlatform)
+        {
+            moveInput = input;
+        }
     }
 
     /// <summary>

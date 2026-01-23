@@ -6,6 +6,19 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/SampleScene.scene
-    guid: 99c9720ab356a0642a771bea13969a05
-  m_configObjects: {}
+    path: Assets/EggRogue/MainMenu.scene
+    guid: 08eb307b924d82a48a2aaccbe5b0cd7a
+  - enabled: 1
+    path: Assets/EggRogue/Scenes/GameScene.scene
+    guid: 692b25eb49d1f384c89cd7f58a6891ae
+  m_BuildProfiles: []
+  m_configObjects:
+    com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 3bfcfd9c8ec7710499ebcb0ced234156,
+      type: 3}
+  m_SlimFeaturesWeixinMiniGame:
+    AllocateOverhead: 1
+    DecompressASTC: 0
+    DecompressDXT: 1
+    DecompressETC: 1
+    FreeTypeSfntPng: 1
+    LightProbe: 2

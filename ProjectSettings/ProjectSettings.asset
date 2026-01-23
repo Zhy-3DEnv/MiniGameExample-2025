@@ -98,7 +98,7 @@ PlayerSettings:
   cacheASTextureAB: 0
   maxCacheSize: 0
   maxConcurrentLoad: 0
-  autoStreamingId: /v1/buckets/3db10f75-da0e-45ae-aedf-c8a89d47ad45/release_by_badge/FlappyBirdV1/content
+  autoStreamingId: /v1/buckets/cf30919b-69ff-4e97-a86e-372f22b9ae52/release_by_badge/latest/content
   instantGameAppId: d2482446-49ee-4f4d-9125-062163345228
   dedicatedServerOptimizations: 0
   bakeCollisionMeshes: 0
@@ -165,7 +165,8 @@ PlayerSettings:
   visionOSBundleVersion: 1.0
   tvOSBundleVersion: 1.0
   bundleVersion: 0.1.0
-  preloadedAssets: []
+  preloadedAssets:
+  - {fileID: -944628639613478452, guid: 3bfcfd9c8ec7710499ebcb0ced234156, type: 3}
   metroInputSource: 0
   wsaTransparentSwapchain: 0
   m_HolographicPauseOnTrackingLoss: 1
