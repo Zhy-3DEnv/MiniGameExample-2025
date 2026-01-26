@@ -1,0 +1,8 @@
+﻿Key,Value,Type,Desc
+PlayerDamage,10,float,玩家单发伤害
+PlayerAttackRange,8,float,玩家攻击范围
+PlayerFireRate,2,float,玩家射速（每秒几发）
+EnemyHealth,20,float,怪物最大生命值
+EnemyMoveSpeed,3,float,怪物移动速度
+CoinDropMin,1,int,最少掉落金币数
+CoinDropMax,2,int,最多掉落金币数
