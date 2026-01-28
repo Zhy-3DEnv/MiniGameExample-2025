@@ -15,7 +15,7 @@ MonoBehaviour:
   enemyName: "\u9ED8\u8BA4\u654C\u4EBA"
   description: "\u57FA\u7840\u654C\u4EBA\u7C7B\u578B"
   icon: {fileID: 0}
-  baseMaxHealth: 20
+  baseMaxHealth: 10
   baseMoveSpeed: 3
   coinDropMin: 1
   coinDropMax: 2
