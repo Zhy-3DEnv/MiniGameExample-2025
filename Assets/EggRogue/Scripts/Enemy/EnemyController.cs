@@ -1,4 +1,5 @@
 using UnityEngine;
+using EggRogue;
 
 /// <summary>
 /// 怪物控制器 - 控制怪物的移动和基础行为。
@@ -19,7 +20,7 @@ using UnityEngine;
 public class EnemyController : MonoBehaviour
 {
     [Header("移动配置")]
-    [Tooltip("移动速度")]
+    [Tooltip("移动速度（可在运行时通过 SetMoveSpeed 修改）")]
     [SerializeField] private float moveSpeed = 3f;
 
     [Tooltip("停止距离（距离玩家多近时停止移动）")]
@@ -36,9 +37,26 @@ public class EnemyController : MonoBehaviour
     [Tooltip("目标（玩家），如果为空会自动查找")]
     [SerializeField] private Transform target;
 
+    [Header("掉落")]
+    [Tooltip("金币 Prefab（需含 Coin 组件），不填则不掉落")]
+    [SerializeField] private GameObject coinPrefab;
+
+    [Tooltip("敌人数据（ScriptableObject）- 如果设置，会覆盖下面的掉落配置")]
+    [SerializeField] private EnemyData enemyData;
+
+    [Tooltip("最少掉落金币数（如果 enemyData 未设置则使用此值）")]
+    [SerializeField] private int coinDropMin = 1;
+
+    [Tooltip("最多掉落金币数（如果 enemyData 未设置则使用此值）")]
+    [SerializeField] private int coinDropMax = 2;
+
+    [Tooltip("掉落随机偏移半径（XZ），避免叠在一起）")]
+    [SerializeField] private float coinDropRadius = 0.3f;
+
     private Health health;
     private Transform _transform;
     private bool isDead = false;
+    private bool isPaused = false;
 
     private void Awake()
     {
@@ -84,8 +102,8 @@ public class EnemyController : MonoBehaviour
 
     private void Update()
     {
-        // 如果已死亡，不处理移动
-        if (isDead)
+        // 如果已死亡或已暂停，不处理移动
+        if (isDead || isPaused)
             return;
 
         // 如果目标丢失，尝试重新查找
@@ -182,9 +200,47 @@ public class EnemyController : MonoBehaviour
             EnemyManager.Instance.UnregisterEnemy(this);
         }
 
-        // 可以在这里播放死亡动画、特效、掉落奖励等
-        // 暂时直接销毁
-        Destroy(gameObject, 0.1f); // 延迟一点销毁，方便播放特效
+        // 掉落 1–2 个金币
+        DropCoins();
+
+        Destroy(gameObject, 0.1f);
+    }
+
+    private void DropCoins()
+    {
+        if (coinPrefab == null) return;
+
+        // 优先使用 EnemyData SO 的配置
+        int min = coinDropMin;
+        int max = coinDropMax;
+        float radius = coinDropRadius;
+
+        if (enemyData != null)
+        {
+            min = enemyData.coinDropMin;
+            max = enemyData.coinDropMax;
+            radius = enemyData.coinDropRadius;
+        }
+
+        // 应用关卡倍率（如果存在）
+        EggRogue.LevelData levelData = EggRogue.LevelManager.Instance?.GetCurrentLevelData();
+        if (levelData != null && levelData.coinDropMultiplier > 0f)
+        {
+            // 倍率只影响数量，不影响范围
+            float mult = levelData.coinDropMultiplier;
+            min = Mathf.RoundToInt(min * mult);
+            max = Mathf.RoundToInt(max * mult);
+        }
+
+        int n = Random.Range(min, max + 1);
+        Vector3 basePos = _transform.position;
+        for (int i = 0; i < n; i++)
+        {
+            Vector2 r = Random.insideUnitCircle * radius;
+            Vector3 pos = basePos + new Vector3(r.x, 0f, r.y);
+            pos.y = groundHeight;
+            Instantiate(coinPrefab, pos, Quaternion.identity);
+        }
     }
 
     private void OnDestroy()
@@ -205,5 +261,37 @@ public class EnemyController : MonoBehaviour
             return float.MaxValue;
 
         return Vector3.Distance(_transform.position, target.position);
+    }
+
+    /// <summary>
+    /// 设置移动速度（外部调用，例如从配置系统读取）
+    /// </summary>
+    public void SetMoveSpeed(float speed)
+    {
+        moveSpeed = speed;
+    }
+
+    /// <summary>
+    /// 设置敌人数据（EnemySpawner 调用）
+    /// </summary>
+    public void SetEnemyData(EnemyData data)
+    {
+        enemyData = data;
+    }
+
+    /// <summary>
+    /// 暂停敌人移动（用于结算界面等）
+    /// </summary>
+    public void PauseMovement()
+    {
+        isPaused = true;
+    }
+
+    /// <summary>
+    /// 恢复敌人移动
+    /// </summary>
+    public void ResumeMovement()
+    {
+        isPaused = false;
     }
 }

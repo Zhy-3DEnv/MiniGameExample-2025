@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:yousandi.cn,2023:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e140ea7640047f24596a59b02f776892, type: 3}
+  m_Name: "\u5168\u9762\u5F3A\u5316"
+  m_EditorClassIdentifier: 
+  cardName: "\u5168\u9762\u5F3A\u5316"
+  description: "\u4F24\u5BB3 +3, \u653B\u901F +0.5, \u751F\u547D +15"
+  icon: {fileID: 21300000, guid: 43f70b0362aa5e041b3c3635e9955551, type: 3}
+  damageBonus: 3
+  fireRateBonus: 0.5
+  maxHealthBonus: 15
+  moveSpeedBonus: 0
+  bulletSpeedBonus: 0
+  attackRangeBonus: 0

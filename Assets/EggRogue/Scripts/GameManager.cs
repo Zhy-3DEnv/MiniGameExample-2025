@@ -19,6 +19,9 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance => _instance;
 
     [Header("场景名称配置")]
+    [Tooltip("常驻场景名称（UI、管理器），启动时最先加载")]
+    public string persistentSceneName = "PersistentScene";
+
     [Tooltip("主菜单场景名称，如：MainMenu")]
     public string mainMenuSceneName = "MainMenu";
 
@@ -26,21 +29,30 @@ public class GameManager : MonoBehaviour
     public string gameSceneName = "GameScene";
 
     /// <summary>
+    /// 战斗场景名称（供 LevelManager 等使用）。
+    /// </summary>
+    public string GameSceneName => gameSceneName;
+
+    /// <summary>
     /// 当前是否在战斗场景中。
-    /// 后续可以用来控制暂停、时间缩放等。
     /// </summary>
     public bool IsInGame { get; private set; }
 
     private void Awake()
     {
+        // Unity 限制：DontDestroyOnLoad 只能作用于“根 GameObject”（或挂在根物体上的组件）。
+        // 为了避免把 GameManager 挂在子物体时触发报错，这里对根节点做常驻。
+        GameObject rootGO = transform.root != null ? transform.root.gameObject : gameObject;
+
         if (_instance != null && _instance != this)
         {
-            Destroy(gameObject);
+            // 销毁整套重复的根节点，避免留下子物体影响状态
+            Destroy(rootGO);
             return;
         }
 
         _instance = this;
-        DontDestroyOnLoad(gameObject);
+        DontDestroyOnLoad(rootGO);
     }
 
     private void OnEnable()
@@ -60,45 +72,49 @@ public class GameManager : MonoBehaviour
     /// </summary>
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        // 根据场景名称自动切换UI
-        if (UIManager.Instance != null)
-        {
-            if (scene.name == mainMenuSceneName)
-            {
-                UIManager.Instance.ShowMainMenu();
-            }
-            else if (scene.name == gameSceneName)
-            {
-                UIManager.Instance.ShowGameHUD();
-            }
-        }
+        if (UIManager.Instance == null)
+            return;
+
+        if (scene.name == mainMenuSceneName)
+            UIManager.Instance.ShowMainMenu();
+        else if (scene.name == gameSceneName)
+            UIManager.Instance.ShowGameHUD();
     }
 
     /// <summary>
-    /// 从主菜单进入游戏场景。
-    /// 建议挂在主菜单 UI 按钮的 OnClick 上。
+    /// 从主菜单进入游戏（第 1 关）。建议挂在主菜单「开始游戏」按钮 OnClick 上。
     /// </summary>
     public void StartGame()
     {
+        LoadGameScene(1);
+    }
+
+    /// <summary>
+    /// 加载指定关卡的 GameScene。由 LevelManager 或 UI 调用。
+    /// </summary>
+    public void LoadGameScene(int level)
+    {
         if (string.IsNullOrEmpty(gameSceneName))
         {
-            Debug.LogError("GameManager: gameSceneName 为空，请在 Inspector 中配置战斗场景名称。");
+            Debug.LogError("GameManager: gameSceneName 为空，请在 Inspector 中配置。");
             return;
         }
+
+        if (EggRogue.LevelManager.Instance != null)
+            EggRogue.LevelManager.Instance.SetLevelAndNotifyLoaded(level);
 
         IsInGame = true;
         SceneManager.LoadScene(gameSceneName);
     }
 
     /// <summary>
-    /// 从游戏返回主菜单。
-    /// 可挂在暂停界面或结算界面的按钮上。
+    /// 从游戏返回主菜单。可挂在暂停/结算界面按钮上。
     /// </summary>
     public void ReturnToMenu()
     {
         if (string.IsNullOrEmpty(mainMenuSceneName))
         {
-            Debug.LogError("GameManager: mainMenuSceneName 为空，请在 Inspector 中配置主菜单场景名称。");
+            Debug.LogError("GameManager: mainMenuSceneName 为空，请在 Inspector 中配置。");
             return;
         }
 
@@ -107,20 +123,14 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 重新开始当前游戏（从第 1 关开始）。
-    /// 当前简单实现为重新加载 gameSceneName。
-    /// 后续可以在这里加入关卡索引、存档恢复等逻辑。
+    /// 重新开始当前游戏（从第 1 关开始）。可挂在结算/暂停界面按钮上。
     /// </summary>
     public void RestartGame()
     {
-        if (string.IsNullOrEmpty(gameSceneName))
-        {
-            Debug.LogError("GameManager: gameSceneName 为空，请在 Inspector 中配置战斗场景名称。");
-            return;
-        }
-
-        IsInGame = true;
-        SceneManager.LoadScene(gameSceneName);
+        if (EggRogue.LevelManager.Instance != null)
+            EggRogue.LevelManager.Instance.RestartFromLevel1();
+        else
+            LoadGameScene(1);
     }
 }
 

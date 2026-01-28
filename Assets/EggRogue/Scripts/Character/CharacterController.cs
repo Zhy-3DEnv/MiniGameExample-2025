@@ -225,6 +225,14 @@ public class CharacterController : MonoBehaviour
     }
 
     /// <summary>
+    /// 获取当前移动输入方向（用于朝向等）。XZ 平面对应 world 的 X、Z。
+    /// </summary>
+    public Vector2 GetMoveInput()
+    {
+        return moveInput;
+    }
+
+    /// <summary>
     /// 停止移动（例如被击晕、暂停时）
     /// </summary>
     public void StopMovement()

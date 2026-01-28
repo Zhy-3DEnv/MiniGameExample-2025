@@ -133,4 +133,34 @@ public class EnemyManager : MonoBehaviour
         }
         aliveEnemies.Clear();
     }
+
+    /// <summary>
+    /// 暂停所有敌人移动（用于结算界面等）
+    /// </summary>
+    public void PauseAllEnemies()
+    {
+        aliveEnemies.RemoveAll(e => e == null);
+        foreach (var enemy in aliveEnemies)
+        {
+            if (enemy != null)
+            {
+                enemy.PauseMovement();
+            }
+        }
+    }
+
+    /// <summary>
+    /// 恢复所有敌人移动
+    /// </summary>
+    public void ResumeAllEnemies()
+    {
+        aliveEnemies.RemoveAll(e => e == null);
+        foreach (var enemy in aliveEnemies)
+        {
+            if (enemy != null)
+            {
+                enemy.ResumeMovement();
+            }
+        }
+    }
 }

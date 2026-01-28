@@ -15,11 +15,11 @@ MonoBehaviour:
   ProjectConf:
     projectName: "\u6C64\u5706\u7684\u5947\u5E7B\u5192\u9669"
     Appid: wxbab5e2baf682cf0e
-    CDN: https://a.unity.cn/client_api/v1/buckets/3db10f75-da0e-45ae-aedf-c8a89d47ad45/release_by_badge/FlappyBirdV1/content
+    CDN: https://a.unity.cn/client_api/v1/buckets/cf30919b-69ff-4e97-a86e-372f22b9ae52/release_by_badge/latest/content
     assetLoadType: 0
     compressDataPackage: 1
     VideoUrl: 
-    DST: D:/Project/MiniGameExample/Builds/WX
+    DST: D:/Project/MiniGameExample/Builds/EggRogue
     StreamCDN: 
     bundleHashLength: 32
     bundlePathIdentifier: StreamingAssets;AS;CUS/CustomAB
@@ -53,7 +53,7 @@ MonoBehaviour:
     profilingFuncs: 1
     Webgl2: 1
     fbslim: 1
-    DeleteStreamingAssets: 1
+    DeleteStreamingAssets: 0
     ProfilingMemory: 0
     CleanBuild: 0
     CustomNodePath: 

@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using EggRogue;
 
 /// <summary>
 /// 敌人生成器 - 在场景中按一定频率生成敌人。
@@ -21,6 +22,9 @@ public class EnemySpawner : MonoBehaviour
     [Tooltip("敌人 Prefab（需要包含 EnemyController 和 Health 组件）")]
     public GameObject enemyPrefab;
 
+    [Tooltip("敌人数据（ScriptableObject）- 定义敌人的基础属性")]
+    public EggRogue.EnemyData enemyData;
+
     [Tooltip("刷怪点位置列表")]
     public Transform[] spawnPoints;
 
@@ -40,8 +44,47 @@ public class EnemySpawner : MonoBehaviour
     [Tooltip("地面高度（Y轴固定值，确保生成的怪物不脱离地面）")]
     public float groundHeight = 0f;
 
+    [Header("随机区域生成")]
+    [Tooltip("是否使用平面区域随机生成敌人（忽略刷怪点）")]
+    public bool useAreaSpawn = false;
+
+    [Tooltip("随机区域中心位置（通常为场景中心）")]
+    public Vector3 areaCenter = Vector3.zero;
+
+    [Tooltip("随机区域尺寸（X,Z 范围），Y 由 groundHeight 控制")]
+    public Vector2 areaSize = new Vector2(10f, 10f);
+
+    [Header("可视化")]
+    [Tooltip("是否在 Scene 视图中绘制生成区域 Gizmo")]
+    public bool drawSpawnAreaGizmo = true;
+
     private float spawnTimer = 0f;
     private bool isSpawning = true;
+    private int spawnedThisLevel = 0;
+
+    /// <summary>
+    /// 当前关卡配置（由 LevelManager 设置）。生成时用于血量/移速/金币倍率。
+    /// </summary>
+    private EggRogue.LevelData currentLevelData;
+
+    /// <summary>
+    /// 应用关卡配置（LevelManager 调用）。会覆盖 spawnInterval、maxAliveEnemies、randomOffsetRadius；
+    /// 生成敌人时使用 health/moveSpeed/coin 倍率。
+    /// </summary>
+    public void ApplyLevelData(EggRogue.LevelData data)
+    {
+        currentLevelData = data;
+    }
+
+    /// <summary>
+    /// 关卡加载后重置刷怪计时（LevelManager 调用）。
+    /// </summary>
+    public void ResetForLevel()
+    {
+        spawnTimer = spawnInterval;
+        spawnedThisLevel = 0;
+        isSpawning = true;
+    }
 
     private void Start()
     {
@@ -73,6 +116,14 @@ public class EnemySpawner : MonoBehaviour
         // 如果到了生成时间
         if (spawnTimer <= 0f)
         {
+            // 如果关卡配置了最大总生成数，且已达上限，则停止刷怪
+            if (currentLevelData != null && currentLevelData.maxTotalEnemies > 0 &&
+                spawnedThisLevel >= currentLevelData.maxTotalEnemies)
+            {
+                isSpawning = false;
+                return;
+            }
+
             // 检查当前存活敌人数量
             int currentAliveCount = 0;
             if (EnemyManager.Instance != null)
@@ -81,7 +132,8 @@ public class EnemySpawner : MonoBehaviour
             }
 
             // 如果未达到上限，生成新敌人
-            if (currentAliveCount < maxAliveEnemies)
+            // 约定：maxAliveEnemies <= 0 表示“不限制”
+            if (maxAliveEnemies <= 0 || currentAliveCount < maxAliveEnemies)
             {
                 SpawnEnemy();
             }
@@ -99,15 +151,40 @@ public class EnemySpawner : MonoBehaviour
         if (enemyPrefab == null)
             return;
 
-        // 选择一个刷怪点
         Vector3 spawnPosition = GetRandomSpawnPosition();
-
-        // 实例化敌人
         GameObject enemy = Instantiate(enemyPrefab, spawnPosition, Quaternion.identity);
         
-        // 可以在这里设置敌人的初始属性（例如根据关卡难度调整血量）
-        // Health health = enemy.GetComponent<Health>();
-        // if (health != null) { health.SetMaxHealth(...); }
+        // 记录本关已生成数量
+        spawnedThisLevel++;
+        
+        // 使用 EnemyData SO 配置敌人属性
+        if (enemyData != null)
+        {
+            float baseHealth = enemyData.baseMaxHealth;
+            float baseMoveSpeed = enemyData.baseMoveSpeed;
+            
+            // 应用关卡倍率（如果存在）
+            float healthMult = (currentLevelData != null && currentLevelData.enemyHealthMultiplier > 0f)
+                ? currentLevelData.enemyHealthMultiplier : 1f;
+            float moveMult = (currentLevelData != null && currentLevelData.enemyMoveSpeedMultiplier > 0f)
+                ? currentLevelData.enemyMoveSpeedMultiplier : 1f;
+
+            Health health = enemy.GetComponent<Health>();
+            if (health != null)
+                health.SetMaxHealth(baseHealth * healthMult);
+
+            EnemyController enemyController = enemy.GetComponent<EnemyController>();
+            if (enemyController != null)
+            {
+                enemyController.SetMoveSpeed(baseMoveSpeed * moveMult);
+                // 传递 EnemyData 给 EnemyController（用于金币掉落配置）
+                enemyController.SetEnemyData(enemyData);
+            }
+        }
+        else
+        {
+            Debug.LogWarning("EnemySpawner: enemyData 未设置，使用默认值");
+        }
     }
 
     /// <summary>
@@ -117,26 +194,36 @@ public class EnemySpawner : MonoBehaviour
     {
         Vector3 basePosition;
 
-        // 如果有刷怪点，随机选一个；否则在原点
-        if (spawnPoints != null && spawnPoints.Length > 0)
+        if (useAreaSpawn)
         {
-            Transform randomPoint = spawnPoints[Random.Range(0, spawnPoints.Length)];
-            basePosition = randomPoint.position;
+            // 在指定区域内随机生成（X,Z 平面，Y 使用 groundHeight）
+            float halfX = areaSize.x * 0.5f;
+            float halfZ = areaSize.y * 0.5f;
+            float x = areaCenter.x + Random.Range(-halfX, halfX);
+            float z = areaCenter.z + Random.Range(-halfZ, halfZ);
+            basePosition = new Vector3(x, groundHeight, z);
         }
         else
         {
-            basePosition = Vector3.zero;
-        }
+            // 使用刷怪点 + 随机偏移
+            if (spawnPoints != null && spawnPoints.Length > 0)
+            {
+                Transform randomPoint = spawnPoints[Random.Range(0, spawnPoints.Length)];
+                basePosition = randomPoint.position;
+            }
+            else
+            {
+                basePosition = Vector3.zero;
+            }
 
-        // 如果需要随机偏移
-        if (useRandomOffset && randomOffsetRadius > 0f)
-        {
-            Vector2 randomCircle = Random.insideUnitCircle * randomOffsetRadius;
-            basePosition += new Vector3(randomCircle.x, 0f, randomCircle.y);
-        }
+            if (useRandomOffset && randomOffsetRadius > 0f)
+            {
+                Vector2 randomCircle = Random.insideUnitCircle * randomOffsetRadius;
+                basePosition += new Vector3(randomCircle.x, 0f, randomCircle.y);
+            }
 
-        // 强制设置Y轴为地面高度（防止怪物在高度上重叠）
-        basePosition.y = groundHeight;
+            basePosition.y = groundHeight;
+        }
 
         return basePosition;
     }
@@ -165,10 +252,14 @@ public class EnemySpawner : MonoBehaviour
         SpawnEnemy();
     }
 
-    // 在Scene视图中显示刷怪点（调试用）
+    // 在 Scene 视图中显示刷怪点 / 生成区域（调试用）
     private void OnDrawGizmosSelected()
     {
-        if (spawnPoints != null)
+        if (!drawSpawnAreaGizmo)
+            return;
+
+        // 绘制刷怪点
+        if (spawnPoints != null && spawnPoints.Length > 0)
         {
             Gizmos.color = Color.red;
             foreach (var point in spawnPoints)
@@ -178,6 +269,22 @@ public class EnemySpawner : MonoBehaviour
                     Gizmos.DrawWireSphere(point.position, 0.5f);
                 }
             }
+        }
+
+        // 绘制随机区域
+        if (useAreaSpawn)
+        {
+            // 线框矩形表示生成区域（X,Z 平面）
+            Gizmos.color = new Color(0f, 1f, 0f, 0.8f);
+            Vector3 center = areaCenter;
+            center.y = groundHeight;
+            Vector3 size = new Vector3(areaSize.x, 0.1f, areaSize.y);
+            Gizmos.DrawWireCube(center, size);
+
+            // 画一个小十字标记区域中心
+            float crossSize = 0.3f;
+            Gizmos.DrawLine(center + Vector3.left * crossSize, center + Vector3.right * crossSize);
+            Gizmos.DrawLine(center + Vector3.forward * crossSize, center + Vector3.back * crossSize);
         }
     }
 }

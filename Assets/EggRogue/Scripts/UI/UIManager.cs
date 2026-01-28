@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// UI管理器 - 负责统一管理所有UI面板的显示和隐藏。
@@ -24,16 +26,30 @@ public class UIManager : MonoBehaviour
     [Tooltip("游戏HUD面板（战斗界面）")]
     public GameHudPanel gameHudPanel;
 
+    [Tooltip("结算面板（关卡胜利后显示）")]
+    public ResultPanel resultPanel;
+
+    [Tooltip("卡片选择面板")]
+    public CardSelectionPanel cardSelectionPanel;
+
+    [Tooltip("属性面板（按ESC打开）")]
+    public AttributePanel attributePanel;
+
     private void Awake()
     {
+        // Unity 限制：DontDestroyOnLoad 只能作用于“根 GameObject”（或挂在根物体上的组件）。
+        // 为了兼容你把 UIManager 挂在 Canvas/子物体的情况，这里一律对根节点做常驻。
+        GameObject rootGO = transform.root != null ? transform.root.gameObject : gameObject;
+
         if (_instance != null && _instance != this)
         {
-            Destroy(gameObject);
+            // 销毁整套重复的 UI 根节点，避免残留子物体导致面板引用错乱
+            Destroy(rootGO);
             return;
         }
 
         _instance = this;
-        DontDestroyOnLoad(gameObject);
+        DontDestroyOnLoad(rootGO);
     }
 
     private void Start()
@@ -41,6 +57,38 @@ public class UIManager : MonoBehaviour
         // 初始化时显示主菜单，隐藏游戏HUD
         ShowMainMenu();
     }
+
+        private void Update()
+        {
+            // 全局检测 ESC，用于打开/关闭属性面板
+            Keyboard keyboard = Keyboard.current;
+            if (keyboard != null && keyboard.escapeKey.wasPressedThisFrame)
+            {
+                // 仅在“战斗场景/战斗状态”时响应
+                // 不能只依赖 HUD 的 IsVisible：因为场景刚切换时，HUD 可能还没来得及 Show()，会导致第一次 ESC 没反应
+                bool inGameContext = false;
+
+                if (GameManager.Instance != null)
+                {
+                    // 以当前场景名判断最稳（避免 UI 初始化时序问题）
+                    string activeSceneName = SceneManager.GetActiveScene().name;
+                    inGameContext = (activeSceneName == GameManager.Instance.GameSceneName) || GameManager.Instance.IsInGame;
+                }
+                else
+                {
+                    // 兜底：仍保留旧判断
+                    inGameContext =
+                        (gameHudPanel != null && gameHudPanel.IsVisible()) ||
+                        (resultPanel != null && resultPanel.IsVisible()) ||
+                        (cardSelectionPanel != null && cardSelectionPanel.IsVisible());
+                }
+
+                if (inGameContext)
+                {
+                    ToggleAttributePanel();
+                }
+            }
+        }
 
     /// <summary>
     /// 显示主菜单面板，隐藏其他面板
@@ -75,7 +123,62 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
+    /// 显示结算面板（关卡胜利后）。
+    /// </summary>
+    public void ShowResult(int collectedGold, int victoryReward)
+    {
+        Debug.Log($"UIManager: ShowResult({collectedGold}, {victoryReward}) 被调用");
+        HideAllPanels();
+        
+        if (resultPanel != null)
+        {
+            Debug.Log("UIManager: 找到 resultPanel，调用 ShowResult");
+            resultPanel.ShowResult(collectedGold, victoryReward);
+        }
+        else
+        {
+            Debug.LogWarning("UIManager: resultPanel 未设置！请在 Inspector 中绑定 ResultPanel 引用。跳过结算界面，直接进入卡片选择");
+            // 如果没有结算界面，直接进入卡片选择
+            ShowCardSelection();
+        }
+    }
+
+    /// <summary>
+    /// 显示卡片选择面板。
+    /// </summary>
+    public void ShowCardSelection()
+    {
+        HideAllPanels();
+        if (cardSelectionPanel != null)
+        {
+            cardSelectionPanel.ShowCardSelection();
+        }
+        else
+        {
+            Debug.LogWarning("UIManager: cardSelectionPanel 未设置，请在 Inspector 中拖入引用。");
+        }
+    }
+
+    /// <summary>
+    /// 切换属性面板显示/隐藏（按ESC调用）
+    /// 注意：属性面板是覆盖层，不会隐藏其他面板
+    /// </summary>
+    public void ToggleAttributePanel()
+    {
+        if (attributePanel != null)
+        {
+            // 属性面板是覆盖层，直接切换显示/隐藏，不影响其他面板
+            attributePanel.TogglePanel();
+        }
+        else
+        {
+            Debug.LogWarning("UIManager: attributePanel 未设置，请在 Inspector 中拖入引用。");
+        }
+    }
+
+    /// <summary>
     /// 隐藏所有面板（用于切换场景或状态时）
+    /// 注意：属性面板是覆盖层，通常不在这里隐藏
     /// </summary>
     private void HideAllPanels()
     {
@@ -87,6 +190,20 @@ public class UIManager : MonoBehaviour
         {
             gameHudPanel.Hide();
         }
+        if (resultPanel != null)
+        {
+            resultPanel.Hide();
+        }
+        if (cardSelectionPanel != null)
+        {
+            cardSelectionPanel.Hide();
+        }
+        // 属性面板是覆盖层，通常不在这里隐藏
+        // 如果需要强制隐藏，可以取消下面的注释
+        // if (attributePanel != null)
+        // {
+        //     attributePanel.Hide();
+        // }
     }
 
     /// <summary>
@@ -101,6 +218,18 @@ public class UIManager : MonoBehaviour
         if (gameHudPanel != null && gameHudPanel.IsVisible())
         {
             return "GameHUD";
+        }
+        if (resultPanel != null && resultPanel.IsVisible())
+        {
+            return "Result";
+        }
+        if (cardSelectionPanel != null && cardSelectionPanel.IsVisible())
+        {
+            return "CardSelection";
+        }
+        if (attributePanel != null && attributePanel.IsVisible())
+        {
+            return "Attribute";
         }
         return "None";
     }

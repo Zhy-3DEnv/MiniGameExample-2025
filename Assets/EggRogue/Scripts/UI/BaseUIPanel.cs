@@ -20,6 +20,10 @@ public abstract class BaseUIPanel : MonoBehaviour
     {
         if (gameObject != null)
         {
+            // 防止 isVisible 与 activeSelf 不同步导致“显示不了/关不掉”
+            if (isVisible && gameObject.activeSelf)
+                return;
+
             gameObject.SetActive(true);
             isVisible = true;
             OnShow();
@@ -33,6 +37,10 @@ public abstract class BaseUIPanel : MonoBehaviour
     {
         if (gameObject != null)
         {
+            // 防止 isVisible 与 activeSelf 不同步导致“显示不了/关不掉”
+            if (!isVisible && !gameObject.activeSelf)
+                return;
+
             gameObject.SetActive(false);
             isVisible = false;
             OnHide();

@@ -27,15 +27,25 @@ public class PlayerCombatController : MonoBehaviour
     [Tooltip("攻击范围（搜索敌人的最大距离）")]
     public float attackRange = 10f;
 
-    [Tooltip("射速（每秒发射几发子弹）")]
+    [Tooltip("攻击速度（每秒发射几发子弹，例如：2 = 每秒2发）")]
     public float fireRate = 2f;
 
     [Tooltip("单发伤害")]
     public float damagePerShot = 10f;
 
+    [Tooltip("子弹移动速度（子弹飞行速度，单位：米/秒，例如：20 = 每秒20米）")]
+    public float bulletSpeed = 20f;
+
     [Header("自动瞄准")]
     [Tooltip("是否自动瞄准最近的敌人")]
     public bool autoAim = true;
+
+    [Header("朝向")]
+    [Tooltip("角色是否始终朝向射击方向（与枪口一致）")]
+    public bool faceFiringDirection = true;
+
+    [Tooltip("朝向插值速度（0=瞬时转向，越大转向越平滑）")]
+    public float faceRotationSpeed = 0f;
 
     private float fireCooldown = 0f;
     private CharacterController characterController;
@@ -72,10 +82,61 @@ public class PlayerCombatController : MonoBehaviour
             fireCooldown -= Time.deltaTime;
         }
 
+        // 角色始终朝向最近敌人（与射击方向一致），枪为子物体会一起旋转
+        if (faceFiringDirection)
+        {
+            UpdateFacing();
+        }
+
         // 如果冷却完成，尝试射击
         if (fireCooldown <= 0f && autoAim)
         {
             TryFire();
+        }
+    }
+
+    /// <summary>
+    /// 更新角色朝向。锁敌时朝向最近敌人；非锁敌时朝向键盘/摇杆移动方向。
+    /// 枪为角色子物体会一起旋转。
+    /// </summary>
+    private void UpdateFacing()
+    {
+        Vector3 direction = Vector3.zero;
+
+        // 锁敌：有敌人在攻击范围内 → 朝向敌人
+        EnemyController targetEnemy = null;
+        if (EnemyManager.Instance != null)
+        {
+            targetEnemy = EnemyManager.Instance.GetClosestEnemy(transform.position, attackRange);
+        }
+
+        if (targetEnemy != null)
+        {
+            direction = (targetEnemy.transform.position - transform.position).normalized;
+            direction.y = 0f;
+        }
+        else
+        {
+            // 非锁敌：朝向键盘/摇杆移动方向
+            Vector2 moveInput = characterController.GetMoveInput();
+            if (moveInput.sqrMagnitude > 0.01f)
+            {
+                direction = new Vector3(moveInput.x, 0f, moveInput.y).normalized;
+            }
+        }
+
+        if (direction.sqrMagnitude < 0.0001f)
+            return;
+
+        Quaternion targetRot = Quaternion.LookRotation(direction);
+
+        if (faceRotationSpeed <= 0f)
+        {
+            transform.rotation = targetRot;
+        }
+        else
+        {
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, Time.deltaTime * faceRotationSpeed);
         }
     }
 
@@ -122,11 +183,11 @@ public class PlayerCombatController : MonoBehaviour
         // 实例化子弹
         GameObject bullet = Instantiate(bulletPrefab, firePoint.position, Quaternion.identity);
 
-        // 初始化子弹（设置方向和伤害）
+        // 初始化子弹（设置方向、伤害和速度）
         Projectile projectile = bullet.GetComponent<Projectile>();
         if (projectile != null)
         {
-            projectile.Initialize(direction, damagePerShot);
+            projectile.Initialize(direction, damagePerShot, bulletSpeed);
         }
         else
         {
@@ -160,5 +221,13 @@ public class PlayerCombatController : MonoBehaviour
     public void SetAttackRange(float newRange)
     {
         attackRange = newRange;
+    }
+
+    /// <summary>
+    /// 设置子弹移动速度（外部调用）
+    /// </summary>
+    public void SetBulletSpeed(float newSpeed)
+    {
+        bulletSpeed = Mathf.Max(0.1f, newSpeed);
     }
 }

@@ -45,15 +45,7 @@ public class BuildTimestampLabel : MonoBehaviour
 
         if (targetText != null)
         {
-            var platformPart = string.IsNullOrEmpty(buildInfo.buildPlatform)
-                ? ""
-                : $" ({buildInfo.buildPlatform})";
-
-            var tagPart = string.IsNullOrEmpty(buildInfo.buildTag)
-                ? ""
-                : $" [{buildInfo.buildTag}]";
-
-            targetText.text = $"{prefix}{buildInfo.buildTime}{platformPart}{tagPart}";
+            targetText.text = $"{prefix}{buildInfo.buildTime}";
         }
     }
 }
