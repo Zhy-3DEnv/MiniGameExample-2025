@@ -79,14 +79,25 @@ public class CharacterStats : MonoBehaviour
                 CurrentAttackRange += bonusAttackRange;
             }
 
-        // 应用到组件
+        // 应用到组件（先按满血初始化）
         ApplyStatsToComponents();
+
+        // 单局继承：若上一关保存了血量，恢复当前血量而非满血
+        if (LevelManager.Instance != null && LevelManager.Instance.TryGetRunStateHealth(out float savedCurrent, out float _))
+        {
+            if (health != null)
+                health.SetCurrentHealth(Mathf.Clamp(savedCurrent, 0f, CurrentMaxHealth));
+        }
     }
 
     /// <summary>
     /// 应用属性到各个组件
     /// </summary>
-    private void ApplyStatsToComponents()
+    /// <param name="fullHeal">
+    /// true  = 将生命值直接回满（用于初始化 / 重新开始关卡）；
+    /// false = 按“最大生命值增量”来调整当前生命值（用于选卡加成：例如 15/20 +5 → 20/25）。
+    /// </param>
+    private void ApplyStatsToComponents(bool fullHeal = true)
     {
         if (combatController != null)
         {
@@ -98,8 +109,35 @@ public class CharacterStats : MonoBehaviour
 
         if (health != null)
         {
-            health.SetMaxHealth(CurrentMaxHealth);
-            health.FullHeal();
+            if (fullHeal)
+            {
+                // 初始化场景时：直接设定最大生命并回满
+                health.SetMaxHealth(CurrentMaxHealth);
+                health.FullHeal();
+            }
+            else
+            {
+                // 选卡等成长场景：希望表现为
+                //   旧： current / max
+                //   新： (current + Δmax) / (max + Δmax) （同时不超过新最大值）
+                float oldCurrent = health.CurrentHealth;
+                float oldMax = health.maxHealth;
+                float newMax = CurrentMaxHealth;
+                float bonusMax = newMax - oldMax;
+
+                // 先根据 Health 自身逻辑调整最大生命值（保持血量百分比不变）
+                health.SetMaxHealth(newMax);
+
+                // 目标当前生命值：在旧生命值基础上增加与最大生命值相同的增量，再受新最大值上限限制
+                float targetCurrent = Mathf.Min(oldCurrent + bonusMax, newMax);
+
+                // 通过 Heal / TakeDamage 调整到目标生命值，保持事件/状态一致
+                float delta = targetCurrent - health.CurrentHealth;
+                if (delta > 0f)
+                    health.Heal(delta);
+                else if (delta < 0f)
+                    health.TakeDamage(-delta);
+            }
         }
 
         if (characterController != null)
@@ -114,17 +152,30 @@ public class CharacterStats : MonoBehaviour
     public void ApplyCardBonus(CardData card)
     {
         if (card == null) return;
+        
+        float oldDamage = CurrentDamage;
+        float oldFireRate = CurrentFireRate;
+        float oldMaxHealth = CurrentMaxHealth;
+        float oldMoveSpeed = CurrentMoveSpeed;
+        float oldBulletSpeed = CurrentBulletSpeed;
+        float oldAttackRange = CurrentAttackRange;
 
         // 累加卡片加成
-        CurrentDamage += card.damageBonus;
-        CurrentFireRate += card.fireRateBonus;
-        CurrentMaxHealth += card.maxHealthBonus;
-        CurrentMoveSpeed += card.moveSpeedBonus;
+        CurrentDamage      += card.damageBonus;
+        CurrentFireRate    += card.fireRateBonus;
+        CurrentMaxHealth   += card.maxHealthBonus;
+        CurrentMoveSpeed   += card.moveSpeedBonus;
         CurrentBulletSpeed += card.bulletSpeedBonus;
         CurrentAttackRange += card.attackRangeBonus;
 
-        // 重新应用到组件
-        ApplyStatsToComponents();
+        Debug.Log(
+            $"CharacterStats: ApplyCardBonus({card.cardName}) " +
+            $"Damage {oldDamage}->{CurrentDamage}, FireRate {oldFireRate}->{CurrentFireRate}, " +
+            $"MaxHealth {oldMaxHealth}->{CurrentMaxHealth}, MoveSpeed {oldMoveSpeed}->{CurrentMoveSpeed}, " +
+            $"BulletSpeed {oldBulletSpeed}->{CurrentBulletSpeed}, AttackRange {oldAttackRange}->{CurrentAttackRange}");
+
+        // 重新应用到组件，但不强制回满生命值，而是按“最大生命值增量”调整当前生命
+        ApplyStatsToComponents(fullHeal: false);
     }
 
     /// <summary>

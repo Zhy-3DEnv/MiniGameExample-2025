@@ -137,6 +137,10 @@ public class CardSelectionPanel : BaseUIPanel
         {
             CardManager.Instance.ApplyCard(selectedCard);
         }
+        else
+        {
+            Debug.LogWarning("CardSelectionPanel: 未找到 CardManager.Instance，卡片加成未能应用到角色。请确认 PersistentScene 中存在 CardManager 对象。");
+        }
 
         Debug.Log($"CardSelectionPanel: 玩家选择了卡片 - {selectedCard.cardName}");
         
@@ -165,12 +169,22 @@ public class CardSelectionPanel : BaseUIPanel
         if (!hasSelected)
             return;
 
+        // 单局继承：仅当未勾选「进入下一关回满血」时，保存当前/最大血量供新场景恢复
+        if (LevelManager.Instance != null && !LevelManager.Instance.fullHealOnNextLevel)
+        {
+            CharacterStats stats = FindObjectOfType<CharacterStats>();
+            if (stats != null)
+            {
+                Health h = stats.GetComponent<Health>();
+                if (h != null)
+                    LevelManager.Instance.SaveRunStateHealth(h.CurrentHealth, h.maxHealth);
+            }
+        }
+
         // 隐藏界面，进入下一关
         Hide();
-        if (EggRogue.LevelManager.Instance != null)
-        {
-            EggRogue.LevelManager.Instance.NextLevel();
-        }
+        if (LevelManager.Instance != null)
+            LevelManager.Instance.NextLevel();
     }
 
     private void Update()

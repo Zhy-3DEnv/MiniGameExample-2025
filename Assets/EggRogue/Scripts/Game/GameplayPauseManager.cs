@@ -62,7 +62,7 @@ namespace EggRogue
             bool added = pauseReasons.Add(reason);
             if (!added)
             {
-                Debug.Log($"GameplayPauseManager: 重复暂停请求已忽略，原因: {reason}（当前暂停原因数: {pauseReasons.Count}）");
+                // Debug.Log($"GameplayPauseManager: 重复暂停请求已忽略，原因: {reason}（当前暂停原因数: {pauseReasons.Count}）");
                 return;
             }
 
@@ -70,11 +70,11 @@ namespace EggRogue
             {
                 // 第一次从 0 -> 1，真正执行暂停
                 ApplyPause();
-                Debug.Log($"GameplayPauseManager: Gameplay 已暂停，原因: {reason}");
+                // Debug.Log($"GameplayPauseManager: Gameplay 已暂停，原因: {reason}");
             }
             else
             {
-                Debug.Log($"GameplayPauseManager: 已追加暂停原因（当前 {pauseReasons.Count} 个），最近原因: {reason}");
+                // Debug.Log($"GameplayPauseManager: 已追加暂停原因（当前 {pauseReasons.Count} 个），最近原因: {reason}");
             }
         }
 
@@ -90,7 +90,7 @@ namespace EggRogue
             bool removed = pauseReasons.Remove(reason);
             if (!removed)
             {
-                Debug.LogWarning($"GameplayPauseManager: 收到未登记的恢复请求，已忽略，原因: {reason}（当前暂停原因数: {pauseReasons.Count}）");
+                // Debug.LogWarning($"GameplayPauseManager: 收到未登记的恢复请求，已忽略，原因: {reason}（当前暂停原因数: {pauseReasons.Count}）");
                 return;
             }
 
@@ -98,11 +98,11 @@ namespace EggRogue
             {
                 // 所有暂停理由都结束，真正恢复
                 ApplyResume();
-                Debug.Log($"GameplayPauseManager: Gameplay 已恢复，原因: {reason}");
+                // Debug.Log($"GameplayPauseManager: Gameplay 已恢复，原因: {reason}");
             }
             else
             {
-                Debug.Log($"GameplayPauseManager: 仍有 {pauseReasons.Count} 个暂停原因未完成，最近恢复原因: {reason}");
+                // Debug.Log($"GameplayPauseManager: 仍有 {pauseReasons.Count} 个暂停原因未完成，最近恢复原因: {reason}");
             }
         }
 
@@ -113,7 +113,7 @@ namespace EggRogue
         {
             pauseReasons.Clear();
             ApplyResume();
-            Debug.Log($"GameplayPauseManager: ForceResumeAll 调用，原因: {reason}");
+            // Debug.Log($"GameplayPauseManager: ForceResumeAll 调用，原因: {reason}");
         }
 
         private void ApplyPause()

@@ -85,8 +85,12 @@ public class Projectile : MonoBehaviour
     /// 初始化子弹（外部调用，用于设置方向和伤害等）
     /// </summary>
     /// <param name="direction">发射方向</param>
-    /// <param name="bulletDamage">伤害值（可选，如果不传则使用默认值）</param>
-    /// <param name="bulletSpeed">移动速度（可选，如果不传则使用默认值）</param>
+    /// <param name="bulletDamage">
+    /// 传入的伤害值；传入负数表示“不修改当前伤害”，传入 0 也会生效（可用于完全关闭伤害）。
+    /// </param>
+    /// <param name="bulletSpeed">
+    /// 传入的移动速度；传入负数表示“不修改当前速度”，传入 0 会被 Clamp 为一个很小的正数。
+    /// </param>
     public void Initialize(Vector3 direction, float bulletDamage = -1f, float bulletSpeed = -1f)
     {
         // 设置朝向
@@ -95,16 +99,16 @@ public class Projectile : MonoBehaviour
             transform.rotation = Quaternion.LookRotation(direction);
         }
 
-        // 如果指定了伤害值，覆盖默认值
-        if (bulletDamage > 0f)
+        // 如果传入的伤害值非负，则覆盖默认值（允许设置为0）
+        if (bulletDamage >= 0f)
         {
             damage = bulletDamage;
         }
 
-        // 如果指定了速度，覆盖默认值
-        if (bulletSpeed > 0f)
+        // 如果传入的速度非负，则覆盖默认值（0 会被后续逻辑 Clamp）
+        if (bulletSpeed >= 0f)
         {
-            speed = bulletSpeed;
+            speed = Mathf.Max(0.1f, bulletSpeed);
         }
     }
 

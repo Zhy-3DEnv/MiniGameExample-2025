@@ -91,25 +91,45 @@ public class LevelFlowManager : MonoBehaviour
             Debug.LogWarning("LevelFlowManager: LevelManager.Instance 为空");
         }
 
-        // 通过 UIManager 显示结算界面（ResultPanel 在 PersistentScene，通过 UIManager 访问）
-        if (UIManager.Instance != null)
-        {
-            Debug.Log($"LevelFlowManager: 调用 UIManager.ShowResult({collectedGold}, {victoryReward})");
-            UIManager.Instance.ShowResult(collectedGold, victoryReward);
-        }
-        else
+        if (UIManager.Instance == null)
         {
             Debug.LogError("LevelFlowManager: UIManager.Instance 为空，无法显示结算界面！");
+            return;
         }
+
+        // 最后一关：跳过 ResultPanel，先发胜利奖励再直接显示完整通关界面
+        if (EggRogue.LevelManager.Instance != null && EggRogue.LevelManager.Instance.IsLastLevel())
+        {
+            if (GoldManager.Instance != null)
+            {
+                GoldManager.Instance.AddGold(victoryReward);
+                Debug.Log($"LevelFlowManager: 最后一关胜利，已添加 {victoryReward} 金币，直接显示完整通关");
+            }
+            int level = EggRogue.LevelManager.Instance.CurrentLevel;
+            int gold = GoldManager.Instance != null ? GoldManager.Instance.Gold : 0;
+            UIManager.Instance.ShowClear(level, gold);
+            return;
+        }
+
+        // 非最后一关：显示 ResultPanel（拾取金币、胜利奖励 → 继续 → 选卡）
+        Debug.Log($"LevelFlowManager: 调用 UIManager.ShowResult({collectedGold}, {victoryReward})");
+        UIManager.Instance.ShowResult(collectedGold, victoryReward);
     }
 
     private void OnPlayerDeath()
     {
         Debug.Log("LevelFlowManager: 玩家死亡，关卡失败");
-        // 可以在这里显示失败界面，或直接返回主菜单
-        if (GameManager.Instance != null)
+        int levelReached = EggRogue.LevelManager.Instance != null ? EggRogue.LevelManager.Instance.CurrentLevel : 1;
+        int gold = GoldManager.Instance != null ? GoldManager.Instance.Gold : 0;
+        if (UIManager.Instance != null)
         {
-            GameManager.Instance.ReturnToMenu();
+            UIManager.Instance.ShowFailure(levelReached, gold);
+        }
+        else
+        {
+            Debug.LogWarning("LevelFlowManager: UIManager.Instance 为空，无法显示失败界面，退回主菜单");
+            if (GameManager.Instance != null)
+                GameManager.Instance.ReturnToMenu();
         }
     }
 

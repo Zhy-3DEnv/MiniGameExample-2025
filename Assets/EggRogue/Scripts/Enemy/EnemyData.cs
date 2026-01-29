@@ -27,6 +27,9 @@ namespace EggRogue
         [Tooltip("基础移动速度")]
         public float baseMoveSpeed = 3f;
 
+        [Tooltip("基础接触伤害（靠近玩家时每次造成的伤害）")]
+        public float baseDamage = 5f;
+
         [Header("掉落配置")]
         [Tooltip("最少掉落金币数")]
         public int coinDropMin = 1;

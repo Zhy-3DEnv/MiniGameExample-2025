@@ -16,9 +16,9 @@ using EggRogue;
 /// - 怪物会自动寻找场景中的玩家（通过 Tag "Player" 或 CharacterController）
 /// - 怪物死亡时会自动从 EnemyManager 中注销
 /// </summary>
-[RequireComponent(typeof(Health))]
-public class EnemyController : MonoBehaviour
-{
+    [RequireComponent(typeof(Health))]
+    public class EnemyController : MonoBehaviour
+    {
     [Header("移动配置")]
     [Tooltip("移动速度（可在运行时通过 SetMoveSpeed 修改）")]
     [SerializeField] private float moveSpeed = 3f;
@@ -33,9 +33,16 @@ public class EnemyController : MonoBehaviour
     [Tooltip("是否强制锁定Y轴（推荐开启，防止怪物在高度上重叠）")]
     [SerializeField] private bool lockYAxis = true;
 
-    [Header("目标")]
-    [Tooltip("目标（玩家），如果为空会自动查找")]
-    [SerializeField] private Transform target;
+        [Header("目标")]
+        [Tooltip("目标（玩家），如果为空会自动查找")]
+        [SerializeField] private Transform target;
+
+        [Header("攻击配置")]
+        [Tooltip("接触玩家时造成的伤害（每次接触冷却一次）")]
+        [SerializeField] private float contactDamage = 5f;
+
+        [Tooltip("接触攻击冷却时间（秒），避免每帧多次伤害")]
+        [SerializeField] private float contactAttackCooldown = 0.5f;
 
     [Header("掉落")]
     [Tooltip("金币 Prefab（需含 Coin 组件），不填则不掉落")]
@@ -53,10 +60,11 @@ public class EnemyController : MonoBehaviour
     [Tooltip("掉落随机偏移半径（XZ），避免叠在一起）")]
     [SerializeField] private float coinDropRadius = 0.3f;
 
-    private Health health;
-    private Transform _transform;
-    private bool isDead = false;
-    private bool isPaused = false;
+        private Health health;
+        private Transform _transform;
+        private bool isDead = false;
+        private bool isPaused = false;
+        private float lastContactAttackTime = -999f;
 
     private void Awake()
     {
@@ -277,6 +285,12 @@ public class EnemyController : MonoBehaviour
     public void SetEnemyData(EnemyData data)
     {
         enemyData = data;
+
+        // 使用 EnemyData 中的配置覆盖局部默认值（例如接触伤害）
+        if (enemyData != null)
+        {
+            contactDamage = enemyData.baseDamage;
+        }
     }
 
     /// <summary>
@@ -293,5 +307,37 @@ public class EnemyController : MonoBehaviour
     public void ResumeMovement()
     {
         isPaused = false;
+    }
+
+    /// <summary>
+    /// 与玩家发生触发器接触时，对玩家造成伤害。
+    /// 需要怪物 Collider 勾选 IsTrigger，玩家身上有 Collider + Rigidbody + Health + CharacterController。
+    /// </summary>
+    private void OnTriggerStay(Collider other)
+    {
+        if (isDead || isPaused)
+            return;
+
+        // 通过 CharacterController 判断是否为玩家
+        CharacterController playerController = other.GetComponentInParent<CharacterController>();
+        if (playerController == null)
+            return;
+
+        // 冷却未结束，不重复伤害
+        if (Time.time < lastContactAttackTime + contactAttackCooldown)
+            return;
+
+        Health playerHealth = playerController.GetComponent<Health>();
+        if (playerHealth == null || playerHealth.IsDead)
+            return;
+
+        float damageToDeal = Mathf.Max(0f, contactDamage);
+        if (damageToDeal <= 0f)
+            return;
+
+        playerHealth.TakeDamage(damageToDeal);
+        lastContactAttackTime = Time.time;
+
+        Debug.Log($"EnemyController: {gameObject.name} 对玩家造成接触伤害 {damageToDeal}");
     }
 }

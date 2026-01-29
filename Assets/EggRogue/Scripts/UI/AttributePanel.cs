@@ -20,11 +20,8 @@ public class AttributePanel : BaseUIPanel
     [Tooltip("攻击速度文本（不推荐，建议使用自动生成模式）")]
     public Text fireRateText;
 
-    [Tooltip("最大生命值文本（不推荐，建议使用自动生成模式）")]
+    [Tooltip("生命值文本（显示：当前/最大）")]
     public Text maxHealthText;
-
-    [Tooltip("当前生命值文本（不推荐，建议使用自动生成模式）")]
-    public Text currentHealthText;
 
     [Tooltip("移动速度文本（不推荐，建议使用自动生成模式）")]
     public Text moveSpeedText;
@@ -44,6 +41,11 @@ public class AttributePanel : BaseUIPanel
 
     private bool isOpen = false;
 
+    // 记录该对象在 Awake 时是否处于激活状态（Awake 即使对象未激活也会执行）
+    // 用于在“一开始就显示在场景里”的情况下，自动在 Start 时隐藏一次，
+    // 同时又不影响一开始就是 inactive（通过 ESC/按钮第一次打开）的情况。
+    private bool wasActiveOnAwake = false;
+
     // 保存暂停前的状态
     private EnemySpawner enemySpawner;
     private CharacterController characterController;
@@ -51,6 +53,11 @@ public class AttributePanel : BaseUIPanel
     private bool wasSpawning = false;
     private bool wasCharacterEnabled = false;
     private bool wasCombatEnabled = false;
+
+    private void Awake()
+    {
+        wasActiveOnAwake = gameObject.activeSelf;
+    }
 
     private void Start()
     {
@@ -67,14 +74,23 @@ public class AttributePanel : BaseUIPanel
             fireRateText = transform.Find("FireRateText")?.GetComponent<Text>();
         if (maxHealthText == null)
             maxHealthText = transform.Find("MaxHealthText")?.GetComponent<Text>();
-        if (currentHealthText == null)
-            currentHealthText = transform.Find("CurrentHealthText")?.GetComponent<Text>();
         if (moveSpeedText == null)
             moveSpeedText = transform.Find("MoveSpeedText")?.GetComponent<Text>();
         if (bulletSpeedText == null)
             bulletSpeedText = transform.Find("BulletSpeedText")?.GetComponent<Text>();
         if (attackRangeText == null)
             attackRangeText = transform.Find("AttackRangeText")?.GetComponent<Text>();
+
+        // 如果该面板在编辑器里默认就是激活状态（wasActiveOnAwake = true），
+        // 启动时帮你自动隐藏一次，避免一进游戏就挡住画面。
+        // 若一开始是 inactive，则不会在 Start 里再次强制隐藏，保证第一次 ESC / 按钮能够正常弹出。
+        if (wasActiveOnAwake && gameObject.activeSelf)
+        {
+            gameObject.SetActive(false);
+            isOpen = false;
+            // 同步基类的可见状态，防止出现 IsVisible() 为 true 但实际上已经被我们关掉的情况。
+            isVisible = false;
+        }
     }
 
     private void Update()
@@ -243,25 +259,20 @@ public class AttributePanel : BaseUIPanel
             fireRateText.text = $"攻击速度: {stats.CurrentFireRate:F1} 发/秒";
         }
 
-        // 显示最大生命值（显示基础值与加成）
+        // 显示生命值：当前 / 最大（最大生命值仍然受成长/卡片加成）
         if (maxHealthText != null)
         {
             float baseMax = stats.characterData != null ? stats.characterData.baseMaxHealth : stats.CurrentMaxHealth;
             float current = stats.CurrentMaxHealth;
             float bonus = current - baseMax;
 
-            if (Mathf.Approximately(bonus, 0f))
-            {
-                maxHealthText.text = $"最大生命值: {current:F1}";
-            }
-            else
-            {
-                string sign = bonus >= 0 ? "+" : "";
-                maxHealthText.text = $"最大生命值: {current:F1} (基础 {baseMax:F1}, {sign}{bonus:F1})";
-            }
-        }
+            float currentHp = current;
+            if (health != null)
+                currentHp = health.CurrentHealth;
 
-        // 当前生命值不作为“角色成长属性”，如需显示可单独放在战斗 HUD 中，这里不更新
+            // 这里主展示“当前/最大”，加成信息可以视需要再补充
+            maxHealthText.text = $"生命值: {currentHp:F0}/{current:F0}";
+        }
 
         // 显示移动速度
         if (moveSpeedText != null)
@@ -304,13 +315,11 @@ public class AttributePanel : BaseUIPanel
             fireRateText.text = $"攻击速度: {combat.fireRate:F1} 发/秒";
         }
 
-        // 显示最大生命值
+        // 显示生命值：当前 / 最大
         if (maxHealthText != null && health != null)
         {
-            maxHealthText.text = $"最大生命值: {health.maxHealth:F1}";
+            maxHealthText.text = $"生命值: {health.CurrentHealth:F0}/{health.maxHealth:F0}";
         }
-
-        // 当前生命值不作为“角色成长属性”，如需显示可单独放在战斗 HUD 中，这里不更新
 
         // 显示移动速度
         if (moveSpeedText != null && character != null)

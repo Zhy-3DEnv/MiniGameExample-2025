@@ -16,13 +16,24 @@ public class LevelManager : MonoBehaviour
     [Tooltip("关卡数据库（ScriptableObject）- 拖入 Assets/EggRogue/Configs/LevelDatabase.asset")]
     public LevelDatabase levelDatabase;
 
-    [Tooltip("总关卡数（用于通关判断，0=使用 LevelDatabase.levels 长度）")]
-    public int maxLevelCount = 20;
+    [Tooltip("总关卡数上限（用于通关判断）。0=仅用 LevelDatabase 实际关卡数；>0 时与 LevelDatabase 取较小值，避免缺关。")]
+    public int maxLevelCount = 0;
+
+    [Header("单局继承")]
+    [Tooltip("进入下一关是否回满血。勾选=回满；不勾选=继承上一关的当前血量。")]
+    public bool fullHealOnNextLevel = true;
 
     /// <summary>
     /// 当前关卡编号（1-based）。
     /// </summary>
     public int CurrentLevel { get; private set; } = 1;
+
+    /// <summary>
+    /// 单局内跨关继承：上一关结束时的当前/最大血量（仅当 fullHealOnNextLevel=false 时使用）。
+    /// </summary>
+    private bool hasSavedRunStateHealth;
+    private float savedCurrentHealth;
+    private float savedMaxHealth;
 
     private void Awake()
     {
@@ -63,6 +74,41 @@ public class LevelManager : MonoBehaviour
     }
 
     /// <summary>
+    /// 清除单局血量继承状态（进入第 1 关时调用）。
+    /// </summary>
+    public void ClearRunStateHealth()
+    {
+        hasSavedRunStateHealth = false;
+    }
+
+    /// <summary>
+    /// 保存当前玩家血量，用于进入下一关后恢复。
+    /// </summary>
+    public void SaveRunStateHealth(float current, float max)
+    {
+        hasSavedRunStateHealth = true;
+        savedCurrentHealth = current;
+        savedMaxHealth = Mathf.Max(0.001f, max);
+    }
+
+    /// <summary>
+    /// 尝试取出并消费已保存的血量；若有则返回 true 并清除保存，否则返回 false。
+    /// </summary>
+    public bool TryGetRunStateHealth(out float current, out float max)
+    {
+        if (!hasSavedRunStateHealth)
+        {
+            current = 0f;
+            max = 0f;
+            return false;
+        }
+        current = savedCurrentHealth;
+        max = savedMaxHealth;
+        hasSavedRunStateHealth = false;
+        return true;
+    }
+
+    /// <summary>
     /// 将当前关卡配置应用到场景（EnemySpawner 等）。
     /// </summary>
     public void ApplyLevelToScene()
@@ -73,6 +119,10 @@ public class LevelManager : MonoBehaviour
             Debug.LogWarning("LevelManager: 未找到当前关卡配置，使用默认");
             return;
         }
+
+        // 进入第 1 关时清除单局血量继承，确保新局 / 重开时满血
+        if (CurrentLevel == 1)
+            ClearRunStateHealth();
 
         EnemySpawner spawner = FindObjectOfType<EnemySpawner>();
         if (spawner != null)
@@ -101,6 +151,27 @@ public class LevelManager : MonoBehaviour
     }
 
     /// <summary>
+    /// 有效关卡总数（用于通关判断）：以 LevelDatabase 实际数量为准，maxLevelCount>0 时取较小值。
+    /// </summary>
+    public int GetMaxLevel()
+    {
+        int dbCount = (levelDatabase != null && levelDatabase.levels != null) ? levelDatabase.levels.Length : 0;
+        if (dbCount <= 0)
+            return maxLevelCount > 0 ? maxLevelCount : 20;
+        if (maxLevelCount > 0)
+            return Mathf.Min(maxLevelCount, dbCount);
+        return dbCount;
+    }
+
+    /// <summary>
+    /// 当前是否为最后一关（通关后应进完整通关结算，而非下一关）。
+    /// </summary>
+    public bool IsLastLevel()
+    {
+        return CurrentLevel >= GetMaxLevel();
+    }
+
+    /// <summary>
     /// 设置当前关卡并加载 GameScene。由 GameManager 调用。
     /// </summary>
     public void SetLevelAndNotifyLoaded(int level)
@@ -109,15 +180,24 @@ public class LevelManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 进入下一关。若已通关则返回主菜单。
+    /// 通关时触发（参数：通关关卡、当前金币）。UIManager 等订阅后显示完整通关结算。
+    /// </summary>
+    public static event System.Action<int, int> OnGameClear;
+
+    /// <summary>
+    /// 进入下一关。若已通关则触发 OnGameClear，否则加载下一关。
     /// </summary>
     public void NextLevel()
     {
-        int max = maxLevelCount > 0 ? maxLevelCount : (levelDatabase != null ? levelDatabase.TotalLevelCount : 20);
+        int max = GetMaxLevel();
         if (CurrentLevel >= max)
         {
-            Debug.Log("LevelManager: 通关，返回主菜单");
-            if (GameManager.Instance != null)
+            Debug.Log("LevelManager: 通关，触发 OnGameClear");
+            int gold = GoldManager.Instance != null ? GoldManager.Instance.Gold : 0;
+            var evt = OnGameClear;
+            bool hasSubs = evt != null && evt.GetInvocationList().Length > 0;
+            evt?.Invoke(CurrentLevel, gold);
+            if (!hasSubs && GameManager.Instance != null)
                 GameManager.Instance.ReturnToMenu();
             return;
         }

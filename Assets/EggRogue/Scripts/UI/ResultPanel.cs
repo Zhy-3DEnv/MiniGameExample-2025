@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
+using EggRogue;
 
 /// <summary>
 /// 结算界面 - 显示关卡胜利后的奖励信息。
@@ -114,16 +115,11 @@ public class ResultPanel : BaseUIPanel
 
         waitingForInput = false;
         Hide();
-        
-        // 通知 UIManager 显示卡片选择界面
+
         if (UIManager.Instance != null)
-        {
             UIManager.Instance.ShowCardSelection();
-        }
         else
-        {
-            Debug.LogWarning("ResultPanel: UIManager.Instance 为空，无法显示卡片选择界面");
-        }
+            Debug.LogWarning("ResultPanel: UIManager.Instance 为空，无法显示选卡界面");
     }
 
     protected override void OnShow()

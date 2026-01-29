@@ -146,6 +146,9 @@ MonoBehaviour:
   OnTakeDamage:
     m_PersistentCalls:
       m_Calls: []
+  useInvincibility: 0
+  invincibleDuration: 0.5
+  damagePopupPrefab: {fileID: 0}
 --- !u!114 &3893463621655489681
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -163,8 +166,11 @@ MonoBehaviour:
   groundHeight: 0
   lockYAxis: 1
   target: {fileID: 0}
+  contactDamage: 5
+  contactAttackCooldown: 0.5
   coinPrefab: {fileID: 7407567273851145033, guid: b23ca81cc0def3242a6a335a6adecebe,
     type: 3}
+  enemyData: {fileID: 0}
   coinDropMin: 1
   coinDropMax: 2
   coinDropRadius: 0.3

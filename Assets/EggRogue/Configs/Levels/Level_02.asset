@@ -19,7 +19,7 @@ MonoBehaviour:
   minTotalEnemies: 0
   maxTotalEnemies: 0
   randomOffsetRadius: 2
-  levelDuration: 30
+  levelDuration: 20
   victoryRewardGold: 4
   enemyHealthMultiplier: 1.05
   enemyMoveSpeedMultiplier: 1.02

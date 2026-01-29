@@ -22,13 +22,16 @@ public class CardManager : MonoBehaviour
 
     private void Awake()
     {
+        // 确保 CardManager 常驻并且只保留一份实例
+        GameObject rootGO = transform.root != null ? transform.root.gameObject : gameObject;
+
         if (_instance != null && _instance != this)
         {
-            Destroy(gameObject);
+            Destroy(rootGO);
             return;
         }
         _instance = this;
-        DontDestroyOnLoad(gameObject);
+        DontDestroyOnLoad(rootGO);
     }
 
     /// <summary>
@@ -45,10 +48,18 @@ public class CardManager : MonoBehaviour
         CharacterStats stats = FindObjectOfType<CharacterStats>();
         if (stats != null)
         {
+            float beforeMax = stats.CurrentMaxHealth;
+            float beforeDamage = stats.CurrentDamage;
+
             stats.ApplyCardBonus(card);
-            Debug.Log($"CardManager: 已应用卡片 {card.cardName} 的加成（通过 CharacterStats）");
+
+            Debug.Log(
+                $"CardManager: 通过 CharacterStats 应用卡片 {card.cardName} 加成。" +
+                $" MaxHealth: {beforeMax} -> {stats.CurrentMaxHealth}, Damage: {beforeDamage} -> {stats.CurrentDamage}");
             return;
         }
+
+        Debug.LogWarning("CardManager: 未找到 CharacterStats，使用兼容旧系统路径应用卡片加成。");
 
         // 兼容旧系统（如果没有 CharacterStats，直接修改组件）
         PlayerCombatController combat = FindObjectOfType<PlayerCombatController>();

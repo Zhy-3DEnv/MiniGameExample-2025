@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
+using EggRogue;
 
 /// <summary>
 /// UI管理器 - 负责统一管理所有UI面板的显示和隐藏。
@@ -29,6 +30,12 @@ public class UIManager : MonoBehaviour
     [Tooltip("结算面板（关卡胜利后显示）")]
     public ResultPanel resultPanel;
 
+    [Tooltip("失败结算面板（玩家死亡后显示）")]
+    public FailurePanel failurePanel;
+
+    [Tooltip("完整通关结算面板（通过最后一关后显示）")]
+    public ClearPanel clearPanel;
+
     [Tooltip("卡片选择面板")]
     public CardSelectionPanel cardSelectionPanel;
 
@@ -54,8 +61,18 @@ public class UIManager : MonoBehaviour
 
     private void Start()
     {
-        // 初始化时显示主菜单，隐藏游戏HUD
+        LevelManager.OnGameClear += OnGameClear;
         ShowMainMenu();
+    }
+
+    private void OnDestroy()
+    {
+        LevelManager.OnGameClear -= OnGameClear;
+    }
+
+    private void OnGameClear(int level, int gold)
+    {
+        ShowClear(level, gold);
     }
 
         private void Update()
@@ -80,6 +97,8 @@ public class UIManager : MonoBehaviour
                     inGameContext =
                         (gameHudPanel != null && gameHudPanel.IsVisible()) ||
                         (resultPanel != null && resultPanel.IsVisible()) ||
+                        (failurePanel != null && failurePanel.IsVisible()) ||
+                        (clearPanel != null && clearPanel.IsVisible()) ||
                         (cardSelectionPanel != null && cardSelectionPanel.IsVisible());
                 }
 
@@ -144,6 +163,46 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
+    /// 显示失败结算面板（玩家死亡后）。
+    /// </summary>
+    /// <param name="levelReached">到达的关卡（死亡时所在关）</param>
+    /// <param name="gold">当前总金币</param>
+    public void ShowFailure(int levelReached, int gold)
+    {
+        HideAllPanels();
+        if (failurePanel != null)
+        {
+            failurePanel.ShowFailure(levelReached, gold);
+        }
+        else
+        {
+            Debug.LogWarning("UIManager: failurePanel 未设置！跳过失败界面，直接返回主菜单。");
+            if (GameManager.Instance != null)
+                GameManager.Instance.ReturnToMenu();
+        }
+    }
+
+    /// <summary>
+    /// 显示完整通关结算面板（通过最后一关后）。
+    /// </summary>
+    /// <param name="levelReached">通关的关卡（最后一关）</param>
+    /// <param name="gold">当前总金币</param>
+    public void ShowClear(int levelReached, int gold)
+    {
+        HideAllPanels();
+        if (clearPanel != null)
+        {
+            clearPanel.ShowClear(levelReached, gold);
+        }
+        else
+        {
+            Debug.LogWarning("UIManager: clearPanel 未设置！跳过完整通关界面，直接返回主菜单。");
+            if (GameManager.Instance != null)
+                GameManager.Instance.ReturnToMenu();
+        }
+    }
+
+    /// <summary>
     /// 显示卡片选择面板。
     /// </summary>
     public void ShowCardSelection()
@@ -194,6 +253,14 @@ public class UIManager : MonoBehaviour
         {
             resultPanel.Hide();
         }
+        if (failurePanel != null)
+        {
+            failurePanel.Hide();
+        }
+        if (clearPanel != null)
+        {
+            clearPanel.Hide();
+        }
         if (cardSelectionPanel != null)
         {
             cardSelectionPanel.Hide();
@@ -222,6 +289,14 @@ public class UIManager : MonoBehaviour
         if (resultPanel != null && resultPanel.IsVisible())
         {
             return "Result";
+        }
+        if (failurePanel != null && failurePanel.IsVisible())
+        {
+            return "Failure";
+        }
+        if (clearPanel != null && clearPanel.IsVisible())
+        {
+            return "Clear";
         }
         if (cardSelectionPanel != null && cardSelectionPanel.IsVisible())
         {

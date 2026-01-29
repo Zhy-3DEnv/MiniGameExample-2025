@@ -47,6 +47,18 @@ public class Health : MonoBehaviour
     /// </summary>
     public float HealthPercent => maxHealth > 0 ? currentHealth / maxHealth : 0f;
 
+    [Header("受击反馈")]
+    [Tooltip("是否启用受击后短暂无敌（防止一瞬间被打空血量）")]
+    public bool useInvincibility = false;
+
+    [Tooltip("受击后无敌时间（秒）")]
+    public float invincibleDuration = 0.5f;
+
+    [Tooltip("受击飘字的预制体（可选，需带有 FlappyBird.ScorePopup 组件）")]
+    public GameObject damagePopupPrefab;
+
+    private float invincibleUntilTime = 0f;
+
     private void Awake()
     {
         // 初始化：当前生命值 = 最大生命值
@@ -62,6 +74,10 @@ public class Health : MonoBehaviour
         if (IsDead)
             return; // 已经死了，不再处理伤害
 
+        // 受击无敌：在无敌时间内忽略所有伤害
+        if (useInvincibility && Time.time < invincibleUntilTime)
+            return;
+
         if (damage <= 0f)
             return; // 无效伤害
 
@@ -69,8 +85,41 @@ public class Health : MonoBehaviour
         currentHealth -= damage;
         currentHealth = Mathf.Max(0f, currentHealth); // 确保不会小于 0
 
+        // 设置新的无敌结束时间
+        if (useInvincibility)
+        {
+            invincibleUntilTime = Time.time + invincibleDuration;
+        }
+
         // 触发受击事件
         OnTakeDamage?.Invoke(damage);
+
+        // 受击飘字（如果配置了预制体）
+        if (damagePopupPrefab != null)
+        {
+            try
+            {
+                GameObject popup = Instantiate(damagePopupPrefab);
+
+                // 兼容 FlappyBird.ScorePopup 的接口
+                var popupScript = popup.GetComponent<FlappyBird.ScorePopup>();
+                if (popupScript != null)
+                {
+                    // 位置：略高于当前对象
+                    Vector3 worldPos = transform.position + Vector3.up * 1.0f;
+                    popupScript.SetPosition(worldPos);
+                    popupScript.SetDamage(Mathf.RoundToInt(damage));
+                }
+                else
+                {
+                    Destroy(popup);
+                }
+            }
+            catch
+            {
+                // 如果预制体缺组件，避免在受击时抛异常影响游戏流程
+            }
+        }
 
         // 如果生命值归零，触发死亡事件
         if (IsDead)
@@ -115,6 +164,14 @@ public class Health : MonoBehaviour
     public void FullHeal()
     {
         currentHealth = maxHealth;
+    }
+
+    /// <summary>
+    /// 直接设置当前生命值（用于跨关恢复等）。会被钳制到 [0, maxHealth]。
+    /// </summary>
+    public void SetCurrentHealth(float value)
+    {
+        currentHealth = Mathf.Clamp(value, 0f, maxHealth);
     }
 
     /// <summary>
