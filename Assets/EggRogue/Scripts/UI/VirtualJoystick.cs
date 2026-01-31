@@ -142,4 +142,15 @@ public class VirtualJoystick : MonoBehaviour, IDragHandler, IPointerDownHandler,
             gameObject.SetActive(visible);
         }
     }
+
+    /// <summary>
+    /// 立即将摇杆复位到中心（进入下一关等场景切换时调用，避免摇杆停留在上一关位置）
+    /// </summary>
+    public void ResetToCenter()
+    {
+        isDragging = false;
+        inputVector = Vector2.zero;
+        if (handle != null)
+            handle.anchoredPosition = Vector2.zero;
+    }
 }

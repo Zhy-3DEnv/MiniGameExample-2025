@@ -27,7 +27,7 @@ public class LevelFlowManager : MonoBehaviour
         {
             levelTimer.OnLevelVictory.AddListener(OnLevelVictory);
             levelTimer.OnPlayerDeath.AddListener(OnPlayerDeath);
-            Debug.Log("LevelFlowManager: 已订阅 LevelTimer 事件");
+            // Debug.Log("LevelFlowManager: 已订阅 LevelTimer 事件");
         }
         else
         {
@@ -90,6 +90,18 @@ public class LevelFlowManager : MonoBehaviour
         {
             Debug.LogWarning("LevelFlowManager: LevelManager.Instance 为空");
         }
+
+        // Debug：统计当前场景中“还留在地上”的金币总价值（玩家此刻还能去捡的）
+        int remainingCoinValue = 0;
+        var coins = FindObjectsOfType<Coin>();
+        foreach (var coin in coins)
+        {
+            if (coin != null)
+            {
+                remainingCoinValue += coin.value;
+            }
+        }
+        Debug.Log($"[Gold Debug] 本关结束时场景中剩余可拾取金币总价值 = {remainingCoinValue}");
 
         if (UIManager.Instance == null)
         {

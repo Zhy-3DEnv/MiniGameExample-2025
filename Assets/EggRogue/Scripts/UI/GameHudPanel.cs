@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
+using EggRogue;
 
 /// <summary>
 /// 游戏HUD面板 - 战斗时显示的UI（血条、金币、返回按钮等）。
@@ -38,6 +39,10 @@ public class GameHudPanel : BaseUIPanel
 
     [Tooltip("关卡文本（显示当前关卡，例如：第1关）")]
     public Text levelText;
+
+    [Header("头像")]
+    [Tooltip("头像图标（AvatarButton 上的 Image，用于显示当前选中角色）")]
+    public Image avatarIcon;
 
     private void Start()
     {
@@ -188,6 +193,23 @@ public class GameHudPanel : BaseUIPanel
             UpdateGold(GoldManager.Instance.Gold);
         else
             UpdateGold(0);
+        RefreshAvatarIcon();
+    }
+
+    /// <summary>
+    /// 同步当前选中角色的图标到头像按钮
+    /// </summary>
+    public void RefreshAvatarIcon()
+    {
+        if (avatarIcon == null) return;
+        if (CharacterSelectionManager.Instance == null || CharacterSelectionManager.Instance.SelectedCharacter == null)
+        {
+            avatarIcon.enabled = false;
+            return;
+        }
+        CharacterData selected = CharacterSelectionManager.Instance.SelectedCharacter;
+        avatarIcon.sprite = selected.icon;
+        avatarIcon.enabled = selected.icon != null;
     }
 
     /// <summary>

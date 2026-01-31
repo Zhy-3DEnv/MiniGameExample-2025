@@ -165,14 +165,16 @@ MonoBehaviour:
   stoppingDistance: 1.5
   groundHeight: 0
   lockYAxis: 1
+  emergenceDuration: 1
+  emergenceOffsetY: 1
   target: {fileID: 0}
   contactDamage: 5
   contactAttackCooldown: 0.5
   coinPrefab: {fileID: 7407567273851145033, guid: b23ca81cc0def3242a6a335a6adecebe,
     type: 3}
-  enemyData: {fileID: 0}
+  enemyData: {fileID: 11400000, guid: 968433df3a0cc744ab885c9e2996f104, type: 2}
   coinDropMin: 1
-  coinDropMax: 2
+  coinDropMax: 1
   coinDropRadius: 0.3
 --- !u!136 &8373943713143548106
 CapsuleCollider:

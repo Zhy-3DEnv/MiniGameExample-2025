@@ -72,6 +72,14 @@ public class GameManager : MonoBehaviour
     /// </summary>
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
+        if (scene.name == gameSceneName)
+        {
+            // 进入游戏/下一关时复位摇杆到中心，避免摇杆停留在上一关位置
+            VirtualJoystick joystick = FindObjectOfType<VirtualJoystick>();
+            if (joystick != null)
+                joystick.ResetToCenter();
+        }
+
         if (UIManager.Instance == null)
             return;
 

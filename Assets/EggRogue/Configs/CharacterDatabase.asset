@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:yousandi.cn,2023:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f531f6c1badbf649b8fbf88a08318e3, type: 3}
+  m_Name: CharacterDatabase
+  m_EditorClassIdentifier: 
+  characters:
+  - {fileID: 11400000, guid: 93c22ac391a4527498e9375e6c52982d, type: 2}
+  - {fileID: 11400000, guid: 2d54532fb4c1edf41b737c0fa95fd153, type: 2}
+  - {fileID: 11400000, guid: 686f12046c7be3f4183374c96ee4851b, type: 2}
+  - {fileID: 11400000, guid: 637c0af1a9edb6f419d7b29063a5d714, type: 2}
+  - {fileID: 11400000, guid: c042f43e2e4d671439d386ca3a5543f4, type: 2}
+  - {fileID: 11400000, guid: 05f0e40d82ff75e48a57b8efd849ebee, type: 2}
+  - {fileID: 11400000, guid: e8a3fb572d2b91742a6edcc26beca4db, type: 2}
+  - {fileID: 11400000, guid: a0b217bb9d701504e849c40c454699b3, type: 2}
+  - {fileID: 11400000, guid: 612901ee65b0a8449a9c4b4ffe89d30e, type: 2}
+  - {fileID: 11400000, guid: 9a72704458f0cf641bcceaf6bc1bc945, type: 2}
+  - {fileID: 11400000, guid: 2a6d0d293431f0a4fb3d4cc4db6d3bf4, type: 2}
+  - {fileID: 11400000, guid: 3f959a7a03d6b3a47aac4ee9526f4bb3, type: 2}
+  - {fileID: 11400000, guid: 113b7e5354637e24cafe289d49bb5882, type: 2}
+  - {fileID: 11400000, guid: e8311e51df794ad44aa834e6e744faa8, type: 2}
+  - {fileID: 11400000, guid: 623e5bec87c08f945ac87bdebf50782a, type: 2}
+  - {fileID: 11400000, guid: 79cbc0bb5c695284a9d92b9fd9298499, type: 2}
+  - {fileID: 11400000, guid: f0d7d740f3e08f849adc21d136178adb, type: 2}
+  - {fileID: 11400000, guid: 62f0c15a85e6f7948ac222eae9f2d7c1, type: 2}
+  - {fileID: 11400000, guid: 0c5d43557c6209a44b9cc8a94256ffff, type: 2}
+  - {fileID: 11400000, guid: 74e6d96d70963e5478617cd3d9702540, type: 2}

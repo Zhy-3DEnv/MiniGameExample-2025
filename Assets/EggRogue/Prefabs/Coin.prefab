@@ -27,13 +27,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4015089870642405745}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.125, z: 0}
-  m_LocalScale: {x: 0.25, y: 0.25, z: 0.25}
-  m_ConstrainProportionsScale: 1
+  m_LocalRotation: {x: -0.29045403, y: -0.6446977, z: 0.29045448, w: 0.6446996}
+  m_LocalPosition: {x: 0, y: 0.16, z: 0}
+  m_LocalScale: {x: 0.462125, y: 0.20953833, z: 0.462125}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 4746060709707055565}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -90, z: 48.506}
 --- !u!33 &1686239088025936240
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -156,3 +156,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   value: 1
+  doubleGoldPopupPrefab: {fileID: 6313427997120869975, guid: a65d37b1ab623c042ab69e26bb7bfb1a,
+    type: 3}

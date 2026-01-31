@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:yousandi.cn,2023:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d8eacb17c0a2fa4b8b1293485a04d74, type: 3}
+  m_Name: "Character_\u8881\u9686\u86CB"
+  m_EditorClassIdentifier: 
+  characterName: "\u8881\u9686\u86CB"
+  description: "\u539F\u578B\uFF1A\u8881\u9686\u5E73\u3002\u975E\u5E38\u4E2D\u56FD\u3001\u975E\u5E38\u6709\u5206\u91CF\u3002\u8840\u725B\u578B\u89D2\u8272\uFF0C\u6700\u5927\u751F\u547D\u503C\u8F6C\u5316\u4E3A\u653B\u51FB\u529B\u3002"
+  icon: {fileID: 21300000, guid: 43fc8e76ba6f2304db2fbcf31713b1d2, type: 3}
+  baseDamage: 7
+  baseFireRate: 1.8
+  baseMaxHealth: 140
+  baseMoveSpeed: 4.2
+  baseBulletSpeed: 17
+  baseAttackRange: 9
+  passiveAbilities:
+  - {fileID: 11400000, guid: 2be8d46b05951bf44acfb508aa263a3e, type: 2}

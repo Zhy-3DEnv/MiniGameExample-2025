@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:yousandi.cn,2023:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6dff1725c84ad4643bcc62fd23b48973, type: 3}
+  m_Name: GlassCannon
+  m_EditorClassIdentifier: 
+  abilityName: "\u73BB\u7483\u5927\u70AE"
+  description: "\u4F24\u5BB3 \xD7 2\uFF0C\u4F46\u6700\u5927\u751F\u547D\u503C \xD7
+    0.5"
+  icon: {fileID: 0}
+  damageMultiplier: 2
+  healthMultiplier: 0.5

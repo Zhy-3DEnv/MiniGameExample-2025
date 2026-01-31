@@ -24,6 +24,9 @@ public class UIManager : MonoBehaviour
     [Tooltip("主菜单面板")]
     public MainMenuPanel mainMenuPanel;
 
+    [Tooltip("角色选择面板")]
+    public CharacterSelectionPanel characterSelectionPanel;
+
     [Tooltip("游戏HUD面板（战斗界面）")]
     public GameHudPanel gameHudPanel;
 
@@ -122,6 +125,26 @@ public class UIManager : MonoBehaviour
         else
         {
             Debug.LogWarning("UIManager: mainMenuPanel 未设置，请在 Inspector 中拖入引用。");
+        }
+    }
+
+    /// <summary>
+    /// 显示角色选择面板，隐藏其他面板
+    /// </summary>
+    public void ShowCharacterSelection()
+    {
+        HideAllPanels();
+        if (characterSelectionPanel != null)
+        {
+            characterSelectionPanel.Show();
+        }
+        else
+        {
+            Debug.LogWarning("UIManager: characterSelectionPanel 未设置，跳过角色选择，直接进入游戏");
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.LoadGameScene(1);
+            }
         }
     }
 
@@ -245,6 +268,10 @@ public class UIManager : MonoBehaviour
         {
             mainMenuPanel.Hide();
         }
+        if (characterSelectionPanel != null)
+        {
+            characterSelectionPanel.Hide();
+        }
         if (gameHudPanel != null)
         {
             gameHudPanel.Hide();
@@ -297,6 +324,10 @@ public class UIManager : MonoBehaviour
         if (clearPanel != null && clearPanel.IsVisible())
         {
             return "Clear";
+        }
+        if (characterSelectionPanel != null && characterSelectionPanel.IsVisible())
+        {
+            return "CharacterSelection";
         }
         if (cardSelectionPanel != null && cardSelectionPanel.IsVisible())
         {

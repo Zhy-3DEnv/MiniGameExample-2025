@@ -61,7 +61,7 @@ public class LevelManager : MonoBehaviour
     }
 
     /// <summary>
-    /// GameScene 加载完成后应用当前关卡数据。
+    /// GameScene 加载完成后应用当前关卡数据，并在正确的时机处理跨关金币补偿。
     /// </summary>
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
@@ -69,6 +69,22 @@ public class LevelManager : MonoBehaviour
             return;
         if (scene.name != GameManager.Instance.GameSceneName)
             return;
+
+        // 到这里时，上一关的 GameScene 已经卸载完毕，所有 Coin.OnDestroy 都已被调用，
+        // GoldManager.lostGoldBank 已经包含了上一关“未拾取金币”的最终数值。
+        if (GoldManager.Instance != null)
+        {
+            if (CurrentLevel <= 1)
+            {
+                // 新开一局，从第 1 关开始：清空历史的未拾取/双倍状态
+                GoldManager.Instance.ResetGoldBonuses();
+            }
+            else
+            {
+                // 进入第 N(>1) 关：把上一关累计的未拾取金币转成本关的双倍拾取额度
+                GoldManager.Instance.PrepareDoubleGoldForNextLevel();
+            }
+        }
 
         ApplyLevelToScene();
     }

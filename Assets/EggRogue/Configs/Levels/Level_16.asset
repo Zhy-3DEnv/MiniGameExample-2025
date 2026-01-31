@@ -14,6 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   levelNumber: 16
   levelName: "\u7B2C16\u5173"
+  spawnMix:
+  - enemyData: {fileID: 11400000, guid: 968433df3a0cc744ab885c9e2996f104, type: 2}
+    enemyPrefab: {fileID: 0}
+    spawnWeight: 0
+    maxAlive: 0
+    spawnRateScale: 0
   spawnsPerSecond: 13
   maxAliveEnemies: 0
   minTotalEnemies: 0

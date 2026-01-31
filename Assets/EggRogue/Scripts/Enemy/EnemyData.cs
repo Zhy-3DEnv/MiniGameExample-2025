@@ -20,6 +20,10 @@ namespace EggRogue
         [Tooltip("敌人图标（可选）")]
         public Sprite icon;
 
+        [Header("Prefab 绑定")]
+        [Tooltip("该敌人类型对应的默认 Prefab（通常挂有 EnemyController + Health）。若在 LevelData.spawnMix 中未指定 Prefab，将优先使用这里的设置。")]
+        public GameObject enemyPrefab;
+
         [Header("基础属性")]
         [Tooltip("基础最大生命值")]
         public float baseMaxHealth = 20f;

@@ -11,18 +11,18 @@ using EggRogue;
 public class CharacterStats : MonoBehaviour
 {
     [Header("角色配置")]
-    [Tooltip("角色数据（ScriptableObject）")]
+    [Tooltip("角色数据（ScriptableObject）。若为空，会尝试从 CharacterSelectionManager 获取选中角色")]
     public CharacterData characterData;
 
     // 当前属性（运行时，包含卡片加成，只读）
     // 注意：属性（property）不能使用 [Header] 和 [Tooltip]，所以这些属性在 Inspector 中不会显示
     // 可以通过 AttributePanel 查看当前属性值
-    public float CurrentDamage { get; private set; }
-    public float CurrentFireRate { get; private set; }
-    public float CurrentMaxHealth { get; private set; }
-    public float CurrentMoveSpeed { get; private set; }
-    public float CurrentBulletSpeed { get; private set; }
-    public float CurrentAttackRange { get; private set; }
+    public float CurrentDamage { get; set; }
+    public float CurrentFireRate { get; set; }
+    public float CurrentMaxHealth { get; set; }
+    public float CurrentMoveSpeed { get; set; }
+    public float CurrentBulletSpeed { get; set; }
+    public float CurrentAttackRange { get; set; }
 
     private Health health;
     private CharacterController characterController;
@@ -46,9 +46,16 @@ public class CharacterStats : MonoBehaviour
     /// </summary>
     public void InitializeStats()
     {
+        // 若未设置 characterData，尝试从 CharacterSelectionManager 获取玩家选择的角色
+        if (characterData == null && CharacterSelectionManager.Instance != null)
+        {
+            characterData = CharacterSelectionManager.Instance.SelectedCharacter;
+            Debug.Log($"CharacterStats: 从 CharacterSelectionManager 获取角色 - {(characterData != null ? characterData.characterName : "null")}");
+        }
+
         if (characterData == null)
         {
-            Debug.LogWarning("CharacterStats: characterData 未设置，使用默认值");
+            Debug.LogWarning("CharacterStats: characterData 未设置且未从 CharacterSelectionManager 获取到角色，使用默认值");
             return;
         }
 
@@ -78,6 +85,9 @@ public class CharacterStats : MonoBehaviour
                 CurrentBulletSpeed += bonusBulletSpeed;
                 CurrentAttackRange += bonusAttackRange;
             }
+
+        // 应用角色被动能力（在卡片加成之后，最终应用到组件之前）
+        ApplyPassiveAbilities();
 
         // 应用到组件（先按满血初始化）
         ApplyStatsToComponents();
@@ -201,6 +211,23 @@ public class CharacterStats : MonoBehaviour
             moveSpeed = 0f;
             bulletSpeed = 0f;
             attackRange = 0f;
+        }
+    }
+
+    /// <summary>
+    /// 应用角色被动能力。在基础值 + 卡片加成之后，最终应用到组件之前调用。
+    /// </summary>
+    private void ApplyPassiveAbilities()
+    {
+        if (characterData == null || characterData.passiveAbilities == null)
+            return;
+
+        foreach (var passive in characterData.passiveAbilities)
+        {
+            if (passive != null)
+            {
+                passive.ModifyStats(this);
+            }
         }
     }
 

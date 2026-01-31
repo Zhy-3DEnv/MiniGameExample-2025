@@ -38,5 +38,9 @@ public class CharacterData : ScriptableObject
 
     [Tooltip("基础攻击范围")]
     public float baseAttackRange = 10f;
+
+    [Header("特殊能力")]
+    [Tooltip("角色的被动能力列表，按顺序应用。例如：攻击力倍率、生命转攻击等")]
+    public CharacterPassive[] passiveAbilities;
 }
 }

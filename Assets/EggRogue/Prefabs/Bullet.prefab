@@ -159,7 +159,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   damage: 10
-  speed: 20
+  speed: 40
   lifeTime: 5
   targetTag: Enemy
   isPiercing: 0

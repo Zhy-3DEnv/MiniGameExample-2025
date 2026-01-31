@@ -33,6 +33,13 @@ using EggRogue;
     [Tooltip("是否强制锁定Y轴（推荐开启，防止怪物在高度上重叠）")]
     [SerializeField] private bool lockYAxis = true;
 
+    [Header("出场")]
+    [Tooltip("出场时长（秒），0 表示不演出、直接可移动攻击")]
+    [SerializeField] private float emergenceDuration = 1f;
+
+    [Tooltip("出场时从地面下沉的深度（Y 轴，用于“从地下冒出”等效果）")]
+    [SerializeField] private float emergenceOffsetY = 1f;
+
         [Header("目标")]
         [Tooltip("目标（玩家），如果为空会自动查找")]
         [SerializeField] private Transform target;
@@ -65,6 +72,11 @@ using EggRogue;
         private bool isDead = false;
         private bool isPaused = false;
         private float lastContactAttackTime = -999f;
+
+        private bool isEmerging = false;
+        private float emergenceElapsed = 0f;
+        private float emergenceSurfaceY = 0f;
+        private float emergenceStartY = 0f;
 
     private void Awake()
     {
@@ -99,8 +111,18 @@ using EggRogue;
             EnemyManager.Instance.RegisterEnemy(this);
         }
 
-        // 初始化时锁定Y轴（如果启用）
-        if (lockYAxis)
+        // 出场：若配置了出场时长，从地下冒出（以生成点 Y 为地面）
+        emergenceSurfaceY = _transform.position.y;
+        if (emergenceDuration > 0f && emergenceOffsetY > 0f)
+        {
+            emergenceStartY = emergenceSurfaceY - emergenceOffsetY;
+            Vector3 pos = _transform.position;
+            pos.y = emergenceStartY;
+            _transform.position = pos;
+            isEmerging = true;
+            emergenceElapsed = 0f;
+        }
+        else if (lockYAxis)
         {
             Vector3 pos = _transform.position;
             pos.y = groundHeight;
@@ -110,8 +132,28 @@ using EggRogue;
 
     private void Update()
     {
-        // 如果已死亡或已暂停，不处理移动
-        if (isDead || isPaused)
+        if (isDead)
+            return;
+
+        // 出场中：只推进冒出动画，不移动；暂停时也不推进
+        if (isEmerging)
+        {
+            if (!isPaused)
+                emergenceElapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(emergenceElapsed / emergenceDuration);
+            Vector3 pos = _transform.position;
+            pos.y = Mathf.Lerp(emergenceStartY, emergenceSurfaceY, t);
+            _transform.position = pos;
+            if (t >= 1f)
+            {
+                isEmerging = false;
+                pos.y = emergenceSurfaceY;
+                _transform.position = pos;
+            }
+            return;
+        }
+
+        if (isPaused)
             return;
 
         // 如果目标丢失，尝试重新查找
@@ -155,12 +197,11 @@ using EggRogue;
     /// </summary>
     private void LateUpdate()
     {
-        // 如果已死亡，不处理
         if (isDead)
             return;
-
-        // 强制锁定Y轴（防止怪物在高度上重叠）
-        // 这个在LateUpdate中执行，确保即使其他系统修改了位置，Y轴也会被锁定
+        // 出场中 Y 由冒出动画控制，不在这里覆盖
+        if (isEmerging)
+            return;
         if (lockYAxis)
         {
             Vector3 pos = _transform.position;
@@ -261,6 +302,11 @@ using EggRogue;
     }
 
     /// <summary>
+    /// 当前敌人对应的 EnemyData（用于按类型统计等）。
+    /// </summary>
+    public EnemyData EnemyData => enemyData;
+
+    /// <summary>
     /// 获取到玩家的距离
     /// </summary>
     public float GetDistanceToPlayer()
@@ -315,7 +361,7 @@ using EggRogue;
     /// </summary>
     private void OnTriggerStay(Collider other)
     {
-        if (isDead || isPaused)
+        if (isDead || isPaused || isEmerging)
             return;
 
         // 通过 CharacterController 判断是否为玩家

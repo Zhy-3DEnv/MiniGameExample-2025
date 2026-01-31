@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:yousandi.cn,2023:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4d7bf4068685b7418b14084b885eeb5, type: 3}
+  m_Name: Tank
+  m_EditorClassIdentifier: 
+  abilityName: "\u94A2\u94C1\u5821\u5792"
+  description: "\u6700\u5927\u751F\u547D\u503C \xD7 2\uFF0C\u4F46\u79FB\u901F \xD7
+    0.7"
+  icon: {fileID: 0}
+  healthMultiplier: 2
+  speedMultiplier: 0.7

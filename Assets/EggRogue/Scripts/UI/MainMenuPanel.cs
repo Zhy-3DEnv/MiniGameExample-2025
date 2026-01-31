@@ -40,26 +40,20 @@ public class MainMenuPanel : BaseUIPanel
     }
 
     /// <summary>
-    /// 开始游戏按钮点击事件
+    /// 开始游戏按钮点击事件 - 进入角色选择界面
     /// </summary>
     private void OnStartGameClicked()
     {
         Debug.Log("MainMenuPanel: 开始游戏按钮被点击");
 
-        // 调用 GameManager 开始游戏
-        if (GameManager.Instance != null)
+        // 显示角色选择界面
+        if (UIManager.Instance != null)
         {
-            GameManager.Instance.StartGame();
-            
-            // 切换UI到游戏HUD
-            if (UIManager.Instance != null)
-            {
-                UIManager.Instance.ShowGameHUD();
-            }
+            UIManager.Instance.ShowCharacterSelection();
         }
         else
         {
-            Debug.LogError("MainMenuPanel: GameManager.Instance 为空，请确保场景中有 GameManager 对象。");
+            Debug.LogError("MainMenuPanel: UIManager.Instance 为空，请确保场景中有 UIManager 对象。");
         }
     }
 

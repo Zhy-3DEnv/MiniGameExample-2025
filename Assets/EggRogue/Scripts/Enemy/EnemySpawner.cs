@@ -1,5 +1,6 @@
-using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
 using EggRogue;
 
 /// <summary>
@@ -63,9 +64,20 @@ public class EnemySpawner : MonoBehaviour
     private int spawnedThisLevel = 0;
 
     /// <summary>
+    /// 本关从开始到当前的累计时间（秒），由 ResetForLevel 重置，在 Update 中累加。
+    /// 用于控制全局刷怪时间窗口和单个 LevelSpawnEntry 的时间窗口。
+    /// </summary>
+    private float levelElapsedTime = 0f;
+
+    /// <summary>
     /// 当前关卡配置（由 LevelManager 设置）。生成时用于血量/移速/金币倍率。
     /// </summary>
     private EggRogue.LevelData currentLevelData;
+
+    /// <summary>
+    /// 当前关卡的多怪物生成配方引用（LevelData.spawnMix）。为空或长度为 0 时，退回单一敌人生成逻辑。
+    /// </summary>
+    private EggRogue.LevelData.LevelSpawnEntry[] currentSpawnMix;
 
     /// <summary>
     /// 应用关卡配置（LevelManager 调用）。会覆盖 spawnInterval、maxAliveEnemies、randomOffsetRadius；
@@ -74,6 +86,16 @@ public class EnemySpawner : MonoBehaviour
     public void ApplyLevelData(EggRogue.LevelData data)
     {
         currentLevelData = data;
+
+        // 缓存当前关卡的多怪物生成配方
+        if (data != null && data.spawnMix != null && data.spawnMix.Length > 0)
+        {
+            currentSpawnMix = data.spawnMix;
+        }
+        else
+        {
+            currentSpawnMix = null;
+        }
     }
 
     /// <summary>
@@ -84,6 +106,7 @@ public class EnemySpawner : MonoBehaviour
         spawnTimer = spawnInterval;
         spawnedThisLevel = 0;
         isSpawning = true;
+        levelElapsedTime = 0f;
     }
 
     private void Start()
@@ -109,6 +132,36 @@ public class EnemySpawner : MonoBehaviour
     {
         if (!isSpawning)
             return;
+
+        // 累计本关经过时间（用于刷怪时间窗口控制）
+        levelElapsedTime += Time.deltaTime;
+
+        // 若有 LevelData 配置刷怪时间窗口，则在窗口外禁止刷怪
+        if (currentLevelData != null)
+        {
+            float startTime = Mathf.Max(0f, currentLevelData.spawnStartTime);
+
+            // 默认使用关卡总时长作为刷怪结束时间；若 spawnEndTime > startTime 则使用自定义值
+            float defaultEnd = currentLevelData.levelDuration > 0f ? currentLevelData.levelDuration : float.MaxValue;
+            float configuredEnd = currentLevelData.spawnEndTime > startTime
+                ? currentLevelData.spawnEndTime
+                : defaultEnd;
+
+            // 未到开始刷怪时间：仅更新计时器但不生成
+            if (levelElapsedTime < startTime)
+            {
+                // 为避免在到达开始时间时瞬间连刷多只，这里保持计时器为初始间隔
+                spawnTimer = spawnInterval;
+                return;
+            }
+
+            // 超过结束时间：本关停止刷怪
+            if (levelElapsedTime >= configuredEnd)
+            {
+                isSpawning = false;
+                return;
+            }
+        }
 
         // 更新计时器
         spawnTimer -= Time.deltaTime;
@@ -144,25 +197,79 @@ public class EnemySpawner : MonoBehaviour
     }
 
     /// <summary>
-    /// 生成一个敌人
+    /// 生成一个敌人。若当前关卡配置了 spawnMix，则按配方随机选择怪物类型；否则沿用单一敌人逻辑。
     /// </summary>
     private void SpawnEnemy()
     {
-        if (enemyPrefab == null)
+        // 如果 LevelData 未配置多怪物配方，则退回到单一敌人生成逻辑
+        if (currentSpawnMix == null || currentSpawnMix.Length == 0)
+        {
+            SpawnSingleEnemy(enemyPrefab, enemyData);
             return;
+        }
+
+        EggRogue.LevelData.LevelSpawnEntry selectedEntry = SelectSpawnEntryWithConstraints();
+
+        // 如果所有类型都已达到各自的 maxAlive 上限，则本次不生成
+        if (selectedEntry == null)
+        {
+            return;
+        }
+
+        // 确定要使用的 EnemyData
+        EggRogue.EnemyData dataToUse = selectedEntry.enemyData != null ? selectedEntry.enemyData : enemyData;
+
+        // 确定要使用的 Prefab（优先级：LevelSpawnEntry.enemyPrefab > EnemyData.enemyPrefab > Spawner.enemyPrefab）
+        GameObject prefabToSpawn = selectedEntry.enemyPrefab;
+        if (prefabToSpawn == null && dataToUse != null)
+        {
+            prefabToSpawn = dataToUse.enemyPrefab;
+        }
+        if (prefabToSpawn == null)
+        {
+            prefabToSpawn = enemyPrefab;
+        }
+
+        SpawnSingleEnemy(prefabToSpawn, dataToUse);
+    }
+
+    /// <summary>
+    /// 实际执行一次敌人生成，根据传入的 prefab 和 EnemyData 应用关卡倍率等。
+    /// </summary>
+    private void SpawnSingleEnemy(GameObject prefab, EggRogue.EnemyData data)
+    {
+        // 优先顺序：
+        // 1. 调用方传入的 prefab（通常是 LevelSpawnEntry.enemyPrefab）
+        // 2. EnemyData 上绑定的默认 prefab
+        // 3. EnemySpawner 自身的 enemyPrefab（全局默认）
+        GameObject prefabToUse = prefab;
+        if (prefabToUse == null && data != null && data.enemyPrefab != null)
+        {
+            prefabToUse = data.enemyPrefab;
+        }
+        if (prefabToUse == null)
+        {
+            prefabToUse = enemyPrefab;
+        }
+
+        if (prefabToUse == null)
+        {
+            Debug.LogWarning("EnemySpawner: 未找到可用的敌人 Prefab（传入、EnemyData、Spawner 均为空），已跳过本次生成。");
+            return;
+        }
 
         Vector3 spawnPosition = GetRandomSpawnPosition();
-        GameObject enemy = Instantiate(enemyPrefab, spawnPosition, Quaternion.identity);
-        
+        GameObject enemy = Instantiate(prefabToUse, spawnPosition, Quaternion.identity);
+
         // 记录本关已生成数量
         spawnedThisLevel++;
-        
+
         // 使用 EnemyData SO 配置敌人属性
-        if (enemyData != null)
+        if (data != null)
         {
-            float baseHealth = enemyData.baseMaxHealth;
-            float baseMoveSpeed = enemyData.baseMoveSpeed;
-            
+            float baseHealth = data.baseMaxHealth;
+            float baseMoveSpeed = data.baseMoveSpeed;
+
             // 应用关卡倍率（如果存在）
             float healthMult = (currentLevelData != null && currentLevelData.enemyHealthMultiplier > 0f)
                 ? currentLevelData.enemyHealthMultiplier : 1f;
@@ -171,20 +278,150 @@ public class EnemySpawner : MonoBehaviour
 
             Health health = enemy.GetComponent<Health>();
             if (health != null)
+            {
                 health.SetMaxHealth(baseHealth * healthMult);
+            }
 
             EnemyController enemyController = enemy.GetComponent<EnemyController>();
             if (enemyController != null)
             {
                 enemyController.SetMoveSpeed(baseMoveSpeed * moveMult);
-                // 传递 EnemyData 给 EnemyController（用于金币掉落配置）
-                enemyController.SetEnemyData(enemyData);
+                // 传递 EnemyData 给 EnemyController（用于金币掉落配置等）
+                enemyController.SetEnemyData(data);
             }
         }
         else
         {
-            Debug.LogWarning("EnemySpawner: enemyData 未设置，使用默认值");
+            Debug.LogWarning("EnemySpawner: EnemyData 未设置，生成的敌人将使用默认属性。");
         }
+    }
+
+    /// <summary>
+    /// 在满足 per-type maxAlive 约束的前提下，从当前 spawnMix 中按权重随机选择一个条目。
+    /// 如果所有条目都不满足条件，则返回 null。
+    /// </summary>
+    private EggRogue.LevelData.LevelSpawnEntry SelectSpawnEntryWithConstraints()
+    {
+        if (currentSpawnMix == null || currentSpawnMix.Length == 0)
+        {
+            return null;
+        }
+
+        // 先收集所有当前仍可生成的条目（未达到各自 maxAlive 上限）
+        List<EggRogue.LevelData.LevelSpawnEntry> candidates = new List<EggRogue.LevelData.LevelSpawnEntry>();
+        List<float> weights = new List<float>();
+
+        for (int i = 0; i < currentSpawnMix.Length; i++)
+        {
+            EggRogue.LevelData.LevelSpawnEntry entry = currentSpawnMix[i];
+            if (entry == null)
+            {
+                continue;
+            }
+
+            // 时间窗口过滤：仅在条目配置的时间段内参与候选
+            // 0 或小于等于 0 表示不限制该方向
+            float t = levelElapsedTime;
+            if (entry.spawnTimeStart > 0f && t < entry.spawnTimeStart)
+            {
+                continue;
+            }
+            if (entry.spawnTimeEnd > 0f && t > entry.spawnTimeEnd)
+            {
+                continue;
+            }
+
+            // 负权重或零权重视为不可用
+            float baseWeight = entry.spawnWeight;
+            if (baseWeight <= 0f)
+            {
+                continue;
+            }
+
+            // 计算该类型当前存活数量，若配置了 maxAlive 且已达上限，则跳过
+            EggRogue.EnemyData typeData = entry.enemyData != null ? entry.enemyData : enemyData;
+            if (typeData != null && entry.maxAlive > 0)
+            {
+                int aliveOfType = GetAliveEnemyCountByData(typeData);
+                if (aliveOfType >= entry.maxAlive)
+                {
+                    continue;
+                }
+            }
+
+            float rateScale = entry.spawnRateScale > 0f ? entry.spawnRateScale : 1f;
+            float finalWeight = baseWeight * rateScale;
+
+            if (finalWeight <= 0f)
+            {
+                continue;
+            }
+
+            candidates.Add(entry);
+            weights.Add(finalWeight);
+        }
+
+        // 若没有任何候选，返回 null
+        if (candidates.Count == 0)
+        {
+            return null;
+        }
+
+        // 加权随机选择一个候选
+        float totalWeight = 0f;
+        for (int i = 0; i < weights.Count; i++)
+        {
+            totalWeight += weights[i];
+        }
+
+        if (totalWeight <= 0f)
+        {
+            // 理论上不应发生，这里兜底：直接返回第一个候选
+            return candidates[0];
+        }
+
+        float roll = Random.value * totalWeight;
+        float cumulative = 0f;
+        for (int i = 0; i < candidates.Count; i++)
+        {
+            cumulative += weights[i];
+            if (roll <= cumulative)
+            {
+                return candidates[i];
+            }
+        }
+
+        // 浮点误差兜底
+        return candidates[candidates.Count - 1];
+    }
+
+    /// <summary>
+    /// 通过 EnemyManager 统计指定 EnemyData 类型的当前存活数量。
+    /// </summary>
+    private int GetAliveEnemyCountByData(EggRogue.EnemyData data)
+    {
+        if (data == null || EnemyManager.Instance == null)
+        {
+            return 0;
+        }
+
+        List<EnemyController> allEnemies = EnemyManager.Instance.GetAllAliveEnemies();
+        int count = 0;
+        for (int i = 0; i < allEnemies.Count; i++)
+        {
+            EnemyController enemy = allEnemies[i];
+            if (enemy == null)
+            {
+                continue;
+            }
+
+            if (enemy.EnemyData == data)
+            {
+                count++;
+            }
+        }
+
+        return count;
     }
 
     /// <summary>
