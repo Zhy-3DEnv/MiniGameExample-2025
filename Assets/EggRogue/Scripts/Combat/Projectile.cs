@@ -67,15 +67,42 @@ public class Projectile : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         if (hit) return;
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        Debug.Log($"[Projectile] OnTriggerEnter: other={other.name}, tag={other.tag}, layer={other.gameObject.layer}");
+#endif
+
         if (!other.CompareTag(targetTag))
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            Debug.Log($"[Projectile] 忽略：Tag 不匹配（期望 '{targetTag}'）");
+#endif
             return;
+        }
 
         Health enemyHealth = other.GetComponentInParent<Health>();
-        if (enemyHealth != null && !enemyHealth.IsDead)
-            enemyHealth.TakeDamage(damage);
+        if (enemyHealth == null)
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            Debug.Log($"[Projectile] 忽略：{other.name} 及其父节点无 Health 组件");
+#endif
+            return;
+        }
+        if (enemyHealth.IsDead)
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            Debug.Log($"[Projectile] 忽略：敌人已死亡");
+#endif
+            return;
+        }
+
+        enemyHealth.TakeDamage(damage);
 
         if (!isPiercing)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            Debug.Log($"[Projectile] 命中 {other.name}，销毁子弹");
+#endif
             hit = true;
             Destroy(gameObject);
         }
@@ -91,7 +118,10 @@ public class Projectile : MonoBehaviour
     /// <param name="bulletSpeed">
     /// 传入的移动速度；传入负数表示“不修改当前速度”，传入 0 会被 Clamp 为一个很小的正数。
     /// </param>
-    public void Initialize(Vector3 direction, float bulletDamage = -1f, float bulletSpeed = -1f)
+    /// <param name="bulletLifeTime">
+    /// 传入的飞行时间（秒）；传入负数表示“不修改当前值”。
+    /// </param>
+    public void Initialize(Vector3 direction, float bulletDamage = -1f, float bulletSpeed = -1f, float bulletLifeTime = -1f)
     {
         // 设置朝向
         if (direction.sqrMagnitude > 0.01f)
@@ -109,6 +139,12 @@ public class Projectile : MonoBehaviour
         if (bulletSpeed >= 0f)
         {
             speed = Mathf.Max(0.1f, bulletSpeed);
+        }
+
+        // 如果传入的飞行时间非负，则覆盖默认值（由武器配置）
+        if (bulletLifeTime >= 0f)
+        {
+            lifeTime = Mathf.Max(0.1f, bulletLifeTime);
         }
     }
 

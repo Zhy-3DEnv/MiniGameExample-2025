@@ -20,6 +20,10 @@ public class CharacterData : ScriptableObject
     [Tooltip("角色图标（可选）")]
     public Sprite icon;
 
+    [Header("视觉表现")]
+    [Tooltip("角色 3D 模型预制体（可选）。若为空则使用默认模型 EggMan01")]
+    public GameObject characterModelPrefab;
+
     [Header("基础属性")]
     [Tooltip("基础伤害")]
     public float baseDamage = 10f;

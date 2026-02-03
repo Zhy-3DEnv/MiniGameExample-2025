@@ -25,6 +25,10 @@ public class CharacterController : MonoBehaviour
     [Tooltip("是否使用物理移动（推荐）")]
     public bool usePhysics = true;
 
+    [Tooltip("加速/转向响应系数（越大越跟手，Settings 可调）")]
+    [Range(5f, 30f)]
+    public float accelerationFactor = 15f;
+
     [Header("边界限制（可选）")]
     [Tooltip("是否限制角色移动范围")]
     public bool useBounds = false;
@@ -152,8 +156,8 @@ public class CharacterController : MonoBehaviour
         // 计算目标速度
         Vector3 targetVelocity = moveDirection * moveSpeed;
 
-        // 平滑插值当前速度到目标速度（使用更平滑的插值系数）
-        currentVelocity = Vector3.Lerp(currentVelocity, targetVelocity, Time.fixedDeltaTime * 15f);
+        // 平滑插值当前速度到目标速度
+        currentVelocity = Vector3.Lerp(currentVelocity, targetVelocity, Time.fixedDeltaTime * accelerationFactor);
 
         // 应用边界限制（先检查边界，再设置速度）
         if (useBounds)
@@ -198,6 +202,15 @@ public class CharacterController : MonoBehaviour
 
         // 移动角色
         transform.position = nextPosition;
+    }
+
+    /// <summary>
+    /// 设置 Rigidbody 阻力（Settings 面板调节手感用）
+    /// </summary>
+    public void SetRigidbodyDrag(float drag)
+    {
+        if (rb != null)
+            rb.drag = Mathf.Clamp(drag, 2f, 25f);
     }
 
     /// <summary>

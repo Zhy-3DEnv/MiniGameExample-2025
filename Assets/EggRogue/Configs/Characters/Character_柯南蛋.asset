@@ -15,10 +15,12 @@ MonoBehaviour:
   characterName: "\u67EF\u5357\u86CB"
   description: "\u539F\u578B\uFF1A\u67EF\u5357\xB7\u9053\u5C14 / \u540D\u4FA6\u63A2\u67EF\u5357\u3002\u5546\u4E1A\u4EB2\u548C\u529B\u6781\u5F3A\u3002\u7CBE\u51C6\u578B\u89D2\u8272\uFF0C\u653B\u51FB\u8303\u56F4\u4E0E\u5B50\u5F39\u901F\u5EA6\u63D0\u5347\u3002"
   icon: {fileID: 21300000, guid: 7f83b904cfa26b84c84791e2020f8661, type: 3}
+  characterModelPrefab: {fileID: 3949371431902328983, guid: 5c3a7d886028ef94e912ed075045363b,
+    type: 3}
   baseDamage: 10
   baseFireRate: 1.5
   baseMaxHealth: 88
-  baseMoveSpeed: 4.8
+  baseMoveSpeed: 8
   baseBulletSpeed: 23
   baseAttackRange: 12
   passiveAbilities:

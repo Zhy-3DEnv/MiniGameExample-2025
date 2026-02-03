@@ -443,11 +443,18 @@ public class CharacterSelectionPanel : BaseUIPanel
             CharacterSelectionManager.Instance.SelectCharacter(_selectedCharacter);
         }
 
-        // 隐藏角色选择界面，进入游戏
+        // 隐藏角色选择界面，进入武器选择界面（首次进入游戏）
         Hide();
 
-        if (GameManager.Instance != null)
+        if (UIManager.Instance != null && UIManager.Instance.HasWeaponSelectionPanel())
         {
+            UIManager.Instance.ShowWeaponSelection();
+        }
+        else if (GameManager.Instance != null)
+        {
+            // 若无武器选择界面，直接进入游戏（兼容旧流程）
+            if (WeaponInventoryManager.Instance != null)
+                WeaponInventoryManager.Instance.InitializeFromStarterWeapon();
             GameManager.Instance.LoadGameScene(1);
         }
     }

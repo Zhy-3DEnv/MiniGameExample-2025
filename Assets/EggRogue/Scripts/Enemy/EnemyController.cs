@@ -302,6 +302,20 @@ using EggRogue;
     }
 
     /// <summary>
+    /// 当前敌人是否可以被攻击/锁定（未死亡、未处于出场阶段）
+    /// </summary>
+    public bool IsAttackable
+    {
+        get
+        {
+            if (isDead) return false;
+            if (health == null || health.IsDead) return false;
+            if (isEmerging) return false;
+            return true;
+        }
+    }
+
+    /// <summary>
     /// 当前敌人对应的 EnemyData（用于按类型统计等）。
     /// </summary>
     public EnemyData EnemyData => enemyData;

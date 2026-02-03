@@ -42,8 +42,14 @@ public class UIManager : MonoBehaviour
     [Tooltip("卡片选择面板")]
     public CardSelectionPanel cardSelectionPanel;
 
+    [Tooltip("武器选择面板（首次进入游戏时选择起始武器）")]
+    public WeaponSelectionPanel weaponSelectionPanel;
+
     [Tooltip("属性面板（按ESC打开）")]
     public AttributePanel attributePanel;
+
+    [Tooltip("设置面板（从 GameHUD 设置按钮打开，调节操控手感等）")]
+    public SettingsPanel settingsPanel;
 
     private void Awake()
     {
@@ -226,6 +232,34 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
+    /// 显示武器选择面板（首次进入游戏时）。
+    /// </summary>
+    public void ShowWeaponSelection()
+    {
+        HideAllPanels();
+        if (weaponSelectionPanel != null)
+        {
+            weaponSelectionPanel.Show();
+        }
+        else
+        {
+            Debug.LogWarning("UIManager: weaponSelectionPanel 未设置，跳过武器选择，直接进入游戏");
+            if (WeaponInventoryManager.Instance != null)
+                WeaponInventoryManager.Instance.InitializeFromStarterWeapon();
+            if (GameManager.Instance != null)
+                GameManager.Instance.LoadGameScene(1);
+        }
+    }
+
+    /// <summary>
+    /// 是否存在武器选择面板
+    /// </summary>
+    public bool HasWeaponSelectionPanel()
+    {
+        return weaponSelectionPanel != null;
+    }
+
+    /// <summary>
     /// 显示卡片选择面板。
     /// </summary>
     public void ShowCardSelection()
@@ -238,6 +272,21 @@ public class UIManager : MonoBehaviour
         else
         {
             Debug.LogWarning("UIManager: cardSelectionPanel 未设置，请在 Inspector 中拖入引用。");
+        }
+    }
+
+    /// <summary>
+    /// 显示设置面板（覆盖层，不隐藏 GameHUD）
+    /// </summary>
+    public void ShowSettings()
+    {
+        if (settingsPanel != null)
+        {
+            settingsPanel.Show();
+        }
+        else
+        {
+            Debug.LogWarning("UIManager: settingsPanel 未设置，请在 Inspector 中拖入引用。");
         }
     }
 
@@ -292,6 +341,14 @@ public class UIManager : MonoBehaviour
         {
             cardSelectionPanel.Hide();
         }
+        if (weaponSelectionPanel != null)
+        {
+            weaponSelectionPanel.Hide();
+        }
+        if (settingsPanel != null)
+        {
+            settingsPanel.Hide();
+        }
         // 属性面板是覆盖层，通常不在这里隐藏
         // 如果需要强制隐藏，可以取消下面的注释
         // if (attributePanel != null)
@@ -328,6 +385,10 @@ public class UIManager : MonoBehaviour
         if (characterSelectionPanel != null && characterSelectionPanel.IsVisible())
         {
             return "CharacterSelection";
+        }
+        if (weaponSelectionPanel != null && weaponSelectionPanel.IsVisible())
+        {
+            return "WeaponSelection";
         }
         if (cardSelectionPanel != null && cardSelectionPanel.IsVisible())
         {

@@ -24,6 +24,9 @@ public class GameHudPanel : BaseUIPanel
     [Tooltip("返回主菜单按钮")]
     public Button returnToMenuButton;
 
+    [Tooltip("设置按钮（打开设置面板调节操控手感等）")]
+    public Button settingsButton;
+
     [Header("HUD元素")]
     [Tooltip("血量条")]
     public Slider healthBar;
@@ -64,6 +67,18 @@ public class GameHudPanel : BaseUIPanel
         {
             Debug.LogWarning("GameHudPanel: returnToMenuButton 未设置，请在 Inspector 中拖入按钮引用。");
         }
+
+        if (settingsButton != null)
+        {
+            settingsButton.onClick.RemoveAllListeners();
+            settingsButton.onClick.AddListener(OnSettingsButtonClicked);
+        }
+    }
+
+    private void OnSettingsButtonClicked()
+    {
+        if (UIManager.Instance != null)
+            UIManager.Instance.ShowSettings();
     }
 
     /// <summary>

@@ -22,14 +22,14 @@ MonoBehaviour:
     spawnRateScale: 0
     spawnTimeStart: 0
     spawnTimeEnd: 0
-  spawnsPerSecond: 1
+  spawnsPerSecond: 5
   maxAliveEnemies: 0
   minTotalEnemies: 15
-  maxTotalEnemies: 20
+  maxTotalEnemies: 500
   randomOffsetRadius: 2
   spawnStartTime: 0
-  spawnEndTime: 15
-  levelDuration: 20
+  spawnEndTime: 0
+  levelDuration: 60
   victoryRewardGold: 2
   enemyHealthMultiplier: 1
   enemyMoveSpeedMultiplier: 1

@@ -7,7 +7,6 @@ using EggRogue;
 /// </summary>
 [RequireComponent(typeof(Health))]
 [RequireComponent(typeof(CharacterController))]
-[RequireComponent(typeof(PlayerCombatController))]
 public class CharacterStats : MonoBehaviour
 {
     [Header("角色配置")]
@@ -33,6 +32,7 @@ public class CharacterStats : MonoBehaviour
         health = GetComponent<Health>();
         characterController = GetComponent<CharacterController>();
         combatController = GetComponent<PlayerCombatController>();
+        // 若使用 WeaponController， combatController 可能被禁用，但引用仍可用（用于卡片加成等）
     }
 
     private void Start()

@@ -45,6 +45,17 @@ public static class PersistentSceneSetup
         CreateManagerChild(managers.transform, "CSVConfigManager", typeof(CSVConfigManager));
         CreateManagerChild(managers.transform, "LevelManager", typeof(LevelManager));
         CreateManagerChild(managers.transform, "CardManager", typeof(CardManager));
+        var wsm = CreateManagerChild(managers.transform, "WeaponSelectionManager", typeof(WeaponSelectionManager));
+        CreateManagerChild(managers.transform, "WeaponInventoryManager", typeof(WeaponInventoryManager));
+
+        var wsmComp = wsm.GetComponent<WeaponSelectionManager>();
+        if (wsmComp != null)
+        {
+            wsmComp.weaponDatabase = AssetDatabase.LoadAssetAtPath<WeaponDatabase>("Assets/EggRogue/Configs/WeaponDatabase.asset");
+            wsmComp.defaultStarterWeapon = AssetDatabase.LoadAssetAtPath<WeaponData>("Assets/EggRogue/Configs/Weapons/Weapon_Gun_Lv1.asset");
+            if (wsmComp.weaponDatabase == null)
+                Debug.LogWarning("PersistentSceneSetup: 请先运行 EggRogue/创建默认武器和 WeaponDatabase");
+        }
 
         GameObject uiRoot = new GameObject("UIRoot");
         uiRoot.transform.SetParent(root.transform, false);

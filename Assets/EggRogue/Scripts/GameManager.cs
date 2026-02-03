@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -70,14 +71,20 @@ public class GameManager : MonoBehaviour
     /// <summary>
     /// 场景加载完成时的回调，用于自动切换UI
     /// </summary>
+    private IEnumerator ResetJoystickAndApplySettingsNextFrame()
+    {
+        yield return null;
+        VirtualJoystick joystick = FindObjectOfType<VirtualJoystick>();
+        if (joystick != null)
+            joystick.ResetToCenter();
+        SettingsPanel.ApplySavedToScene();
+    }
+
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         if (scene.name == gameSceneName)
         {
-            // 进入游戏/下一关时复位摇杆到中心，避免摇杆停留在上一关位置
-            VirtualJoystick joystick = FindObjectOfType<VirtualJoystick>();
-            if (joystick != null)
-                joystick.ResetToCenter();
+            StartCoroutine(ResetJoystickAndApplySettingsNextFrame());
         }
 
         if (UIManager.Instance == null)
