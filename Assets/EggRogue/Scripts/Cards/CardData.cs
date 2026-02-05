@@ -37,5 +37,8 @@ public class CardData : ScriptableObject
 
     [Tooltip("攻击范围加成（+N）")]
     public float attackRangeBonus = 0f;
+
+    [Tooltip("拾取范围加成（+N，米）")]
+    public float pickupRangeBonus = 0f;
 }
 }

@@ -66,20 +66,36 @@ public class Health : MonoBehaviour
     }
 
     /// <summary>
+    /// 伤害修正回调： (原始伤害, 伤害来源) => 修正后伤害。用于护盾减伤等。
+    /// </summary>
+    public System.Func<float, GameObject, float> DamageModifier;
+
+    /// <summary>
+    /// 受到伤害时且来源非空时的回调，用于荆棘反弹等。
+    /// </summary>
+    public System.Action<float, GameObject> OnDamageFrom;
+
+    /// <summary>
     /// 造成伤害
     /// </summary>
     /// <param name="damage">伤害值</param>
-    public void TakeDamage(float damage)
+    /// <param name="damageSource">伤害来源（如敌人 GameObject，用于荆棘反弹）</param>
+    public void TakeDamage(float damage, GameObject damageSource = null)
     {
         if (IsDead)
-            return; // 已经死了，不再处理伤害
+            return;
 
-        // 受击无敌：在无敌时间内忽略所有伤害
         if (useInvincibility && Time.time < invincibleUntilTime)
             return;
 
         if (damage <= 0f)
-            return; // 无效伤害
+            return;
+
+        if (DamageModifier != null)
+            damage = DamageModifier(damage, damageSource);
+
+        if (damage <= 0f)
+            return;
 
         // 扣除生命值
         currentHealth -= damage;
@@ -121,11 +137,11 @@ public class Health : MonoBehaviour
             }
         }
 
-        // 如果生命值归零，触发死亡事件
         if (IsDead)
-        {
             OnDeath?.Invoke();
-        }
+
+        if (damageSource != null && OnDamageFrom != null)
+            OnDamageFrom.Invoke(damage, damageSource);
     }
 
     /// <summary>

@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:yousandi.cn,2023:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06aaf58445d50e340865b1099cc324d1, type: 3}
+  m_Name: ItemDatabase
+  m_EditorClassIdentifier: 
+  items:
+  - {fileID: 11400000, guid: 504ac0e6c7c014d4794c75eb196d0141, type: 2}
+  - {fileID: 11400000, guid: 786b7446f67b08f4cb270b84da74da76, type: 2}
+  - {fileID: 11400000, guid: 5b60c67b3c77d12468774133b2dfb072, type: 2}
+  - {fileID: 11400000, guid: fbf974ac72fa04243a534863b81c695b, type: 2}
+  - {fileID: 11400000, guid: 7d1f20f38b70b0f499be42b1adfc0d58, type: 2}
+  - {fileID: 11400000, guid: 202ca385c280e6f41adb575f708982a9, type: 2}
+  - {fileID: 11400000, guid: 5ff07b9fe73e60744846ce8c5c8addae, type: 2}
+  - {fileID: 11400000, guid: c57d6089834fad848a5837e9a98e6059, type: 2}
+  - {fileID: 11400000, guid: 178d012f38b27be49acc135eefd2e0ff, type: 2}
+  - {fileID: 11400000, guid: de9b478e9c866754888a59cf5c57dd01, type: 2}

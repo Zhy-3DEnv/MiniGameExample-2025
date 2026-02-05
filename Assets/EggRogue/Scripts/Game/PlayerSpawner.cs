@@ -90,9 +90,13 @@ public class PlayerSpawner : MonoBehaviour
         if (_spawnedPlayer.GetComponent<WeaponController>() == null)
             _spawnedPlayer.AddComponent<WeaponController>();
 
+        // 确保有 ItemEffectManager（道具效果）
+        if (_spawnedPlayer.GetComponent<ItemEffectManager>() == null)
+            _spawnedPlayer.AddComponent<ItemEffectManager>();
+
         // 首次进入游戏时，WeaponInventoryManager 已由 WeaponSelectionPanel 初始化
         // 若跳过武器选择（兼容），则在此初始化
-        if (WeaponInventoryManager.Instance != null && WeaponInventoryManager.Instance.GetWeaponAt(0) == null)
+        if (WeaponInventoryManager.Instance != null && WeaponInventoryManager.Instance.IsEmpty)
             WeaponInventoryManager.Instance.InitializeFromStarterWeapon();
 
         // 实例化武器模型到挂点

@@ -101,6 +101,23 @@ public class EnemyManager : MonoBehaviour
     }
 
     /// <summary>
+    /// 获取范围内随机一个敌人
+    /// </summary>
+    public EnemyController GetRandomEnemyInRange(Vector3 fromPosition, float maxDistance)
+    {
+        var list = GetAllAliveEnemies();
+        var inRange = new System.Collections.Generic.List<EnemyController>();
+        foreach (var e in list)
+        {
+            if (e == null) continue;
+            if (Vector3.Distance(fromPosition, e.transform.position) <= maxDistance)
+                inRange.Add(e);
+        }
+        if (inRange.Count == 0) return null;
+        return inRange[Random.Range(0, inRange.Count)];
+    }
+
+    /// <summary>
     /// 获取所有存活的敌人
     /// </summary>
     public List<EnemyController> GetAllAliveEnemies()

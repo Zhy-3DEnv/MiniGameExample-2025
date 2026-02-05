@@ -113,6 +113,7 @@ public static class FailurePanelSetup
         text.fontSize = fontSize;
         text.alignment = TextAnchor.MiddleCenter;
         text.color = Color.white;
+        text.font = EggRogue.GameFont.GetDefault();
         return go;
     }
 
@@ -141,6 +142,7 @@ public static class FailurePanelSetup
         text.alignment = TextAnchor.MiddleCenter;
         text.color = Color.white;
         text.fontSize = 18;
+        text.font = EggRogue.GameFont.GetDefault();
         return go;
     }
 

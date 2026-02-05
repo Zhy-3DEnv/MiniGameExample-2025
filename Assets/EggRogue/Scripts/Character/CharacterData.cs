@@ -25,6 +25,9 @@ public class CharacterData : ScriptableObject
     public GameObject characterModelPrefab;
 
     [Header("基础属性")]
+    [Tooltip("基础等级（角色初始等级）")]
+    public int baseLevel = 1;
+
     [Tooltip("基础伤害")]
     public float baseDamage = 10f;
 
@@ -42,6 +45,9 @@ public class CharacterData : ScriptableObject
 
     [Tooltip("基础攻击范围")]
     public float baseAttackRange = 10f;
+
+    [Tooltip("基础拾取范围（金币等可收集物，米）")]
+    public float basePickupRange = 0.5f;
 
     [Header("特殊能力")]
     [Tooltip("角色的被动能力列表，按顺序应用。例如：攻击力倍率、生命转攻击等")]

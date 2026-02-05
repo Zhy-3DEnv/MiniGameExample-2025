@@ -34,6 +34,10 @@ namespace EggRogue
         [Tooltip("基础接触伤害（靠近玩家时每次造成的伤害）")]
         public float baseDamage = 5f;
 
+        [Header("经验值")]
+        [Tooltip("击杀该敌人获得的经验值（用于玩家升级、计算选卡次数）")]
+        public int xpValue = 1;
+
         [Header("掉落配置")]
         [Tooltip("最少掉落金币数")]
         public int coinDropMin = 1;

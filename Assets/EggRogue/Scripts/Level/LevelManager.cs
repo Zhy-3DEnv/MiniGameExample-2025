@@ -28,13 +28,6 @@ public class LevelManager : MonoBehaviour
     /// </summary>
     public int CurrentLevel { get; private set; } = 1;
 
-    /// <summary>
-    /// 单局内跨关继承：上一关结束时的当前/最大血量（仅当 fullHealOnNextLevel=false 时使用）。
-    /// </summary>
-    private bool hasSavedRunStateHealth;
-    private float savedCurrentHealth;
-    private float savedMaxHealth;
-
     private void Awake()
     {
         // 确保 LevelManager 作为根节点常驻，避免在子物体上调用 DontDestroyOnLoad 导致的错误日志
@@ -70,58 +63,51 @@ public class LevelManager : MonoBehaviour
         if (scene.name != GameManager.Instance.GameSceneName)
             return;
 
+        // 进入第 1 关时统一重置本局状态（等级、血量、金币等）
+        if (CurrentLevel <= 1 && PlayerRunState.Instance != null)
+        {
+            PlayerRunState.Instance.ResetRunState();
+            if (GoldManager.Instance != null)
+                GoldManager.Instance.NotifyGoldChanged();
+        }
+
         // 到这里时，上一关的 GameScene 已经卸载完毕，所有 Coin.OnDestroy 都已被调用，
         // GoldManager.lostGoldBank 已经包含了上一关“未拾取金币”的最终数值。
-        if (GoldManager.Instance != null)
+        // 金币：第 1 关时已在 ResetRunState 中重置；第 N 关时将未拾取金币转入双倍额度
+        if (GoldManager.Instance != null && CurrentLevel > 1)
         {
-            if (CurrentLevel <= 1)
-            {
-                // 新开一局，从第 1 关开始：清空历史的未拾取/双倍状态
-                GoldManager.Instance.ResetGoldBonuses();
-            }
-            else
-            {
-                // 进入第 N(>1) 关：把上一关累计的未拾取金币转成本关的双倍拾取额度
-                GoldManager.Instance.PrepareDoubleGoldForNextLevel();
-            }
+            GoldManager.Instance.PrepareDoubleGoldForNextLevel();
         }
 
         ApplyLevelToScene();
     }
 
     /// <summary>
-    /// 清除单局血量继承状态（进入第 1 关时调用）。
+    /// 清除单局血量继承状态（委托 PlayerRunState）。
     /// </summary>
     public void ClearRunStateHealth()
     {
-        hasSavedRunStateHealth = false;
+        PlayerRunState.Instance?.ClearRunStateHealth();
     }
 
     /// <summary>
-    /// 保存当前玩家血量，用于进入下一关后恢复。
+    /// 保存当前玩家血量，用于进入下一关后恢复（委托 PlayerRunState）。
     /// </summary>
     public void SaveRunStateHealth(float current, float max)
     {
-        hasSavedRunStateHealth = true;
-        savedCurrentHealth = current;
-        savedMaxHealth = Mathf.Max(0.001f, max);
+        PlayerRunState.Instance?.SaveRunStateHealth(current, max);
     }
 
     /// <summary>
-    /// 尝试取出并消费已保存的血量；若有则返回 true 并清除保存，否则返回 false。
+    /// 尝试取出已保存的血量（委托 PlayerRunState）。
     /// </summary>
     public bool TryGetRunStateHealth(out float current, out float max)
     {
-        if (!hasSavedRunStateHealth)
-        {
-            current = 0f;
-            max = 0f;
-            return false;
-        }
-        current = savedCurrentHealth;
-        max = savedMaxHealth;
-        hasSavedRunStateHealth = false;
-        return true;
+        if (PlayerRunState.Instance != null)
+            return PlayerRunState.Instance.TryGetRunStateHealth(out current, out max);
+        current = 0f;
+        max = 0f;
+        return false;
     }
 
     /// <summary>

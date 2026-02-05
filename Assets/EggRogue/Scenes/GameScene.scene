@@ -264,9 +264,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5f071fa35458a394397b1931930acf23, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerPrefab: {fileID: 5144214466918161386, guid: 6241a8219f82b48478d9ddfba4ae88e4,
+  playerPrefab: {fileID: 3734454716433559517, guid: a7791636cf7bdf54db0ede9581c094cc,
     type: 3}
-  defaultModelPrefab: {fileID: 3949371431902328983, guid: 5c3a7d886028ef94e912ed075045363b,
+  defaultModelPrefab: {fileID: 4144580196621053565, guid: dffd0f84523b0fc4cb837fd78eb384d2,
     type: 3}
   spawnPoint: {fileID: 374989044}
 --- !u!4 &374989044
@@ -1199,6 +1199,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1570396285}
   - component: {fileID: 1570396286}
+  - component: {fileID: 1570396287}
   m_Layer: 0
   m_HasEditorInfo: 1
   m_Name: LevelFlowManager
@@ -1235,6 +1236,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelTimer: {fileID: 523372811}
+--- !u!114 &1570396287
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1570396284}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd97bd67824935a459ae117243ad9091, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ambientMode: 0
+  ambientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
+  ambientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
+  ambientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
+  ambientIntensity: 1
+  delayOneFrame: 1
 --- !u!1 &2095249707
 GameObject:
   m_ObjectHideFlags: 0

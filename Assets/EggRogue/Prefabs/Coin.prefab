@@ -96,7 +96,6 @@ GameObject:
   serializedVersion: 7
   m_Component:
   - component: {fileID: 4746060709707055565}
-  - component: {fileID: 6769781165839380078}
   - component: {fileID: 1631271792612901757}
   m_Layer: 0
   m_HasEditorInfo: 1
@@ -122,27 +121,6 @@ Transform:
   - {fileID: 7299999062476815559}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!135 &6769781165839380078
-SphereCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7407567273851145033}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Radius: 0.4
-  m_Center: {x: 0, y: 0.125, z: 0}
 --- !u!114 &1631271792612901757
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -158,3 +136,9 @@ MonoBehaviour:
   value: 1
   doubleGoldPopupPrefab: {fileID: 6313427997120869975, guid: a65d37b1ab623c042ab69e26bb7bfb1a,
     type: 3}
+  flyIconSprite: {fileID: 0}
+  flyIconColor: {r: 0.4745098, g: 1, b: 0.41960785, a: 1}
+  flyIconSize: 20
+  flyDuration: 1
+  checkInterval: 0.05
+  debugLog: 1

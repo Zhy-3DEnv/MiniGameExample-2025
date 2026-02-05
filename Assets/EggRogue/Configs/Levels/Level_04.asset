@@ -17,15 +17,33 @@ MonoBehaviour:
   spawnMix:
   - enemyData: {fileID: 11400000, guid: 968433df3a0cc744ab885c9e2996f104, type: 2}
     enemyPrefab: {fileID: 0}
-    spawnWeight: 0
+    spawnWeight: 2
     maxAlive: 0
     spawnRateScale: 0
+    spawnTimeStart: 0
+    spawnTimeEnd: 0
+  - enemyData: {fileID: 11400000, guid: 915e5b5149627164fa90ad784b53c3c3, type: 2}
+    enemyPrefab: {fileID: 0}
+    spawnWeight: 1
+    maxAlive: 0
+    spawnRateScale: 0
+    spawnTimeStart: 0
+    spawnTimeEnd: 0
+  - enemyData: {fileID: 11400000, guid: af35571ff4453084f9d1c5ccfda9816c, type: 2}
+    enemyPrefab: {fileID: 0}
+    spawnWeight: 0.5
+    maxAlive: 0
+    spawnRateScale: 0
+    spawnTimeStart: 0
+    spawnTimeEnd: 0
   spawnsPerSecond: 3
   maxAliveEnemies: 0
   minTotalEnemies: 0
   maxTotalEnemies: 0
   randomOffsetRadius: 2
-  levelDuration: 30
+  spawnStartTime: 0
+  spawnEndTime: 0
+  levelDuration: 35
   victoryRewardGold: 8
   enemyHealthMultiplier: 1.15
   enemyMoveSpeedMultiplier: 1.06

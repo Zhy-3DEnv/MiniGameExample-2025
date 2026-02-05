@@ -40,13 +40,16 @@ public static class PersistentSceneSetup
         managers.transform.SetParent(root.transform, false);
 
         CreateManagerChild(managers.transform, "GameManager", typeof(GameManager));
+        CreateManagerChild(managers.transform, "PlayerRunState", typeof(PlayerRunState));
         GameObject umGo = CreateManagerChild(managers.transform, "UIManager", typeof(UIManager));
         CreateManagerChild(managers.transform, "GoldManager", typeof(GoldManager));
         CreateManagerChild(managers.transform, "CSVConfigManager", typeof(CSVConfigManager));
         CreateManagerChild(managers.transform, "LevelManager", typeof(LevelManager));
         CreateManagerChild(managers.transform, "CardManager", typeof(CardManager));
-        var wsm = CreateManagerChild(managers.transform, "WeaponSelectionManager", typeof(WeaponSelectionManager));
+        var wsm =         CreateManagerChild(managers.transform, "WeaponSelectionManager", typeof(WeaponSelectionManager));
         CreateManagerChild(managers.transform, "WeaponInventoryManager", typeof(WeaponInventoryManager));
+        CreateManagerChild(managers.transform, "ItemInventoryManager", typeof(ItemInventoryManager));
+        CreateManagerChild(managers.transform, "PlayerLevelManager", typeof(PlayerLevelManager));
 
         var wsmComp = wsm.GetComponent<WeaponSelectionManager>();
         if (wsmComp != null)
@@ -140,8 +143,7 @@ public static class PersistentSceneSetup
         text.alignment = TextAnchor.MiddleCenter;
         text.color = Color.white;
         text.fontSize = 18;
-        if (UnityEngine.Font.GetOSInstalledFontNames().Length > 0)
-            text.font = UnityEngine.Font.CreateDynamicFontFromOSFont(UnityEngine.Font.GetOSInstalledFontNames()[0], 18);
+        text.font = EggRogue.GameFont.GetDefault();
 
         return go;
     }
@@ -152,6 +154,40 @@ public static class PersistentSceneSetup
         rt.anchorMax = Vector2.one;
         rt.offsetMin = Vector2.zero;
         rt.offsetMax = Vector2.zero;
+    }
+
+    [MenuItem("EggRogue/添加 PlayerRunState 到现有场景")]
+    public static void AddPlayerRunStateToScene()
+    {
+        if (AssetDatabase.LoadMainAssetAtPath(ScenePath) == null)
+        {
+            EditorUtility.DisplayDialog("添加 PlayerRunState", $"未找到 {ScenePath}，请先创建 PersistentScene。", "确定");
+            return;
+        }
+        var scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+        Transform managers = null;
+        foreach (var go in scene.GetRootGameObjects())
+        {
+            var m = go.transform.Find("Managers");
+            if (m != null) { managers = m; break; }
+        }
+        if (managers == null)
+        {
+            EditorUtility.DisplayDialog("添加 PlayerRunState", "未找到 Managers 节点。", "确定");
+            return;
+        }
+        if (managers.Find("PlayerRunState") != null)
+        {
+            EditorUtility.DisplayDialog("添加 PlayerRunState", "场景中已存在 PlayerRunState。", "确定");
+            return;
+        }
+        var prs = new GameObject("PlayerRunState");
+        prs.transform.SetParent(managers, false);
+        prs.transform.SetSiblingIndex(1);
+        prs.AddComponent<PlayerRunState>();
+        EditorSceneManager.SaveScene(scene);
+        Debug.Log("PersistentSceneSetup: 已添加 PlayerRunState 并保存场景。");
+        EditorUtility.DisplayDialog("添加 PlayerRunState", "已添加 PlayerRunState 并保存场景。", "确定");
     }
 
     private static void AddPersistentSceneToBuild()

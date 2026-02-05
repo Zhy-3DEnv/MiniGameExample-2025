@@ -1,4 +1,5 @@
 using UnityEngine;
+using EggRogue;
 
 /// <summary>
 /// 子弹/投射物 - 从玩家武器发射，命中敌人造成伤害。
@@ -53,6 +54,9 @@ public class Projectile : MonoBehaviour
     {
         if (hit) return;
 
+        if (GameplayPauseManager.Instance != null && GameplayPauseManager.Instance.IsPaused)
+            return;
+
         transform.position += transform.forward * speed * Time.deltaTime;
         lifeTimer += Time.deltaTime;
         if (lifeTimer >= lifeTime)
@@ -69,13 +73,13 @@ public class Projectile : MonoBehaviour
         if (hit) return;
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-        Debug.Log($"[Projectile] OnTriggerEnter: other={other.name}, tag={other.tag}, layer={other.gameObject.layer}");
+        //Debug.log($"[Projectile] OnTriggerEnter: other={other.name}, tag={other.tag}, layer={other.gameObject.layer}");
 #endif
 
         if (!other.CompareTag(targetTag))
         {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            Debug.Log($"[Projectile] 忽略：Tag 不匹配（期望 '{targetTag}'）");
+            //Debug.log($"[Projectile] 忽略：Tag 不匹配（期望 '{targetTag}'）");
 #endif
             return;
         }
@@ -84,24 +88,25 @@ public class Projectile : MonoBehaviour
         if (enemyHealth == null)
         {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            Debug.Log($"[Projectile] 忽略：{other.name} 及其父节点无 Health 组件");
+            //Debug.log($"[Projectile] 忽略：{other.name} 及其父节点无 Health 组件");
 #endif
             return;
         }
         if (enemyHealth.IsDead)
         {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            Debug.Log($"[Projectile] 忽略：敌人已死亡");
+            //Debug.log($"[Projectile] 忽略：敌人已死亡");
 #endif
             return;
         }
 
-        enemyHealth.TakeDamage(damage);
+        float finalDamage = EggRogue.ItemEffectManager.ProcessPlayerDamage(enemyHealth, damage);
+        enemyHealth.TakeDamage(finalDamage);
 
         if (!isPiercing)
         {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            Debug.Log($"[Projectile] 命中 {other.name}，销毁子弹");
+            //Debug.log($"[Projectile] 命中 {other.name}，销毁子弹");
 #endif
             hit = true;
             Destroy(gameObject);

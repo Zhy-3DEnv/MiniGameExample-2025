@@ -18,11 +18,13 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: bd432b6805ad1b24ba470868c5d3e649, type: 3}
   characterModelPrefab: {fileID: 4144580196621053565, guid: bb13347e6d160524e8749c8f33a559d7,
     type: 3}
+  baseLevel: 1
   baseDamage: 10
   baseFireRate: 1.6
   baseMaxHealth: 85
   baseMoveSpeed: 8
   baseBulletSpeed: 24
-  baseAttackRange: 12
+  baseAttackRange: 2
+  basePickupRange: 1.5
   passiveAbilities:
   - {fileID: 11400000, guid: 023d034cbbd60c34494375144b33f76e, type: 2}

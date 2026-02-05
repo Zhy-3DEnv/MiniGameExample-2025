@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   weaponId: gun_lv1
   weaponName: S12K
-  icon: {fileID: 21300000, guid: 4e2debda0e955644ea311d969d582c00, type: 3}
+  icon: {fileID: 21300000, guid: 7a0d4b976e1a99c4384c430551af9e57, type: 3}
   weaponType: 0
   level: 1
   basePrice: 50
@@ -22,9 +22,10 @@ MonoBehaviour:
   fireRate: 2
   attackRange: 10
   bulletSpeed: 20
+  bulletLifeTime: 5
   bulletPrefab: {fileID: 2903440007014586367, guid: 9c64ee27a38bee244af0d4e6c3afd790,
     type: 3}
   meleeHitPrefab: {fileID: 0}
   modelPrefab: {fileID: 4889238492278348137, guid: 23493e654800e094d951bc28a509a9c8,
     type: 3}
-  nextLevelWeapon: {fileID: 0}
+  nextLevelWeapon: {fileID: 11400000, guid: 6801ee9d5d4d4af40a7aa5a92763225b, type: 2}

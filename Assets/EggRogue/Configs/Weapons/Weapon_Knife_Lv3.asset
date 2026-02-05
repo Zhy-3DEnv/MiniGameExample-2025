@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:yousandi.cn,2023:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3242813c38511d6489c176af29c944c6, type: 3}
+  m_Name: Weapon_Knife_Lv3
+  m_EditorClassIdentifier: 
+  weaponId: knife_lv1
+  weaponName: "\u5C0F\u5200"
+  icon: {fileID: 21300000, guid: abc3e88cf95dbf641bca12db6f3f7f78, type: 3}
+  weaponType: 1
+  level: 1
+  basePrice: 18
+  damage: 9
+  fireRate: 3
+  attackRange: 2
+  bulletSpeed: 20
+  bulletLifeTime: 5
+  bulletPrefab: {fileID: 0}
+  meleeHitPrefab: {fileID: 0}
+  modelPrefab: {fileID: 2750633297595489994, guid: 93188645a49cd6940b1b1b23e6ea4fd9,
+    type: 3}
+  nextLevelWeapon: {fileID: 11400000, guid: 497f06d0e3dd9f74198e92e232fc36f8, type: 2}

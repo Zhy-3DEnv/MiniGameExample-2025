@@ -22,20 +22,29 @@ public class CardSelectionPanel : BaseUIPanel
     [Tooltip("卡片数据库（ScriptableObject）")]
     public CardDatabase cardDatabase;
 
-    [Header("确认进入下一关")]
-    [Tooltip("确认进入下一关的按钮（PC 按 Enter，手机点击此按钮）")]
+    [Header("选卡后进入商店")]
+    [Tooltip("选卡后显示的「继续」按钮，点击进入商店")]
     public Button nextLevelButton;
 
-    private CardData[] currentCards = new CardData[4];
-    private bool hasSelected = false;
+    [Header("选择次数显示")]
+    [Tooltip("显示可选次数，如 2/4（已选/总额）")]
+    public Text selectionCountText;
 
-    // 保存暂停前的状态
-    private EnemySpawner enemySpawner;
-    private CharacterController characterController;
-    private PlayerCombatController playerCombatController;
-    private bool wasSpawning = false;
-    private bool wasCharacterEnabled = false;
-    private bool wasCombatEnabled = false;
+    [Header("随机刷新")]
+    [Tooltip("随机按钮（花费金币重新随机 4 张卡片，每次价格递增，下关重置）")]
+    public Button rerollButton;
+
+    [Tooltip("首次随机价格")]
+    public int rerollBasePrice = 5;
+
+    [Tooltip("每次随机价格递增")]
+    public int rerollPriceIncrement = 5;
+
+    private CardData[] currentCards = new CardData[4];
+    private int selectedCount = 0;
+    private int totalPicks = 1;
+    private readonly bool[] selectedIndices = new bool[4];
+    private int rerollCount = 0;
 
     private void Start()
     {
@@ -53,9 +62,14 @@ public class CardSelectionPanel : BaseUIPanel
         if (nextLevelButton != null)
         {
             nextLevelButton.onClick.RemoveAllListeners();
-            nextLevelButton.onClick.AddListener(OnConfirmNextLevel);
-            // 初始不可见 / 不可用，等待玩家选完卡再显示
+            nextLevelButton.onClick.AddListener(OnContinueClicked);
             nextLevelButton.gameObject.SetActive(false);
+        }
+
+        if (rerollButton != null)
+        {
+            rerollButton.onClick.RemoveAllListeners();
+            rerollButton.onClick.AddListener(OnRerollClicked);
         }
     }
 
@@ -72,15 +86,106 @@ public class CardSelectionPanel : BaseUIPanel
 
         // 随机选择 4 张卡片
         currentCards = cardDatabase.GetRandomCards(4);
-        hasSelected = false;
+        selectedCount = 0;
+        rerollCount = 0;
+        for (int i = 0; i < selectedIndices.Length; i++)
+            selectedIndices[i] = false;
 
-        // 更新按钮显示
+        totalPicks = GetCardPickCount();
+
+        RefreshCardDisplay();
+        RefreshSelectedVisibility();
+        RefreshRerollButton();
+        RefreshContinueButton();
+        RefreshSelectionCountText();
+        Show();
+    }
+
+    private int GetCardPickCount()
+    {
+        if (PlayerLevelManager.Instance != null)
+            return PlayerLevelManager.Instance.GetCardPickCount();
+        return 1;
+    }
+
+    private void RefreshCardDisplay()
+    {
         for (int i = 0; i < cardButtons.Length && i < currentCards.Length; i++)
         {
             UpdateCardButton(i, currentCards[i]);
         }
+    }
 
-        Show();
+    /// <summary>
+    /// 刷新已选卡片的可见性。已选中的用 CanvasGroup 隐藏显示但保留占位，避免 HorizontalLayoutGroup 重新排布。
+    /// </summary>
+    private void RefreshSelectedVisibility()
+    {
+        for (int i = 0; i < cardButtons.Length && i < selectedIndices.Length; i++)
+        {
+            if (cardButtons[i] == null) continue;
+
+            bool selected = selectedIndices[i];
+            var go = cardButtons[i].gameObject;
+
+            // 保持 GameObject 激活，用 CanvasGroup 控制可见性，以保留布局占位
+            var cg = go.GetComponent<CanvasGroup>();
+            if (cg == null)
+                cg = go.AddComponent<CanvasGroup>();
+
+            if (selected)
+            {
+                cg.alpha = 0f;
+                cg.blocksRaycasts = true;  // 阻挡点击
+                cg.interactable = false;
+                cardButtons[i].interactable = false;
+            }
+            else
+            {
+                cg.alpha = 1f;
+                cg.blocksRaycasts = true;
+                cg.interactable = true;
+                cardButtons[i].interactable = true;
+            }
+        }
+    }
+
+    private void RefreshContinueButton()
+    {
+        if (nextLevelButton == null) return;
+        bool canContinue = selectedCount >= totalPicks;
+        nextLevelButton.gameObject.SetActive(canContinue);
+        if (canContinue)
+        {
+            nextLevelButton.interactable = true;
+            var btnText = nextLevelButton.GetComponentInChildren<Text>();
+            if (btnText != null)
+                btnText.text = selectedCount > 0 ? "继续" : "继续";
+        }
+    }
+
+    private void RefreshSelectionCountText()
+    {
+        if (selectionCountText != null)
+        {
+            int remaining = Mathf.Max(0, totalPicks - selectedCount);
+            selectionCountText.text = $"{remaining}/{totalPicks}";
+        }
+    }
+
+    private void RefreshRerollButton()
+    {
+        if (rerollButton == null) return;
+        int price = GetCurrentRerollPrice();
+        var text = rerollButton.GetComponentInChildren<Text>();
+        if (text != null)
+            text.text = $"随机 ({price}金币)";
+        rerollButton.interactable = selectedCount == 0 && GoldManager.Instance != null && GoldManager.Instance.Gold >= price;
+    }
+
+    private int GetCurrentRerollPrice()
+    {
+        return rerollBasePrice + rerollCount * rerollPriceIncrement;
     }
 
     private void UpdateCardButton(int index, CardData card)
@@ -123,14 +228,17 @@ public class CardSelectionPanel : BaseUIPanel
 
     private void OnCardSelected(int index)
     {
-        if (hasSelected || index < 0 || index >= currentCards.Length)
+        if (index < 0 || index >= currentCards.Length || selectedIndices[index])
+            return;
+        if (selectedCount >= totalPicks)
             return;
 
         CardData selectedCard = currentCards[index];
         if (selectedCard == null)
             return;
 
-        hasSelected = true;
+        selectedIndices[index] = true;
+        selectedCount++;
 
         // 应用卡片加成
         if (CardManager.Instance != null)
@@ -139,63 +247,82 @@ public class CardSelectionPanel : BaseUIPanel
         }
         else
         {
-            Debug.LogWarning("CardSelectionPanel: 未找到 CardManager.Instance，卡片加成未能应用到角色。请确认 PersistentScene 中存在 CardManager 对象。");
+            Debug.LogWarning("CardSelectionPanel: 未找到 CardManager.Instance，卡片加成未能应用到角色。");
         }
 
-        Debug.Log($"CardSelectionPanel: 玩家选择了卡片 - {selectedCard.cardName}");
-        
-        // 隐藏所有卡片按钮（玩家只看到结果与“进入下一关”按钮）
-        for (int i = 0; i < cardButtons.Length; i++)
-        {
-            if (cardButtons[i] != null)
-            {
-                cardButtons[i].gameObject.SetActive(false);
-            }
-        }
+        Debug.Log($"CardSelectionPanel: 玩家选择了卡片 - {selectedCard.cardName} ({selectedCount}/{totalPicks})");
 
-        // 显示“进入下一关”按钮，让玩家自行确认
-        if (nextLevelButton != null)
+        // 隐藏已选中的卡片
+        RefreshSelectedVisibility();
+        RefreshRerollButton();
+        RefreshContinueButton();
+        RefreshSelectionCountText();
+
+        // 当卡池空了但还有选择次数时，自动补充新卡片
+        if (selectedCount < totalPicks && AreAllSlotsSelected())
+            RefillCards();
+    }
+
+    private bool AreAllSlotsSelected()
+    {
+        for (int i = 0; i < selectedIndices.Length && i < cardButtons.Length; i++)
         {
-            nextLevelButton.gameObject.SetActive(true);
-            nextLevelButton.interactable = true;
+            if (!selectedIndices[i]) return false;
         }
+        return true;
+    }
+
+    private void RefillCards()
+    {
+        if (cardDatabase == null) return;
+        currentCards = cardDatabase.GetRandomCards(4);
+        for (int i = 0; i < selectedIndices.Length; i++)
+            selectedIndices[i] = false;
+        RefreshCardDisplay();
+        RefreshSelectedVisibility();
+        RefreshRerollButton();
+        RefreshContinueButton();
+        RefreshSelectionCountText();
+    }
+
+    private void OnRerollClicked()
+    {
+        if (selectedCount > 0) return;
+        int price = GetCurrentRerollPrice();
+        if (GoldManager.Instance == null || !GoldManager.Instance.SpendGold(price))
+            return;
+
+        rerollCount++;
+        currentCards = cardDatabase.GetRandomCards(4);
+        RefreshCardDisplay();
+        RefreshRerollButton();
     }
 
     /// <summary>
-    /// 玩家确认进入下一关（按钮点击或键盘 Enter 调用）
+    /// 玩家点击「继续」后进入商店，再在商店中点击「继续」进入下一关。
     /// </summary>
-    private void OnConfirmNextLevel()
+    private void OnContinueClicked()
     {
-        if (!hasSelected)
+        if (selectedCount < totalPicks)
             return;
 
-        // 单局继承：仅当未勾选「进入下一关回满血」时，保存当前/最大血量供新场景恢复
-        if (LevelManager.Instance != null && !LevelManager.Instance.fullHealOnNextLevel)
-        {
-            CharacterStats stats = FindObjectOfType<CharacterStats>();
-            if (stats != null)
-            {
-                Health h = stats.GetComponent<Health>();
-                if (h != null)
-                    LevelManager.Instance.SaveRunStateHealth(h.CurrentHealth, h.maxHealth);
-            }
-        }
-
-        // 隐藏界面，进入下一关
         Hide();
-        if (LevelManager.Instance != null)
+        if (UIManager.Instance != null)
+            UIManager.Instance.ShowShop();
+        else if (LevelManager.Instance != null)
             LevelManager.Instance.NextLevel();
     }
 
     private void Update()
     {
-        // 允许玩家在选完卡后按 Enter 进入下一关
-        if (IsVisible() && hasSelected)
+        RefreshRerollButton();
+        // 选够卡后按 Enter 进入商店
+        if (IsVisible() && selectedCount >= totalPicks)
         {
             Keyboard keyboard = Keyboard.current;
             if (keyboard != null && (keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame))
             {
-                OnConfirmNextLevel();
+                OnContinueClicked();
             }
         }
     }
@@ -203,9 +330,11 @@ public class CardSelectionPanel : BaseUIPanel
     protected override void OnShow()
     {
         base.OnShow();
-        hasSelected = false;
+        selectedCount = 0;
+        for (int i = 0; i < selectedIndices.Length; i++)
+            selectedIndices[i] = false;
 
-        // 每次显示选卡界面前，确保卡片按钮重新激活、可交互
+        // 确保卡片按钮可见、可交互（RefreshSelectedVisibility 会在 Refresh 时根据 selectedIndices 更新）
         for (int i = 0; i < cardButtons.Length; i++)
         {
             if (cardButtons[i] != null)
@@ -215,12 +344,16 @@ public class CardSelectionPanel : BaseUIPanel
             }
         }
 
-        // 隐藏“进入下一关”按钮，等待玩家重新选择
         if (nextLevelButton != null)
         {
             nextLevelButton.gameObject.SetActive(false);
             nextLevelButton.interactable = false;
+            var btnText = nextLevelButton.GetComponentInChildren<Text>();
+            if (btnText != null)
+                btnText.text = "继续";
         }
+
+        RefreshSelectionCountText();
 
         // 暂停所有游戏玩法系统（通过统一的 GameplayPauseManager）
         if (EggRogue.GameplayPauseManager.Instance != null)

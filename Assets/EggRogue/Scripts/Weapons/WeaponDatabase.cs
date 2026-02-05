@@ -42,5 +42,22 @@ namespace EggRogue
             if (weapons == null || weapons.Length == 0) return new WeaponData[0];
             return weapons;
         }
+
+        /// <summary>
+        /// 随机获取若干把武器（用于商店刷新，可重复）
+        /// </summary>
+        public WeaponData[] GetRandomWeapons(int count)
+        {
+            if (weapons == null || weapons.Length == 0 || count <= 0)
+                return new WeaponData[0];
+
+            var result = new WeaponData[count];
+            for (int i = 0; i < count; i++)
+            {
+                int idx = Random.Range(0, weapons.Length);
+                result[i] = weapons[idx];
+            }
+            return result;
+        }
     }
 }

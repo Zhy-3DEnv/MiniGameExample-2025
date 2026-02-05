@@ -14,10 +14,10 @@ namespace EggRogue
 
         public const int MaxSlots = 6;
 
-        /// <summary>
-        /// 当前装备的武器，索引 0-5，null 表示空槽
-        /// </summary>
         private readonly WeaponData[] _slots = new WeaponData[MaxSlots];
+
+        /// <summary>武器槽变化时触发</summary>
+        public event System.Action OnWeaponsChanged;
 
         public int SlotCount => MaxSlots;
 
@@ -51,6 +51,48 @@ namespace EggRogue
         {
             if (index < 0 || index >= MaxSlots) return;
             _slots[index] = weapon;
+            OnWeaponsChanged?.Invoke();
+        }
+
+        /// <summary>当前是否没有任何武器</summary>
+        public bool IsCompletelyEmpty
+        {
+            get
+            {
+                for (int i = 0; i < MaxSlots; i++)
+                    if (_slots[i] != null) return false;
+                return true;
+            }
+        }
+
+        /// <summary>是否有空槽</summary>
+        public bool HasEmptySlot
+        {
+            get
+            {
+                for (int i = 0; i < MaxSlots; i++)
+                    if (_slots[i] == null) return true;
+                return false;
+            }
+        }
+
+        /// <summary>是否完全没有任何武器</summary>
+        public bool IsEmpty
+        {
+            get
+            {
+                for (int i = 0; i < MaxSlots; i++)
+                    if (_slots[i] != null) return false;
+                return true;
+            }
+        }
+
+        /// <summary>第一个空槽索引，无空槽返回 -1</summary>
+        public int GetFirstEmptySlotIndex()
+        {
+            for (int i = 0; i < MaxSlots; i++)
+                if (_slots[i] == null) return i;
+            return -1;
         }
 
         /// <summary>
@@ -64,6 +106,7 @@ namespace EggRogue
                 if (_slots[i] == null)
                 {
                     _slots[i] = weapon;
+                    OnWeaponsChanged?.Invoke();
                     return true;
                 }
             }
@@ -78,6 +121,7 @@ namespace EggRogue
             if (index < 0 || index >= MaxSlots) return null;
             var old = _slots[index];
             _slots[index] = null;
+            if (old != null) OnWeaponsChanged?.Invoke();
             return old;
         }
 

@@ -17,9 +17,10 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 7720ed897d6e0b742881d60b6ba279f7, type: 3}
   enemyPrefab: {fileID: 1405202925373373295, guid: bc0aeb28eded2364ea46086e2bbc629e,
     type: 3}
-  baseMaxHealth: 2
+  baseMaxHealth: 20
   baseMoveSpeed: 2
   baseDamage: 1
+  xpValue: 1
   coinDropMin: 1
   coinDropMax: 1
   coinDropRadius: 0.3

@@ -26,6 +26,16 @@ public class SettingsPanel : BaseUIPanel
     [Tooltip("摇杆回中速度（5-25）")]
     public Slider joystickReturnSpeedSlider;
 
+    [Header("调试显示")]
+    [Tooltip("基础攻击范围圈")]
+    public Toggle debugDrawAttackRangeToggle;
+
+    [Tooltip("每把武器射程线")]
+    public Toggle debugDrawWeaponRangeToggle;
+
+    [Tooltip("拾取范围圈")]
+    public Toggle debugDrawPickupRangeToggle;
+
     [Header("按钮")]
     [Tooltip("关闭按钮")]
     public Button closeButton;
@@ -52,6 +62,13 @@ public class SettingsPanel : BaseUIPanel
             rigidbodyDragSlider.onValueChanged.AddListener(_ => OnSliderChanged());
         if (joystickReturnSpeedSlider != null)
             joystickReturnSpeedSlider.onValueChanged.AddListener(_ => OnSliderChanged());
+
+        if (debugDrawAttackRangeToggle != null)
+            debugDrawAttackRangeToggle.onValueChanged.AddListener(v => DebugDrawSettings.AttackRangeVisible = v);
+        if (debugDrawWeaponRangeToggle != null)
+            debugDrawWeaponRangeToggle.onValueChanged.AddListener(v => DebugDrawSettings.WeaponRangeVisible = v);
+        if (debugDrawPickupRangeToggle != null)
+            debugDrawPickupRangeToggle.onValueChanged.AddListener(v => DebugDrawSettings.PickupRangeVisible = v);
     }
 
     protected override void OnShow()
@@ -62,6 +79,12 @@ public class SettingsPanel : BaseUIPanel
         LoadFromPrefs();
         RefreshValueTexts();
         ApplyToComponents();
+        if (debugDrawAttackRangeToggle != null)
+            debugDrawAttackRangeToggle.SetIsOnWithoutNotify(DebugDrawSettings.AttackRangeVisible);
+        if (debugDrawWeaponRangeToggle != null)
+            debugDrawWeaponRangeToggle.SetIsOnWithoutNotify(DebugDrawSettings.WeaponRangeVisible);
+        if (debugDrawPickupRangeToggle != null)
+            debugDrawPickupRangeToggle.SetIsOnWithoutNotify(DebugDrawSettings.PickupRangeVisible);
     }
 
     protected override void OnHide()

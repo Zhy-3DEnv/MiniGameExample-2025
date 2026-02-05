@@ -249,8 +249,13 @@ using EggRogue;
             EnemyManager.Instance.UnregisterEnemy(this);
         }
 
-        // 掉落 1–2 个金币
+        // 掉落金币
         DropCoins();
+
+        // 给玩家经验值（用于升级和选卡次数）
+        int xp = enemyData != null ? enemyData.xpValue : 1;
+        if (xp > 0 && PlayerLevelManager.Instance != null)
+            PlayerLevelManager.Instance.AddXP(xp);
 
         Destroy(gameObject, 0.1f);
     }
@@ -340,6 +345,14 @@ using EggRogue;
     }
 
     /// <summary>
+    /// 获取当前移动速度（用于 Buff 等恢复）
+    /// </summary>
+    public float GetCurrentMoveSpeed()
+    {
+        return moveSpeed;
+    }
+
+    /// <summary>
     /// 设置敌人数据（EnemySpawner 调用）
     /// </summary>
     public void SetEnemyData(EnemyData data)
@@ -395,7 +408,7 @@ using EggRogue;
         if (damageToDeal <= 0f)
             return;
 
-        playerHealth.TakeDamage(damageToDeal);
+        playerHealth.TakeDamage(damageToDeal, gameObject);
         lastContactAttackTime = Time.time;
 
         Debug.Log($"EnemyController: {gameObject.name} 对玩家造成接触伤害 {damageToDeal}");

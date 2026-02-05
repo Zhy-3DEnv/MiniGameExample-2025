@@ -29,8 +29,8 @@ MonoBehaviour:
   randomOffsetRadius: 2
   spawnStartTime: 0
   spawnEndTime: 0
-  levelDuration: 60
-  victoryRewardGold: 2
+  levelDuration: 20
+  victoryRewardGold: 10
   enemyHealthMultiplier: 1
   enemyMoveSpeedMultiplier: 1
   coinDropMultiplier: 1

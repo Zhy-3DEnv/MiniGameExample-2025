@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using EggRogue;
 
 /// <summary>
@@ -29,7 +30,15 @@ public class WeaponController : MonoBehaviour
     [Tooltip("单把武器相对角色前方最大偏转角度（度）")]
     public float maxWeaponAimAngle = 90f;
 
+    [Header("近战挥砍表现")]
+    [Tooltip("近战挥砍弧度（度），例如 120 = 从左 -60° 划到右 +60°")]
+    public float meleeSwingAngle = 120f;
+
+    [Tooltip("近战挥砍时长（秒）")]
+    public float meleeSwingDuration = 0.2f;
+
     private CharacterController _characterController;
+    private CharacterStats _characterStats;
     private readonly float[] _cooldowns = new float[WeaponInventoryManager.MaxSlots];
     private readonly Transform[] _slotFirePoints = new Transform[WeaponInventoryManager.MaxSlots];
     private readonly Quaternion[] _slotDefaultLocalRotations = new Quaternion[WeaponInventoryManager.MaxSlots];
@@ -39,6 +48,7 @@ public class WeaponController : MonoBehaviour
     private void Awake()
     {
         _characterController = GetComponent<CharacterController>();
+        _characterStats = GetComponent<CharacterStats>();
 
         if (firePoint == null)
         {
@@ -118,7 +128,8 @@ public class WeaponController : MonoBehaviour
 
         // 简化版锁敌：在攻击范围内，全局查找最近的可攻击敌人。
         // 如果场上只有 1 个敌人，所有枪都会瞄准它并开火。
-        EnemyController target = FindGlobalClosestTarget(fp.position, weapon.attackRange);
+        float range = GetWeaponRange(weapon);
+        EnemyController target = FindGlobalClosestTarget(fp.position, range);
         if (target == null)
         {
             // 没有锁定目标时，槽位回正到初始朝向
@@ -148,14 +159,135 @@ public class WeaponController : MonoBehaviour
 
     private void TryFireMelee(int slotIndex, WeaponData weapon)
     {
-        EnemyController target = EnemyManager.Instance?.GetClosestEnemy(transform.position, weapon.attackRange);
+        float range = GetWeaponRange(weapon);
+        EnemyController target = EnemyManager.Instance?.GetClosestEnemy(transform.position, range);
         if (target == null) return;
 
+        // 1. 先做一次伤害结算（保持原有数值逻辑）
         var health = target.GetComponentInChildren<Health>();
         if (health != null && !health.IsDead)
-            health.TakeDamage(weapon.damage);
+        {
+            float dmg = EggRogue.ItemEffectManager.ProcessPlayerDamage(health, weapon.damage);
+            health.TakeDamage(dmg);
+        }
+
+        // 2. 触发近战挥砍动作（旋转武器挂点 + 可选特效）
+        StartCoroutine(PlayMeleeSwing(slotIndex, weapon, target.transform.position));
 
         _cooldowns[slotIndex] = 1f / Mathf.Max(0.1f, weapon.fireRate);
+    }
+
+    /// <summary>
+    /// 近战挥砍动作：让武器挂点沿着指向目标的方向「飞过去劈砍再飞回」，同时做弧线旋转，可选播放 meleeHitPrefab。
+    /// </summary>
+    private IEnumerator PlayMeleeSwing(int slotIndex, WeaponData weapon, Vector3 targetPos)
+    {
+        Transform slotRoot = GetSlotRoot(slotIndex);
+        if (slotRoot == null)
+            slotRoot = transform;
+
+        // 记录初始 local 状态，用于结束后复位
+        Vector3 startLocalPos = slotRoot.localPosition;
+
+        // 计算朝向目标的中心朝向
+        Vector3 toTarget = targetPos - transform.position;
+        toTarget.y = 0f;
+        if (toTarget.sqrMagnitude < 0.0001f)
+            toTarget = transform.forward;
+        Vector3 dir = toTarget.normalized;
+        Quaternion centerRot = Quaternion.LookRotation(dir);
+
+        // 计算「飞过去」的目标 local 位置：沿角色→目标方向，在攻击范围内偏前一点
+        float range = GetWeaponRange(weapon);
+        float distToTarget = toTarget.magnitude;
+        float flyDist = Mathf.Min(range, distToTarget) * 0.9f;
+        Transform parent = slotRoot.parent;
+        Vector3 localDir = parent != null ? parent.InverseTransformDirection(dir) : dir;
+        Vector3 targetLocalPos = startLocalPos + localDir * flyDist;
+
+        float halfAngle = meleeSwingAngle * 0.5f;
+        Quaternion startRot = centerRot * Quaternion.Euler(0f, -halfAngle, 0f);
+        Quaternion endRot = centerRot * Quaternion.Euler(0f, halfAngle, 0f);
+
+        float duration = Mathf.Max(0.05f, meleeSwingDuration);
+        float timer = 0f;
+        bool hitVfxSpawned = false;
+
+        while (timer < duration)
+        {
+            float t = timer / duration;
+
+            // 位移（local）：前半程飞向目标，后半程飞回原位
+            if (t <= 0.5f)
+            {
+                float k = t / 0.5f;
+                slotRoot.localPosition = Vector3.Lerp(startLocalPos, targetLocalPos, k);
+            }
+            else
+            {
+                float k = (t - 0.5f) / 0.5f;
+                slotRoot.localPosition = Vector3.Lerp(targetLocalPos, startLocalPos, k);
+            }
+
+            // 旋转：整段时间做一次左右挥砍
+            slotRoot.rotation = Quaternion.Slerp(startRot, endRot, t);
+
+            // 在挥砍中段生成一次近战特效（如果配置了）
+            if (!hitVfxSpawned && weapon.meleeHitPrefab != null && t >= 0.4f)
+            {
+                hitVfxSpawned = true;
+                Vector3 hitPos = slotRoot.position + slotRoot.forward * (range * 0.3f);
+                Object.Instantiate(weapon.meleeHitPrefab, hitPos, slotRoot.rotation);
+            }
+
+            timer += Time.deltaTime;
+            yield return null;
+        }
+
+        // 挥砍结束后将武器复位到初始位置和初始朝向（使用槽位原本的 localPosition / localRotation）
+        slotRoot.localPosition = startLocalPos;
+        slotRoot.localRotation = _slotDefaultLocalRotCaptured[slotIndex] ? _slotDefaultLocalRotations[slotIndex] : Quaternion.identity;
+    }
+
+    /// <summary>
+    /// 统一计算某把武器的实际攻击范围：
+    /// 角色当前攻击范围（含卡片/被动加成） + 武器自身 attackRange 偏移。
+    /// </summary>
+    private float GetWeaponRange(WeaponData weapon)
+    {
+        float baseRange = _characterStats != null ? _characterStats.CurrentAttackRange : 0f;
+        float weaponOffset = weapon != null ? weapon.attackRange : 0f;
+        return Mathf.Max(0f, baseRange + weaponOffset);
+    }
+
+    /// <summary>
+    /// 在 Scene 视图中调试显示每把武器的实际攻击范围：从玩家位置沿各武器朝向画一条射程线。
+    /// </summary>
+    private void OnDrawGizmosSelected()
+    {
+        if (WeaponInventoryManager.Instance == null) return;
+        if (_characterStats == null)
+            _characterStats = GetComponent<CharacterStats>();
+
+        for (int i = 0; i < WeaponInventoryManager.MaxSlots; i++)
+        {
+            var weapon = WeaponInventoryManager.Instance.GetWeaponAt(i);
+            if (weapon == null) continue;
+
+            float range = GetWeaponRange(weapon);
+            if (range <= 0f) continue;
+
+            // 不同槽位用不同颜色
+            float t = i / (float)(WeaponInventoryManager.MaxSlots - 1);
+            Gizmos.color = Color.Lerp(Color.cyan, Color.red, t);
+
+            // 方向优先使用 WeaponSlot_i 的 forward，没有就用角色 forward
+            Transform slotRoot = weaponSlotRoot != null ? weaponSlotRoot.Find($"WeaponSlot_{i}") : null;
+            Vector3 origin = transform.position;
+            Vector3 dir = slotRoot != null ? slotRoot.forward : transform.forward;
+
+            Gizmos.DrawLine(origin, origin + dir.normalized * range);
+        }
     }
 
     private Transform GetSlotFirePoint(int slotIndex)

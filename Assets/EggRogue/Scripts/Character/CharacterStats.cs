@@ -15,13 +15,14 @@ public class CharacterStats : MonoBehaviour
 
     // 当前属性（运行时，包含卡片加成，只读）
     // 注意：属性（property）不能使用 [Header] 和 [Tooltip]，所以这些属性在 Inspector 中不会显示
-    // 可以通过 AttributePanel 查看当前属性值
+    // 可以通过 CharacterInfoPanel 查看当前属性值
     public float CurrentDamage { get; set; }
     public float CurrentFireRate { get; set; }
     public float CurrentMaxHealth { get; set; }
     public float CurrentMoveSpeed { get; set; }
     public float CurrentBulletSpeed { get; set; }
     public float CurrentAttackRange { get; set; }
+    public float CurrentPickupRange { get; set; }
 
     private Health health;
     private CharacterController characterController;
@@ -66,25 +67,28 @@ public class CharacterStats : MonoBehaviour
         CurrentMoveSpeed = characterData.baseMoveSpeed;
         CurrentBulletSpeed = characterData.baseBulletSpeed;
         CurrentAttackRange = characterData.baseAttackRange;
+        CurrentPickupRange = characterData.basePickupRange;
 
-            // 如果有卡片管理器，叠加当前已选卡片的总加成（用于跨关卡继承成长）
-            if (CardManager.Instance != null)
-            {
-                CardManager.Instance.GetTotalBonuses(
-                    out float bonusDamage,
-                    out float bonusFireRate,
-                    out float bonusMaxHealth,
-                    out float bonusMoveSpeed,
-                    out float bonusBulletSpeed,
-                    out float bonusAttackRange);
+        // 如果有卡片管理器，叠加当前已选卡片的总加成（用于跨关卡继承成长）
+        if (CardManager.Instance != null)
+        {
+            CardManager.Instance.GetTotalBonuses(
+                out float bonusDamage,
+                out float bonusFireRate,
+                out float bonusMaxHealth,
+                out float bonusMoveSpeed,
+                out float bonusBulletSpeed,
+                out float bonusAttackRange,
+                out float bonusPickupRange);
 
-                CurrentDamage      += bonusDamage;
-                CurrentFireRate    += bonusFireRate;
-                CurrentMaxHealth   += bonusMaxHealth;
-                CurrentMoveSpeed   += bonusMoveSpeed;
-                CurrentBulletSpeed += bonusBulletSpeed;
-                CurrentAttackRange += bonusAttackRange;
-            }
+            CurrentDamage += bonusDamage;
+            CurrentFireRate += bonusFireRate;
+            CurrentMaxHealth += bonusMaxHealth;
+            CurrentMoveSpeed += bonusMoveSpeed;
+            CurrentBulletSpeed += bonusBulletSpeed;
+            CurrentAttackRange += bonusAttackRange;
+            CurrentPickupRange += bonusPickupRange;
+        }
 
         // 应用角色被动能力（在卡片加成之后，最终应用到组件之前）
         ApplyPassiveAbilities();
@@ -171,12 +175,13 @@ public class CharacterStats : MonoBehaviour
         float oldAttackRange = CurrentAttackRange;
 
         // 累加卡片加成
-        CurrentDamage      += card.damageBonus;
-        CurrentFireRate    += card.fireRateBonus;
-        CurrentMaxHealth   += card.maxHealthBonus;
-        CurrentMoveSpeed   += card.moveSpeedBonus;
+        CurrentDamage += card.damageBonus;
+        CurrentFireRate += card.fireRateBonus;
+        CurrentMaxHealth += card.maxHealthBonus;
+        CurrentMoveSpeed += card.moveSpeedBonus;
         CurrentBulletSpeed += card.bulletSpeedBonus;
         CurrentAttackRange += card.attackRangeBonus;
+        CurrentPickupRange += card.pickupRangeBonus;
 
         Debug.Log(
             $"CharacterStats: ApplyCardBonus({card.cardName}) " +
@@ -192,7 +197,7 @@ public class CharacterStats : MonoBehaviour
     /// 获取基础属性（用于显示，不包含卡片加成）
     /// </summary>
     public void GetBaseStats(out float damage, out float fireRate, out float maxHealth,
-        out float moveSpeed, out float bulletSpeed, out float attackRange)
+        out float moveSpeed, out float bulletSpeed, out float attackRange, out float pickupRange)
     {
         if (characterData != null)
         {
@@ -202,6 +207,7 @@ public class CharacterStats : MonoBehaviour
             moveSpeed = characterData.baseMoveSpeed;
             bulletSpeed = characterData.baseBulletSpeed;
             attackRange = characterData.baseAttackRange;
+            pickupRange = characterData.basePickupRange;
         }
         else
         {
@@ -211,6 +217,7 @@ public class CharacterStats : MonoBehaviour
             moveSpeed = 0f;
             bulletSpeed = 0f;
             attackRange = 0f;
+            pickupRange = 0.5f;
         }
     }
 
@@ -235,7 +242,7 @@ public class CharacterStats : MonoBehaviour
     /// 获取卡片累计加成（用于显示）
     /// </summary>
     public void GetCardBonuses(out float damage, out float fireRate, out float maxHealth,
-        out float moveSpeed, out float bulletSpeed, out float attackRange)
+        out float moveSpeed, out float bulletSpeed, out float attackRange, out float pickupRange)
     {
         if (characterData == null)
         {
@@ -245,6 +252,7 @@ public class CharacterStats : MonoBehaviour
             moveSpeed = 0f;
             bulletSpeed = 0f;
             attackRange = 0f;
+            pickupRange = 0f;
             return;
         }
 
@@ -255,5 +263,57 @@ public class CharacterStats : MonoBehaviour
         moveSpeed = CurrentMoveSpeed - characterData.baseMoveSpeed;
         bulletSpeed = CurrentBulletSpeed - characterData.baseBulletSpeed;
         attackRange = CurrentAttackRange - characterData.baseAttackRange;
+        pickupRange = CurrentPickupRange - characterData.basePickupRange;
     }
+
+        /// <summary>
+        /// 在 Scene 视图中显示角色当前攻击范围（黄圈）和拾取范围（青圈），用于调试。
+        /// </summary>
+        private void OnDrawGizmosSelected()
+        {
+            if (GetComponent<DebugDrawController>() != null) return;
+            if (characterData == null && _instanceNotInitialized())
+                return;
+
+            Vector3 center = transform.position;
+            int segments = 32;
+
+            // 攻击范围（黄色）- 编辑模式下用 characterData 基础值
+            float attackRange = Application.isPlaying ? CurrentAttackRange : (characterData != null ? characterData.baseAttackRange : 0f);
+            if (attackRange > 0f)
+            {
+                Gizmos.color = Color.yellow;
+                Vector3 prev = center + new Vector3(attackRange, 0f, 0f);
+                for (int i = 1; i <= segments; i++)
+                {
+                    float angle = i * Mathf.PI * 2f / segments;
+                    Vector3 next = center + new Vector3(Mathf.Cos(angle) * attackRange, 0f, Mathf.Sin(angle) * attackRange);
+                    Gizmos.DrawLine(prev, next);
+                    prev = next;
+                }
+            }
+
+            // 拾取范围（青色）
+            float pickupRange = Application.isPlaying
+                ? Mathf.Max(0.1f, CurrentPickupRange + EggRogue.ItemEffectManager.GetPickupRangeBonus())
+                : (characterData != null ? characterData.basePickupRange : 0.5f);
+            if (pickupRange > 0f)
+            {
+                Gizmos.color = new Color(0f, 1f, 1f, 0.8f);
+                Vector3 prev = center + new Vector3(pickupRange, 0f, 0f);
+                for (int i = 1; i <= segments; i++)
+                {
+                    float angle = i * Mathf.PI * 2f / segments;
+                    Vector3 next = center + new Vector3(Mathf.Cos(angle) * pickupRange, 0f, Mathf.Sin(angle) * pickupRange);
+                    Gizmos.DrawLine(prev, next);
+                    prev = next;
+                }
+            }
+        }
+
+        // 简单判断：在编辑器下未运行且尚未初始化 stats 时不画圈
+        private bool _instanceNotInitialized()
+        {
+            return Application.isPlaying == false && CurrentAttackRange <= 0.0001f;
+        }
 }

@@ -114,8 +114,8 @@ public class CardManager : MonoBehaviour
     /// <summary>
     /// 计算所有卡片的累计加成（用于显示）。
     /// </summary>
-    public void GetTotalBonuses(out float totalDamage, out float totalFireRate, out float totalMaxHealth, 
-        out float totalMoveSpeed, out float totalBulletSpeed, out float totalAttackRange)
+    public void GetTotalBonuses(out float totalDamage, out float totalFireRate, out float totalMaxHealth,
+        out float totalMoveSpeed, out float totalBulletSpeed, out float totalAttackRange, out float totalPickupRange)
     {
         totalDamage = 0f;
         totalFireRate = 0f;
@@ -123,6 +123,7 @@ public class CardManager : MonoBehaviour
         totalMoveSpeed = 0f;
         totalBulletSpeed = 0f;
         totalAttackRange = 0f;
+        totalPickupRange = 0f;
 
         foreach (var card in selectedCards)
         {
@@ -133,6 +134,7 @@ public class CardManager : MonoBehaviour
             totalMoveSpeed += card.moveSpeedBonus;
             totalBulletSpeed += card.bulletSpeedBonus;
             totalAttackRange += card.attackRangeBonus;
+            totalPickupRange += card.pickupRangeBonus;
         }
     }
 }

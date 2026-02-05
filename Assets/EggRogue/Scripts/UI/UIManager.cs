@@ -45,11 +45,17 @@ public class UIManager : MonoBehaviour
     [Tooltip("武器选择面板（首次进入游戏时选择起始武器）")]
     public WeaponSelectionPanel weaponSelectionPanel;
 
-    [Tooltip("属性面板（按ESC打开）")]
-    public AttributePanel attributePanel;
+    [Tooltip("角色信息面板（按ESC打开，原属性面板）")]
+    public CharacterInfoPanel characterInfoPanel;
 
     [Tooltip("设置面板（从 GameHUD 设置按钮打开，调节操控手感等）")]
     public SettingsPanel settingsPanel;
+
+    [Tooltip("商店面板（选卡后必进，可购买武器/道具）")]
+    public ShopPanel shopPanel;
+
+    [Tooltip("加载过渡界面（商店点继续后黑屏/Loading，可选，未设置则自动创建）")]
+    public EggRogue.LoadingOverlayPanel loadingOverlayPanel;
 
     private void Awake()
     {
@@ -66,6 +72,11 @@ public class UIManager : MonoBehaviour
 
         _instance = this;
         DontDestroyOnLoad(rootGO);
+
+        if (loadingOverlayPanel == null)
+            loadingOverlayPanel = GetComponent<EggRogue.LoadingOverlayPanel>();
+        if (loadingOverlayPanel == null)
+            loadingOverlayPanel = gameObject.AddComponent<EggRogue.LoadingOverlayPanel>();
     }
 
     private void Start()
@@ -113,7 +124,7 @@ public class UIManager : MonoBehaviour
 
                 if (inGameContext)
                 {
-                    ToggleAttributePanel();
+                    ToggleCharacterInfoPanel();
                 }
             }
         }
@@ -123,6 +134,7 @@ public class UIManager : MonoBehaviour
     /// </summary>
     public void ShowMainMenu()
     {
+        HideLoadingOverlay();
         HideAllPanels();
         if (mainMenuPanel != null)
         {
@@ -154,11 +166,69 @@ public class UIManager : MonoBehaviour
         }
     }
 
+    [Header("关卡过渡设置")]
+    [Tooltip("商店点继续后显示的加载过渡时长（秒），黑屏/Loading 后进入下一关")]
+    public float nextLevelTransitionDuration = 1f;
+
+    /// <summary>
+    /// 显示加载过渡界面（黑屏/Loading），用于商店点继续后等待进入下一关。
+    /// </summary>
+    public void ShowLoadingOverlay()
+    {
+        if (loadingOverlayPanel != null)
+            loadingOverlayPanel.Show();
+    }
+
+    /// <summary>
+    /// 隐藏加载过渡界面。
+    /// </summary>
+    public void HideLoadingOverlay()
+    {
+        if (loadingOverlayPanel != null)
+            loadingOverlayPanel.Hide();
+    }
+
+    /// <summary>
+    /// 请求过渡到下一关（由 ShopPanel 调用）。负责显示 Loading、等待、加载下一关。
+    /// </summary>
+    public void RequestNextLevelTransition()
+    {
+        // 隐藏商店面板
+        if (shopPanel != null)
+            shopPanel.Hide();
+
+        // 显示加载界面
+        ShowLoadingOverlay();
+
+        // 启动过渡协程（UIManager 是常驻对象，不会 inactive）
+        StartCoroutine(TransitionToNextLevelCoroutine());
+    }
+
+    /// <summary>
+    /// 过渡到下一关的协程：等待指定时长后加载下一关。
+    /// </summary>
+    private System.Collections.IEnumerator TransitionToNextLevelCoroutine()
+    {
+        float duration = nextLevelTransitionDuration > 0f ? nextLevelTransitionDuration : 1f;
+        yield return new WaitForSecondsRealtime(duration);
+
+        if (LevelManager.Instance != null)
+        {
+            LevelManager.Instance.NextLevel();
+        }
+        else
+        {
+            Debug.LogError("UIManager: LevelManager.Instance 为空，无法加载下一关！");
+            HideLoadingOverlay();
+        }
+    }
+
     /// <summary>
     /// 显示游戏HUD面板，隐藏其他面板
     /// </summary>
     public void ShowGameHUD()
     {
+        HideLoadingOverlay();
         HideAllPanels();
         if (gameHudPanel != null)
         {
@@ -218,6 +288,7 @@ public class UIManager : MonoBehaviour
     /// <param name="gold">当前总金币</param>
     public void ShowClear(int levelReached, int gold)
     {
+        HideLoadingOverlay();
         HideAllPanels();
         if (clearPanel != null)
         {
@@ -260,6 +331,24 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
+    /// 显示商店面板（选卡完成后必进）。
+    /// </summary>
+    public void ShowShop()
+    {
+        HideAllPanels();
+        if (shopPanel != null)
+        {
+            shopPanel.Show();
+        }
+        else
+        {
+            Debug.LogWarning("UIManager: shopPanel 未设置，跳过商店，直接进入下一关");
+            if (LevelManager.Instance != null)
+                LevelManager.Instance.NextLevel();
+        }
+    }
+
+    /// <summary>
     /// 显示卡片选择面板。
     /// </summary>
     public void ShowCardSelection()
@@ -291,19 +380,18 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 切换属性面板显示/隐藏（按ESC调用）
-    /// 注意：属性面板是覆盖层，不会隐藏其他面板
+    /// 切换角色信息面板显示/隐藏（按ESC调用）
+    /// 注意：角色信息面板是覆盖层，不会隐藏其他面板
     /// </summary>
-    public void ToggleAttributePanel()
+    public void ToggleCharacterInfoPanel()
     {
-        if (attributePanel != null)
+        if (characterInfoPanel != null)
         {
-            // 属性面板是覆盖层，直接切换显示/隐藏，不影响其他面板
-            attributePanel.TogglePanel();
+            characterInfoPanel.TogglePanel();
         }
         else
         {
-            Debug.LogWarning("UIManager: attributePanel 未设置，请在 Inspector 中拖入引用。");
+            Debug.LogWarning("UIManager: characterInfoPanel 未设置，请在 Inspector 中拖入引用。");
         }
     }
 
@@ -349,12 +437,13 @@ public class UIManager : MonoBehaviour
         {
             settingsPanel.Hide();
         }
-        // 属性面板是覆盖层，通常不在这里隐藏
-        // 如果需要强制隐藏，可以取消下面的注释
-        // if (attributePanel != null)
-        // {
-        //     attributePanel.Hide();
-        // }
+        if (shopPanel != null)
+        {
+            shopPanel.Hide();
+        }
+        // 角色信息面板是覆盖层，通常不在这里隐藏
+        // if (characterInfoPanel != null)
+        //     characterInfoPanel.Hide();
     }
 
     /// <summary>
@@ -394,9 +483,13 @@ public class UIManager : MonoBehaviour
         {
             return "CardSelection";
         }
-        if (attributePanel != null && attributePanel.IsVisible())
+        if (shopPanel != null && shopPanel.IsVisible())
         {
-            return "Attribute";
+            return "Shop";
+        }
+        if (characterInfoPanel != null && characterInfoPanel.IsVisible())
+        {
+            return "CharacterInfo";
         }
         return "None";
     }

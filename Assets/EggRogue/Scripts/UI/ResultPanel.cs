@@ -32,14 +32,6 @@ public class ResultPanel : BaseUIPanel
     private int victoryReward = 0;
     private bool waitingForInput = false;
 
-    // 保存暂停前的状态
-    private EnemySpawner enemySpawner;
-    private CharacterController characterController;
-    private PlayerCombatController playerCombatController;
-    private bool wasSpawning = false;
-    private bool wasCharacterEnabled = false;
-    private bool wasCombatEnabled = false;
-
     private void Update()
     {
         if (waitingForInput)

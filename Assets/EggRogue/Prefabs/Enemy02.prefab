@@ -330,8 +330,7 @@ MonoBehaviour:
       m_Calls: []
   useInvincibility: 0
   invincibleDuration: 0.5
-  damagePopupPrefab: {fileID: 6313427997120869975, guid: c58bc4f86b920164aa077d1a5003a305,
-    type: 3}
+  damagePopupPrefab: {fileID: 0}
 --- !u!114 &3893463621655489681
 MonoBehaviour:
   m_ObjectHideFlags: 0

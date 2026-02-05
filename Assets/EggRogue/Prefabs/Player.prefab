@@ -80,6 +80,9 @@ GameObject:
   - component: {fileID: 492432061819335283}
   - component: {fileID: 5579479885699425382}
   - component: {fileID: 2825871182375710433}
+  - component: {fileID: 4885565627182699776}
+  - component: {fileID: 2889649442105627802}
+  - component: {fileID: 219728121798331847}
   m_Layer: 0
   m_HasEditorInfo: 1
   m_Name: Player
@@ -251,6 +254,53 @@ MonoBehaviour:
   groundYOffset: -0.05
   circleSegments: 64
   lineWidth: 0
+--- !u!114 &4885565627182699776
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5144214466918161386}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: afe2501f4cd17c94a8964996f637a439, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  firePoint: {fileID: 0}
+  faceFiringDirection: 1
+  faceRotationSpeed: 60
+  weaponSlotRoot: {fileID: 0}
+  weaponAimSpeed: 360
+  maxWeaponAimAngle: 90
+  meleeSwingAngle: 120
+  meleeSwingDuration: 0.2
+--- !u!114 &2889649442105627802
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5144214466918161386}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cad0f5b26698cc044adc48955b26e18b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &219728121798331847
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5144214466918161386}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: edc1d1a7ab0caba46a1e6d7d9fcaa95e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  showInGame: 1
+  lineWidth: 0.04
+  lineMaterial: {fileID: 0}
 --- !u!1 &8722962543641072996
 GameObject:
   m_ObjectHideFlags: 0

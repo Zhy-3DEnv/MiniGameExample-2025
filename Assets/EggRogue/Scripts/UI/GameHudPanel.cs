@@ -43,14 +43,31 @@ public class GameHudPanel : BaseUIPanel
     [Tooltip("关卡文本（显示当前关卡，例如：第1关）")]
     public Text levelText;
 
+    [Header("玩家等级条（与 HealthBar 类似的 Slider + Text）")]
+    [Tooltip("玩家等级进度条（0~1 表示当前经验/升级所需）")]
+    public Slider characterLevelBar;
+
+    [Tooltip("当前等级文本（例如：Lv.3）")]
+    public Text characterLevelText;
+
+    [Tooltip("经验值文本（例如：25/45，表示当前经验/升级所需）")]
+    public Text characterLevelXPText;
+
     [Header("头像")]
     [Tooltip("头像图标（AvatarButton 上的 Image，用于显示当前选中角色）")]
     public Image avatarIcon;
 
     private void Start()
     {
-        // 自动绑定按钮事件
         SetupButtons();
+        if (goldText != null)
+            CoinFlyTarget.Register(goldText.rectTransform);
+    }
+
+    private void OnDestroy()
+    {
+        if (goldText != null)
+            CoinFlyTarget.Unregister(goldText.rectTransform);
     }
 
     /// <summary>
@@ -176,6 +193,8 @@ public class GameHudPanel : BaseUIPanel
                 levelText.text = $"第{currentLevel}关";
             }
 
+            RefreshPlayerLevelDisplay();
+
             // 更新血量条和血量文本（通过 CharacterStats 找到玩家的 Health，避免找到敌人的）
             CharacterStats playerStats = FindObjectOfType<CharacterStats>();
             if (playerStats != null)
@@ -208,7 +227,32 @@ public class GameHudPanel : BaseUIPanel
             UpdateGold(GoldManager.Instance.Gold);
         else
             UpdateGold(0);
+        RefreshPlayerLevelDisplay();
         RefreshAvatarIcon();
+    }
+
+    /// <summary>
+    /// 刷新玩家等级显示（CharacterLevelBar：Slider 进度 + 等级文本 + 经验文本）
+    /// </summary>
+    private void RefreshPlayerLevelDisplay()
+    {
+        var plm = EggRogue.PlayerLevelManager.Instance;
+        int level = plm != null ? plm.CurrentLevel : 1;
+        int currentXP = plm != null ? plm.CurrentXP : 0;
+        int xpToNext = plm != null ? plm.GetXPToNextLevel() : 10;
+
+        if (characterLevelBar != null)
+        {
+            characterLevelBar.value = xpToNext > 0 ? (float)currentXP / xpToNext : 0f;
+        }
+        if (characterLevelText != null)
+        {
+            characterLevelText.text = $"Lv.{level}";
+        }
+        if (characterLevelXPText != null)
+        {
+            characterLevelXPText.text = $"{currentXP}/{xpToNext}";
+        }
     }
 
     /// <summary>

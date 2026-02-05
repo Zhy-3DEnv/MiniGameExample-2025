@@ -1,17 +1,20 @@
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.InputSystem;
-using System.Reflection;
+using EggRogue;
 
 /// <summary>
-/// 属性面板 - 显示角色当前属性数值。
+/// 角色信息面板（原属性面板）- 显示玩家等级与角色当前属性数值。
 /// 按 ESC 键打开/关闭。
 /// </summary>
-public class AttributePanel : BaseUIPanel
+public class CharacterInfoPanel : BaseUIPanel
 {
     [Header("UI 引用")]
     [Tooltip("关闭按钮（点击关闭面板）")]
     public Button closeButton;
+
+    [Tooltip("玩家等级文本（格式：Lv.X 当前经验/升级所需，例如：Lv.3 25/45）")]
+    public Text playerLevelText;
 
     [Header("（可选）旧版单独 Text 引用")]
     [Tooltip("伤害值文本（不推荐，建议使用自动生成模式）")]
@@ -39,24 +42,18 @@ public class AttributePanel : BaseUIPanel
     [Tooltip("属性行预制体（需要包含 NameText 和 ValueText 两个 Text 子节点）")]
     public GameObject attributeRowPrefab;
 
-    private bool isOpen = false;
-
-    // 记录该对象在 Awake 时是否处于激活状态（Awake 即使对象未激活也会执行）
-    // 用于在“一开始就显示在场景里”的情况下，自动在 Start 时隐藏一次，
-    // 同时又不影响一开始就是 inactive（通过 ESC/按钮第一次打开）的情况。
     private bool wasActiveOnAwake = false;
-
-    // 保存暂停前的状态
-    private EnemySpawner enemySpawner;
-    private CharacterController characterController;
-    private PlayerCombatController playerCombatController;
-    private bool wasSpawning = false;
-    private bool wasCharacterEnabled = false;
-    private bool wasCombatEnabled = false;
+    private bool openingViaShow = false;
 
     private void Awake()
     {
         wasActiveOnAwake = gameObject.activeSelf;
+    }
+
+    public override void Show()
+    {
+        openingViaShow = true;
+        base.Show();
     }
 
     private void Start()
@@ -66,8 +63,9 @@ public class AttributePanel : BaseUIPanel
             closeButton.onClick.AddListener(OnCloseClicked);
         }
 
-        // 旧版模式：如果没有在 Inspector 中手动绑定 Text，就按约定名称在子节点里自动查找
-        // 这样你只需要在面板下创建对应名字的 Text 即可，无需拖引用
+        if (playerLevelText == null)
+            playerLevelText = transform.Find("PlayerLevelText")?.GetComponent<Text>();
+
         if (damageText == null)
             damageText = transform.Find("DamageText")?.GetComponent<Text>();
         if (fireRateText == null)
@@ -81,21 +79,16 @@ public class AttributePanel : BaseUIPanel
         if (attackRangeText == null)
             attackRangeText = transform.Find("AttackRangeText")?.GetComponent<Text>();
 
-        // 如果该面板在编辑器里默认就是激活状态（wasActiveOnAwake = true），
-        // 启动时帮你自动隐藏一次，避免一进游戏就挡住画面。
-        // 若一开始是 inactive，则不会在 Start 里再次强制隐藏，保证第一次 ESC / 按钮能够正常弹出。
-        if (wasActiveOnAwake && gameObject.activeSelf)
+        if (!openingViaShow && wasActiveOnAwake && gameObject.activeSelf)
         {
             gameObject.SetActive(false);
-            isOpen = false;
-            // 同步基类的可见状态，防止出现 IsVisible() 为 true 但实际上已经被我们关掉的情况。
             isVisible = false;
         }
+        openingViaShow = false;
     }
 
     private void Update()
     {
-        // 只要当前真正可见，就实时刷新属性显示
         if (IsVisible())
         {
             UpdateAttributes();
@@ -107,7 +100,6 @@ public class AttributePanel : BaseUIPanel
     /// </summary>
     public void TogglePanel()
     {
-        // 以实际可见状态为准，避免本地 isOpen 与 activeSelf/IsVisible 不一致时出现“要按两次才生效”的问题
         if (IsVisible())
             Hide();
         else
@@ -124,28 +116,48 @@ public class AttributePanel : BaseUIPanel
     /// </summary>
     private void UpdateAttributes()
     {
-        // 优先使用自动生成模式（基于 CharacterData / CharacterStats 动态构建）
         if (attributesContainer != null && attributeRowPrefab != null)
         {
             UpdateAttributesDynamic();
-            return;
         }
-
-        // 优先使用 CharacterStats（新系统）
-        CharacterStats stats = FindObjectOfType<CharacterStats>();
-        if (stats != null)
+        else
         {
-            UpdateAttributesFromStats(stats);
-            return;
+            CharacterStats stats = FindObjectOfType<CharacterStats>();
+            if (stats != null)
+            {
+                UpdateAttributesFromStats(stats);
+            }
+            else
+            {
+                UpdateAttributesFromComponents();
+            }
         }
 
-        // 兼容旧系统（如果没有 CharacterStats，从组件读取）
-        UpdateAttributesFromComponents();
+        RefreshPlayerLevel();
+    }
+
+    /// <summary>
+    /// 刷新玩家等级显示（格式：Lv.X 当前经验/升级所需，例如 Lv.3 25/45）
+    /// </summary>
+    private void RefreshPlayerLevel()
+    {
+        if (playerLevelText == null) return;
+        var plm = PlayerLevelManager.Instance;
+        if (plm != null)
+        {
+            int level = plm.CurrentLevel;
+            int currentXP = plm.CurrentXP;
+            int xpToNext = plm.GetXPToNextLevel();
+            playerLevelText.text = $"玩家等级 Lv.{level} {currentXP}/{xpToNext}";
+        }
+        else
+        {
+            playerLevelText.text = "玩家等级 Lv.1 0/10";
+        }
     }
 
     /// <summary>
     /// 自动生成属性行（推荐模式）
-    /// 基于 CharacterData 的字段和 CharacterStats 的当前属性，自动创建 UI 行。
     /// </summary>
     private void UpdateAttributesDynamic()
     {
@@ -157,13 +169,11 @@ public class AttributePanel : BaseUIPanel
         if (data == null)
             return;
 
-        // 清空旧行
         for (int i = attributesContainer.childCount - 1; i >= 0; i--)
         {
             Destroy(attributesContainer.GetChild(i).gameObject);
         }
 
-        // 反射遍历 CharacterData 的 public float 字段（主要是 baseXxx）
         var dataType = data.GetType();
         var fields = dataType.GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
 
@@ -172,12 +182,11 @@ public class AttributePanel : BaseUIPanel
             if (field.FieldType != typeof(float))
                 continue;
 
-            string fieldName = field.Name;      // 例如 baseDamage
+            string fieldName = field.Name;
             float baseValue = (float)field.GetValue(data);
 
-            // 约定：baseDamage -> CurrentDamage；baseMoveSpeed -> CurrentMoveSpeed
             string suffix = fieldName.StartsWith("base")
-                ? fieldName.Substring("base".Length)   // Damage / MoveSpeed ...
+                ? fieldName.Substring("base".Length)
                 : fieldName;
 
             PropertyInfo currentProp = stats.GetType().GetProperty("Current" + suffix,
@@ -189,10 +198,8 @@ public class AttributePanel : BaseUIPanel
                 currentValue = (float)currentProp.GetValue(stats);
             }
 
-            // 根据字段名映射一个更友好的中文显示名
             string displayName = GetDisplayNameForField(fieldName);
 
-            // 实例化一行 UI
             GameObject row = GameObject.Instantiate(attributeRowPrefab, attributesContainer);
             Text nameText = row.transform.Find("NameText")?.GetComponent<Text>();
             Text valueText = row.transform.Find("ValueText")?.GetComponent<Text>();
@@ -202,7 +209,6 @@ public class AttributePanel : BaseUIPanel
 
             if (valueText != null)
             {
-                // 显示当前值和相对基础值的加成
                 if (Mathf.Approximately(currentValue, baseValue))
                 {
                     valueText.text = currentValue.ToString("F1");
@@ -217,11 +223,6 @@ public class AttributePanel : BaseUIPanel
         }
     }
 
-    /// <summary>
-    /// 将 CharacterData 字段名映射为中文展示名。
-    /// 例如 baseDamage -> 伤害，baseMoveSpeed -> 移动速度。
-    /// 对于未知字段，退回显示原字段名。
-    /// </summary>
     private string GetDisplayNameForField(string fieldName)
     {
         switch (fieldName)
@@ -232,145 +233,90 @@ public class AttributePanel : BaseUIPanel
             case "baseMoveSpeed":    return "移动速度";
             case "baseBulletSpeed":  return "子弹速度";
             case "baseAttackRange":  return "攻击范围";
+            case "basePickupRange":  return "拾取范围";
             default:
-                // 去掉前缀 base 并简化展示
                 if (fieldName.StartsWith("base"))
                     return fieldName.Substring("base".Length);
                 return fieldName;
         }
     }
 
-    /// <summary>
-    /// 从 CharacterStats 更新属性显示（新系统）
-    /// </summary>
     private void UpdateAttributesFromStats(CharacterStats stats)
     {
         Health health = stats.GetComponent<Health>();
 
-        // 显示伤害
         if (damageText != null)
-        {
             damageText.text = $"伤害: {stats.CurrentDamage:F1}";
-        }
 
-        // 显示攻击速度
         if (fireRateText != null)
-        {
             fireRateText.text = $"攻击速度: {stats.CurrentFireRate:F1} 发/秒";
-        }
 
-        // 显示生命值：当前 / 最大（最大生命值仍然受成长/卡片加成）
         if (maxHealthText != null)
         {
-            float baseMax = stats.characterData != null ? stats.characterData.baseMaxHealth : stats.CurrentMaxHealth;
             float current = stats.CurrentMaxHealth;
-            float bonus = current - baseMax;
-
-            float currentHp = current;
-            if (health != null)
-                currentHp = health.CurrentHealth;
-
-            // 这里主展示“当前/最大”，加成信息可以视需要再补充
+            float currentHp = health != null ? health.CurrentHealth : current;
             maxHealthText.text = $"生命值: {currentHp:F0}/{current:F0}";
         }
 
-        // 显示移动速度
         if (moveSpeedText != null)
-        {
             moveSpeedText.text = $"移动速度: {stats.CurrentMoveSpeed:F1}";
-        }
 
-        // 显示子弹速度
         if (bulletSpeedText != null)
-        {
             bulletSpeedText.text = $"子弹速度: {stats.CurrentBulletSpeed:F1}";
-        }
 
-        // 显示攻击范围
         if (attackRangeText != null)
-        {
             attackRangeText.text = $"攻击范围: {stats.CurrentAttackRange:F1}";
-        }
-
     }
 
-    /// <summary>
-    /// 从组件更新属性显示（兼容旧系统）
-    /// </summary>
     private void UpdateAttributesFromComponents()
     {
         PlayerCombatController combat = FindObjectOfType<PlayerCombatController>();
         Health health = FindObjectOfType<Health>();
         CharacterController character = FindObjectOfType<CharacterController>();
 
-        // 显示伤害
         if (damageText != null && combat != null)
-        {
             damageText.text = $"伤害: {combat.damagePerShot:F1}";
-        }
 
-        // 显示攻击速度
         if (fireRateText != null && combat != null)
-        {
             fireRateText.text = $"攻击速度: {combat.fireRate:F1} 发/秒";
-        }
 
-        // 显示生命值：当前 / 最大
         if (maxHealthText != null && health != null)
-        {
             maxHealthText.text = $"生命值: {health.CurrentHealth:F0}/{health.maxHealth:F0}";
-        }
 
-        // 显示移动速度
         if (moveSpeedText != null && character != null)
-        {
             moveSpeedText.text = $"移动速度: {character.moveSpeed:F1}";
-        }
 
-        // 显示子弹速度
         if (bulletSpeedText != null && combat != null)
-        {
             bulletSpeedText.text = $"子弹速度: {combat.bulletSpeed:F1}";
-        }
 
-        // 显示攻击范围
         if (attackRangeText != null && combat != null)
-        {
             attackRangeText.text = $"攻击范围: {combat.attackRange:F1}";
-        }
-
     }
 
     protected override void OnShow()
     {
         base.OnShow();
-        isOpen = true;
 
-        // 确保属性面板在同一 Canvas 下的显示优先级最高
-        // 将自身移动到兄弟节点的最后一个位置，这样不会被选卡/结算面板遮挡
         if (transform.parent != null)
         {
             transform.SetAsLastSibling();
         }
 
         UpdateAttributes();
-        
-        // 暂停所有游戏玩法系统（通过统一的 GameplayPauseManager）
-        if (EggRogue.GameplayPauseManager.Instance != null)
+
+        if (GameplayPauseManager.Instance != null)
         {
-            EggRogue.GameplayPauseManager.Instance.RequestPause("AttributePanel");
+            GameplayPauseManager.Instance.RequestPause("CharacterInfoPanel");
         }
     }
 
     protected override void OnHide()
     {
         base.OnHide();
-        isOpen = false;
-        
-        // 结束属性面板的暂停请求
-        if (EggRogue.GameplayPauseManager.Instance != null)
+
+        if (GameplayPauseManager.Instance != null)
         {
-            EggRogue.GameplayPauseManager.Instance.RequestResume("AttributePanel");
+            GameplayPauseManager.Instance.RequestResume("CharacterInfoPanel");
         }
     }
 }

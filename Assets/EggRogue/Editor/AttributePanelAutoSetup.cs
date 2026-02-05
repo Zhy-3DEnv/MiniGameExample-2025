@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Reflection;
 
-public static class AttributePanelAutoSetup
+public static class CharacterInfoPanelAutoSetup
 {
     /// <summary>
     /// 新版（自动生成模式）：
@@ -17,24 +17,24 @@ public static class AttributePanelAutoSetup
         GameObject go = Selection.activeGameObject;
         if (go == null)
         {
-            EditorUtility.DisplayDialog("AttributePanel 自动生成",
-                "请先在层级（Hierarchy）中选中一个包含 AttributePanel 组件的对象。", "确定");
+            EditorUtility.DisplayDialog("CharacterInfoPanel 自动生成",
+                "请先在层级（Hierarchy）中选中一个包含 CharacterInfoPanel 组件的对象。", "确定");
             return;
         }
 
-        AttributePanel panel = go.GetComponent<AttributePanel>();
+        CharacterInfoPanel panel = go.GetComponent<CharacterInfoPanel>();
         if (panel == null)
         {
-            EditorUtility.DisplayDialog("AttributePanel 自动生成",
-                "当前选中的对象上没有 AttributePanel 组件。\n\n请选中包含 AttributePanel 的 UI 根节点再执行此命令。", "确定");
+            EditorUtility.DisplayDialog("CharacterInfoPanel 自动生成",
+                "当前选中的对象上没有 CharacterInfoPanel 组件。\n\n请选中包含 CharacterInfoPanel 的 UI 根节点再执行此命令。", "确定");
             return;
         }
 
         if (panel.attributesContainer == null || panel.attributeRowPrefab == null)
         {
-            EditorUtility.DisplayDialog("AttributePanel 自动生成",
-                "AttributePanel 的 attributesContainer 或 attributeRowPrefab 未设置。\n\n" +
-                "请先在 Inspector 上为 AttributePanel 设置：\n" +
+            EditorUtility.DisplayDialog("CharacterInfoPanel 自动生成",
+                "CharacterInfoPanel 的 attributesContainer 或 attributeRowPrefab 未设置。\n\n" +
+                "请先在 Inspector 上为 CharacterInfoPanel 设置：\n" +
                 "- Attributes Container（属性行容器，例如 VerticalLayoutGroup）\n" +
                 "- Attribute Row Prefab（包含 NameText / ValueText 的预制体）",
                 "确定");
@@ -44,7 +44,7 @@ public static class AttributePanelAutoSetup
         CharacterStats stats = Object.FindObjectOfType<CharacterStats>();
         if (stats == null || stats.characterData == null)
         {
-            EditorUtility.DisplayDialog("AttributePanel 自动生成",
+            EditorUtility.DisplayDialog("CharacterInfoPanel 自动生成",
                 "场景中未找到 CharacterStats，或 CharacterStats 的 characterData 未设置。\n\n" +
                 "请确保：\n- 场景中存在角色对象并挂载 CharacterStats\n- 且 CharacterStats.characterData 已正确指定。",
                 "确定");
@@ -59,7 +59,7 @@ public static class AttributePanelAutoSetup
         if (panel.attributesContainer.childCount > 0)
         {
             bool rebuild = EditorUtility.DisplayDialog(
-                "AttributePanel 自动生成",
+                "CharacterInfoPanel 自动生成",
                 "检测到 attributesContainer 下已经存在子节点。\n\n是否删除现有子节点后重新生成？",
                 "重新生成", "取消");
 
@@ -111,7 +111,7 @@ public static class AttributePanelAutoSetup
 
             if (valueText != null)
             {
-                // 这里的数值只是占位，运行时 AttributePanel 会根据实际数值刷新
+                // 这里的数值只是占位，运行时 CharacterInfoPanel 会根据实际数值刷新
                 float baseValue = (float)field.GetValue(data);
                 valueText.text = baseValue.ToString("F1");
             }
@@ -120,13 +120,13 @@ public static class AttributePanelAutoSetup
         EditorUtility.SetDirty(panel.attributesContainer.gameObject);
         EditorSceneManager.MarkSceneDirty(panel.gameObject.scene);
 
-        EditorUtility.DisplayDialog("AttributePanel 自动生成",
+        EditorUtility.DisplayDialog("CharacterInfoPanel 自动生成",
             "属性行已根据 CharacterData 自动生成完成。\n\n" +
-            "运行时 AttributePanel 会自动更新数值显示。", "确定");
+            "运行时 CharacterInfoPanel 会自动更新数值显示。", "确定");
     }
 
     /// <summary>
-    /// 与 AttributePanel 中的映射规则保持一致：
+    /// 与 CharacterInfoPanel 中的映射规则保持一致：
     /// baseDamage -> 伤害 等。
     /// </summary>
     private static string GetDisplayNameForField(string fieldName)
@@ -139,6 +139,7 @@ public static class AttributePanelAutoSetup
             case "baseMoveSpeed":   return "移动速度";
             case "baseBulletSpeed": return "子弹速度";
             case "baseAttackRange": return "攻击范围";
+            case "basePickupRange":  return "拾取范围";
             default:
                 if (fieldName.StartsWith("base"))
                     return fieldName.Substring("base".Length);
@@ -149,11 +150,11 @@ public static class AttributePanelAutoSetup
 
 /// <summary>
 /// 旧版 Text 自动生成与绑定工具：
-/// - 仍然使用 AttributePanel 上的旧字段（damageText / fireRateText ...）
+/// - 仍然使用 CharacterInfoPanel 上的旧字段（damageText / fireRateText ...）
 /// - 根据 CharacterData 中存在的基础属性，自动在当前面板下创建 Text，并写入到对应引用
 /// - 适合你继续使用“旧版模式”，但不想手动创建和拖引用
 /// </summary>
-public static class AttributePanelLegacyTextSetup
+public static class CharacterInfoPanelLegacyTextSetup
 {
     [MenuItem("EggRogue/Attribute Panel/一键生成旧版 Text 并自动绑定")]
     private static void GenerateLegacyTexts()
@@ -161,23 +162,23 @@ public static class AttributePanelLegacyTextSetup
         GameObject go = Selection.activeGameObject;
         if (go == null)
         {
-            EditorUtility.DisplayDialog("AttributePanel 旧版 Text 自动生成",
-                "请先在层级（Hierarchy）中选中一个包含 AttributePanel 组件的对象。", "确定");
+            EditorUtility.DisplayDialog("CharacterInfoPanel 旧版 Text 自动生成",
+                "请先在层级（Hierarchy）中选中一个包含 CharacterInfoPanel 组件的对象。", "确定");
             return;
         }
 
-        AttributePanel panel = go.GetComponent<AttributePanel>();
+        CharacterInfoPanel panel = go.GetComponent<CharacterInfoPanel>();
         if (panel == null)
         {
-            EditorUtility.DisplayDialog("AttributePanel 旧版 Text 自动生成",
-                "当前选中的对象上没有 AttributePanel 组件。\n\n请选中包含 AttributePanel 的 UI 根节点再执行此命令。", "确定");
+            EditorUtility.DisplayDialog("CharacterInfoPanel 旧版 Text 自动生成",
+                "当前选中的对象上没有 CharacterInfoPanel 组件。\n\n请选中包含 CharacterInfoPanel 的 UI 根节点再执行此命令。", "确定");
             return;
         }
 
         CharacterStats stats = Object.FindObjectOfType<CharacterStats>();
         if (stats == null || stats.characterData == null)
         {
-            EditorUtility.DisplayDialog("AttributePanel 旧版 Text 自动生成",
+            EditorUtility.DisplayDialog("CharacterInfoPanel 旧版 Text 自动生成",
                 "场景中未找到 CharacterStats，或 CharacterStats 的 characterData 未设置。\n\n" +
                 "请确保：\n- 场景中存在角色对象并挂载 CharacterStats\n- 且 CharacterStats.characterData 已正确指定。",
                 "确定");
@@ -185,9 +186,9 @@ public static class AttributePanelLegacyTextSetup
         }
 
         // 记录 Undo，方便撤销
-        Undo.RecordObject(panel, "Setup AttributePanel Legacy Texts");
+        Undo.RecordObject(panel, "Setup CharacterInfoPanel Legacy Texts");
 
-        // 内部辅助：确保有 AttributePanelContainers 作为 Text 的父节点（VerticalLayoutGroup）
+        // 内部辅助：确保有 AttributePanelContainers 作为 Text 的父节点（保留旧名以兼容场景）
         Transform EnsureContainer()
         {
             Transform container = panel.transform.Find("AttributePanelContainers");
@@ -214,7 +215,7 @@ public static class AttributePanelLegacyTextSetup
                 container = goContainer.transform;
             }
 
-            // 顺便把 AttributePanel 上的 attributesContainer 指向它（方便你如果之后用新模式）
+            // 顺便把 CharacterInfoPanel 上的 attributesContainer 指向它（方便你如果之后用新模式）
             if (panel.attributesContainer == null)
             {
                 panel.attributesContainer = container;
@@ -252,9 +253,7 @@ public static class AttributePanelLegacyTextSetup
                 textComp = textGO.GetComponent<Text>();
                 textComp.text = defaultText;
                 textComp.alignment = TextAnchor.MiddleLeft;
-                // 注意：在新版本 Unity 中 Arial.ttf 不再是有效的内置字体
-                // 使用 LegacyRuntime.ttf 作为内置字体，避免报错
-                textComp.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+                textComp.font = EggRogue.GameFont.GetDefault();
                 textComp.color = Color.white;
             }
 
@@ -308,7 +307,7 @@ public static class AttributePanelLegacyTextSetup
                 textComp.text = "关闭";
                 textComp.alignment = TextAnchor.MiddleCenter;
                 textComp.color = Color.white;
-                textComp.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+                textComp.font = EggRogue.GameFont.GetDefault();
                 textComp.resizeTextForBestFit = true;
             }
 
@@ -360,9 +359,9 @@ public static class AttributePanelLegacyTextSetup
         EditorUtility.SetDirty(panel);
         EditorSceneManager.MarkSceneDirty(panel.gameObject.scene);
 
-        EditorUtility.DisplayDialog("AttributePanel 旧版 Text 自动生成",
+        EditorUtility.DisplayDialog("CharacterInfoPanel 旧版 Text 自动生成",
             "已根据 CharacterData 中存在的基础属性，在当前面板下自动创建并绑定旧版 Text。\n\n" +
-            "你可以在场景中调整这些 Text 的位置与样式，运行时 AttributePanel 会自动填充值。", "确定");
+            "你可以在场景中调整这些 Text 的位置与样式，运行时 CharacterInfoPanel 会自动填充值。", "确定");
     }
 
     private static bool HasField(EggRogue.CharacterData data, string fieldName)
