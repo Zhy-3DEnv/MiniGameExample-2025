@@ -25,9 +25,13 @@ public class CharacterController : MonoBehaviour
     [Tooltip("是否使用物理移动（推荐）")]
     public bool usePhysics = true;
 
-    [Tooltip("加速/转向响应系数（越大越跟手，Settings 可调）")]
-    [Range(5f, 30f)]
-    public float accelerationFactor = 15f;
+    [Tooltip("加速/转向响应系数（越大越跟手；移动端建议 20–28）")]
+    [Range(8f, 35f)]
+    public float accelerationFactor = 24f;
+
+    [Tooltip("松杆时减速系数（越大停得越快，跟手感更好）")]
+    [Range(8f, 35f)]
+    public float decelerationFactor = 20f;
 
     [Header("边界限制（可选）")]
     [Tooltip("是否限制角色移动范围")]
@@ -67,9 +71,9 @@ public class CharacterController : MonoBehaviour
             rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezeRotationZ;
             // 取消重力（3D Rigidbody 使用 useGravity）
             rb.useGravity = false;
-            // 设置阻力，让角色停止更自然（防止抖动）
-            rb.drag = 10f;
-            rb.angularDrag = 10f;
+            // 阻力不宜过大，否则会加重“推不动”的顿感；停止主要靠 decelerationFactor
+            rb.drag = 4f;
+            rb.angularDrag = 4f;
         }
     }
 
@@ -115,16 +119,19 @@ public class CharacterController : MonoBehaviour
         {
             moveInput = joystickInput;
         }
+
+        // 物理移动：在 Update 里根据本帧输入更新速度并写入 rb.velocity，
+        // 避免“输入在 Update、移动在 FixedUpdate”造成的延迟和顿感（尤其移动端）
+        if (usePhysics && rb != null)
+        {
+            ApplyMovementFromInput();
+        }
     }
 
     private void FixedUpdate()
     {
-        // 物理移动在 FixedUpdate 中进行
-        if (usePhysics)
-        {
-            MoveWithPhysics();
-        }
-        else
+        // 物理模式下速度已在 Update 中设置，这里只做非物理的直接移动
+        if (!usePhysics)
         {
             MoveDirectly();
         }
@@ -146,38 +153,25 @@ public class CharacterController : MonoBehaviour
     }
 
     /// <summary>
-    /// 使用物理移动（推荐，更平滑）
+    /// 根据本帧输入在 Update 中更新速度并写入 rb.velocity，减少输入到移动的延迟（跟手）。
+    /// 原先在 FixedUpdate 里 Lerp 会导致：1）输入与移动不同步 2）移动端帧率低时顿感明显。
     /// </summary>
-    private void MoveWithPhysics()
+    private void ApplyMovementFromInput()
     {
-        // 计算移动方向（XZ平面，如果是2D游戏改成XY平面）
         Vector3 moveDirection = new Vector3(moveInput.x, 0f, moveInput.y);
-
-        // 计算目标速度
         Vector3 targetVelocity = moveDirection * moveSpeed;
 
-        // 平滑插值当前速度到目标速度
-        currentVelocity = Vector3.Lerp(currentVelocity, targetVelocity, Time.fixedDeltaTime * accelerationFactor);
+        float factor = moveInput.sqrMagnitude > 0.01f ? accelerationFactor : decelerationFactor;
+        float t = Mathf.Clamp01(Time.deltaTime * factor);
+        currentVelocity = Vector3.Lerp(currentVelocity, targetVelocity, t);
 
-        // 应用边界限制（先检查边界，再设置速度）
         if (useBounds)
         {
-            Vector3 nextPosition = rb.position + currentVelocity * Time.fixedDeltaTime;
-            
-            // 如果X轴超出边界，取消X轴速度
-            if (nextPosition.x < minX || nextPosition.x > maxX)
-            {
-                currentVelocity.x = 0f;
-            }
-            
-            // 如果Z轴超出边界，取消Z轴速度
-            if (nextPosition.z < minZ || nextPosition.z > maxZ)
-            {
-                currentVelocity.z = 0f;
-            }
+            Vector3 nextPosition = rb.position + currentVelocity * Time.deltaTime;
+            if (nextPosition.x < minX || nextPosition.x > maxX) currentVelocity.x = 0f;
+            if (nextPosition.z < minZ || nextPosition.z > maxZ) currentVelocity.z = 0f;
         }
 
-        // 使用 velocity 直接设置速度，比 MovePosition 更平滑
         rb.velocity = new Vector3(currentVelocity.x, 0f, currentVelocity.z);
     }
 

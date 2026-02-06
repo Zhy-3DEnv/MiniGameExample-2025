@@ -12,12 +12,55 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e140ea7640047f24596a59b02f776892, type: 3}
   m_Name: "\u5168\u9762\u5F3A\u5316"
   m_EditorClassIdentifier: 
+  cardTypeId: "\u5168\u9762\u5F3A\u5316"
   cardName: "\u5168\u9762\u5F3A\u5316"
   description: "\u4F24\u5BB3 +3, \u653B\u901F +0.5, \u751F\u547D +15"
   icon: {fileID: 21300000, guid: 43f70b0362aa5e041b3c3635e9955551, type: 3}
+  levelBonuses:
+  - level: 1
+    damageBonus: 3
+    fireRateBonus: 0.5
+    maxHealthBonus: 15
+    moveSpeedBonus: 0
+    bulletSpeedBonus: 0
+    attackRangeBonus: 0
+    pickupRangeBonus: 0
+  - level: 2
+    damageBonus: 0
+    fireRateBonus: 0
+    maxHealthBonus: 0
+    moveSpeedBonus: 0
+    bulletSpeedBonus: 0
+    attackRangeBonus: 0
+    pickupRangeBonus: 0
+  - level: 3
+    damageBonus: 0
+    fireRateBonus: 0
+    maxHealthBonus: 0
+    moveSpeedBonus: 0
+    bulletSpeedBonus: 0
+    attackRangeBonus: 0
+    pickupRangeBonus: 0
+  - level: 4
+    damageBonus: 0
+    fireRateBonus: 0
+    maxHealthBonus: 0
+    moveSpeedBonus: 0
+    bulletSpeedBonus: 0
+    attackRangeBonus: 0
+    pickupRangeBonus: 0
+  - level: 5
+    damageBonus: 0
+    fireRateBonus: 0
+    maxHealthBonus: 0
+    moveSpeedBonus: 0
+    bulletSpeedBonus: 0
+    attackRangeBonus: 0
+    pickupRangeBonus: 0
   damageBonus: 3
   fireRateBonus: 0.5
   maxHealthBonus: 15
   moveSpeedBonus: 0
   bulletSpeedBonus: 0
   attackRangeBonus: 0
+  pickupRangeBonus: 0

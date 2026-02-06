@@ -161,12 +161,19 @@ public class CharacterStats : MonoBehaviour
     }
 
     /// <summary>
-    /// 应用卡片加成（CardManager 调用）
+    /// 应用卡片加成（CardManager 调用）。按等级加成表取值并应用。
     /// </summary>
-    public void ApplyCardBonus(CardData card)
+    public void ApplyCardBonus(CardData card, int level)
     {
         if (card == null) return;
-        
+        ApplyCardBonus(card.GetBonusForLevel(level));
+    }
+
+    /// <summary>
+    /// 应用卡片等级加成（内部使用）。
+    /// </summary>
+    public void ApplyCardBonus(CardLevelBonus bonus)
+    {
         float oldDamage = CurrentDamage;
         float oldFireRate = CurrentFireRate;
         float oldMaxHealth = CurrentMaxHealth;
@@ -174,17 +181,16 @@ public class CharacterStats : MonoBehaviour
         float oldBulletSpeed = CurrentBulletSpeed;
         float oldAttackRange = CurrentAttackRange;
 
-        // 累加卡片加成
-        CurrentDamage += card.damageBonus;
-        CurrentFireRate += card.fireRateBonus;
-        CurrentMaxHealth += card.maxHealthBonus;
-        CurrentMoveSpeed += card.moveSpeedBonus;
-        CurrentBulletSpeed += card.bulletSpeedBonus;
-        CurrentAttackRange += card.attackRangeBonus;
-        CurrentPickupRange += card.pickupRangeBonus;
+        CurrentDamage += bonus.damageBonus;
+        CurrentFireRate += bonus.fireRateBonus;
+        CurrentMaxHealth += bonus.maxHealthBonus;
+        CurrentMoveSpeed += bonus.moveSpeedBonus;
+        CurrentBulletSpeed += bonus.bulletSpeedBonus;
+        CurrentAttackRange += bonus.attackRangeBonus;
+        CurrentPickupRange += bonus.pickupRangeBonus;
 
         Debug.Log(
-            $"CharacterStats: ApplyCardBonus({card.cardName}) " +
+            $"CharacterStats: ApplyCardBonus Lv{bonus.level} " +
             $"Damage {oldDamage}->{CurrentDamage}, FireRate {oldFireRate}->{CurrentFireRate}, " +
             $"MaxHealth {oldMaxHealth}->{CurrentMaxHealth}, MoveSpeed {oldMoveSpeed}->{CurrentMoveSpeed}, " +
             $"BulletSpeed {oldBulletSpeed}->{CurrentBulletSpeed}, AttackRange {oldAttackRange}->{CurrentAttackRange}");
@@ -264,6 +270,78 @@ public class CharacterStats : MonoBehaviour
         bulletSpeed = CurrentBulletSpeed - characterData.baseBulletSpeed;
         attackRange = CurrentAttackRange - characterData.baseAttackRange;
         pickupRange = CurrentPickupRange - characterData.basePickupRange;
+    }
+
+    /// <summary>
+    /// 计算当前角色使用一把武器时的「基础攻击伤害」。
+    ///
+    /// 设计目标：
+    /// - 角色成长（等级、卡牌、被动）统一体现在 CurrentDamage 上；
+    /// - 武器本身的数值体现在 WeaponData.damage 上；
+    /// - 不同角色可以通过调整系数，让“更吃武器”或“更吃自身数值”的风格清晰可控。
+    /// </summary>
+    /// <param name="weapon">当前攻击使用的武器（可空）</param>
+    public float GetBaseAttackDamage(WeaponData weapon)
+    {
+        // 角色当前伤害（已包含：角色基础值 + 卡片加成 + 被动修正）
+        float charBase = CurrentDamage;
+
+        // 武器伤害（来自 WeaponData）
+        float weaponBase = weapon != null ? weapon.damage : 0f;
+
+        // 角色与武器的权重系数：后续可按角色类型、被动等做差异化
+        float charFactor = 1f;
+        float weaponFactor = 1f;
+
+        // 示例：如果以后想做“武器依赖型角色”，可以这样写：
+        // if (characterData != null && characterData.characterName == "武器大师")
+        // {
+        //     charFactor = 0.5f;
+        //     weaponFactor = 1.5f;
+        // }
+
+        float dmg = charBase * charFactor + weaponBase * weaponFactor;
+
+        // 玻璃大炮等“最终总伤害倍率”类被动：在所有加成叠好之后再做一次整体倍率
+        if (characterData != null && characterData.passiveAbilities != null)
+        {
+            foreach (var passive in characterData.passiveAbilities)
+            {
+                if (passive is GlassCannonPassive glass)
+                {
+                    dmg *= glass.damageMultiplier;
+                }
+            }
+        }
+
+        return Mathf.Max(0f, dmg);
+    }
+
+    /// <summary>
+    /// 计算当前角色使用一把武器时的「基础攻击速度」（每秒攻击次数）。
+    ///
+    /// 设计目标：
+    /// - 角色的攻速成长统一反映在 CurrentFireRate；
+    /// - 武器本身的攻速在 WeaponData.fireRate；
+    /// - 通过系数控制：有的角色更吃自身攻速，有的更吃武器攻速。
+    /// </summary>
+    public float GetBaseFireRate(WeaponData weapon)
+    {
+        float charBase = CurrentFireRate;                 // 角色当前攻速（含等级/卡牌/被动）
+        float weaponBase = weapon != null ? weapon.fireRate : 0f; // 武器自身攻速
+
+        float charFactor = 1f;
+        float weaponFactor = 1f;
+
+        // 将来可按角色区分风格：
+        // if (characterData != null && characterData.characterName == "快速射手")
+        // {
+        //     charFactor = 1.2f;
+        //     weaponFactor = 0.8f;
+        // }
+
+        float rate = charBase * charFactor + weaponBase * weaponFactor;
+        return Mathf.Max(0.1f, rate); // 防止除零
     }
 
         /// <summary>

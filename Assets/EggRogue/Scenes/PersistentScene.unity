@@ -246,7 +246,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: -159.00003}
+  m_AnchoredPosition: {x: 0, y: -159.00006}
   m_SizeDelta: {x: 574, y: 482}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &14676234
@@ -1877,7 +1877,7 @@ MonoBehaviour:
   settingsPanel: {fileID: 787020002}
   shopPanel: {fileID: 1493533931}
   loadingOverlayPanel: {fileID: 0}
-  nextLevelTransitionDuration: 1
+  nextLevelTransitionDuration: 0.2
 --- !u!1 &215322646
 GameObject:
   m_ObjectHideFlags: 0
@@ -7576,8 +7576,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1651358774}
   m_HandleRect: {fileID: 1651358773}
   m_Direction: 2
-  m_Value: 0.00000037216546
-  m_Size: 0.82987547
+  m_Value: 0.0000011164967
+  m_Size: 0.8298755
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -19721,6 +19721,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aac239d76d2ff95418d973114ac8a97e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  starterWeaponCount: 1
+  fillOrder: 000000000300000001000000040000000200000005000000
 --- !u!114 &1973722682 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 779752394797152581, guid: 55c138190f37597478e5d225f89ef876,

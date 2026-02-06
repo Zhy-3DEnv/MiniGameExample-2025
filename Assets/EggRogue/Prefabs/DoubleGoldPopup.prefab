@@ -94,7 +94,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moveSpeed: 2
-  lifetime: 1
+  lifetime: 0.5
   fadeStartRatio: 0.5
   enableScaleAnimation: 1
   startScale: 0.25

@@ -19,21 +19,21 @@ MonoBehaviour:
     enemyPrefab: {fileID: 0}
     spawnWeight: 2
     maxAlive: 0
-    spawnRateScale: 0
+    spawnRateScale: 1
     spawnTimeStart: 0
     spawnTimeEnd: 0
   - enemyData: {fileID: 11400000, guid: 915e5b5149627164fa90ad784b53c3c3, type: 2}
     enemyPrefab: {fileID: 0}
     spawnWeight: 1
     maxAlive: 0
-    spawnRateScale: 0
+    spawnRateScale: 1
     spawnTimeStart: 0
     spawnTimeEnd: 0
   - enemyData: {fileID: 11400000, guid: af35571ff4453084f9d1c5ccfda9816c, type: 2}
     enemyPrefab: {fileID: 0}
     spawnWeight: 0.5
     maxAlive: 0
-    spawnRateScale: 0
+    spawnRateScale: 1
     spawnTimeStart: 18
     spawnTimeEnd: 20
   spawnsPerSecond: 2
@@ -42,9 +42,15 @@ MonoBehaviour:
   maxTotalEnemies: 0
   randomOffsetRadius: 2
   spawnStartTime: 0
-  spawnEndTime: 25
-  levelDuration: 30
+  spawnEndTime: 0
+  levelDuration: 40
   victoryRewardGold: 6
-  enemyHealthMultiplier: 1.1
-  enemyMoveSpeedMultiplier: 1.04
+  cardLevelWeights:
+  - 10
+  - 4
+  - 2
+  - 1
+  - 0
+  enemyHealthMultiplier: 1.5
+  enemyMoveSpeedMultiplier: 1.2
   coinDropMultiplier: 1.06

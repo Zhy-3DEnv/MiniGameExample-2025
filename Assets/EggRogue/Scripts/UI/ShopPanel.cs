@@ -164,6 +164,9 @@ public class ShopPanel : BaseUIPanel
     {
         base.OnShow();
 
+        // 行业标准做法：进入商店时清理所有伤害飘字，避免它们显示在UI上并阻挡交互
+        ClearAllDamagePopups();
+
         if (ShopManager.Instance != null)
         {
             ShopManager.Instance.ResetRerollCountForNewShop();
@@ -180,6 +183,23 @@ public class ShopPanel : BaseUIPanel
         }
         if (GameplayPauseManager.Instance != null)
             GameplayPauseManager.Instance.RequestPause("ShopPanel");
+    }
+    
+    /// <summary>
+    /// 清理场景中所有活跃的伤害飘字（ScorePopup），避免它们显示在商店UI上并阻挡交互。
+    /// 行业标准做法：在进入UI界面（商店/选卡等）时统一清理所有飘字。
+    /// </summary>
+    private void ClearAllDamagePopups()
+    {
+        // 查找所有 ScorePopup 组件并销毁
+        FlappyBird.ScorePopup[] popups = Object.FindObjectsOfType<FlappyBird.ScorePopup>();
+        foreach (var popup in popups)
+        {
+            if (popup != null && popup.gameObject != null)
+            {
+                Object.Destroy(popup.gameObject);
+            }
+        }
     }
 
     protected override void OnHide()

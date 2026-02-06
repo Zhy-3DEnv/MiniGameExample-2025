@@ -51,19 +51,79 @@ public static class CardDatabaseSetup
         Debug.Log("CardDatabaseSetup: 已创建 CardDatabase 与默认卡片。在 CardSelectionPanel 上指定 CardDatabase 引用。");
     }
 
-    private static EggRogue.CardData CreateCard(string name, string desc, float damage, float fireRate, 
+    private static EggRogue.CardData CreateCard(string name, string desc, float damage, float fireRate,
         float health, float moveSpeed, float bulletSpeed, float attackRange)
     {
         var card = ScriptableObject.CreateInstance<EggRogue.CardData>();
+        card.cardTypeId = name;
         card.cardName = name;
         card.description = desc;
-        card.damageBonus = damage;
-        card.fireRateBonus = fireRate;
-        card.maxHealthBonus = health;
-        card.moveSpeedBonus = moveSpeed;
-        card.bulletSpeedBonus = bulletSpeed;
-        card.attackRangeBonus = attackRange;
+        card.levelBonuses = new EggRogue.CardLevelBonus[5];
+        // 默认只填等级1的加成
+        card.levelBonuses[0] = new EggRogue.CardLevelBonus
+        {
+            level = 1,
+            damageBonus = damage,
+            fireRateBonus = fireRate,
+            maxHealthBonus = health,
+            moveSpeedBonus = moveSpeed,
+            bulletSpeedBonus = bulletSpeed,
+            attackRangeBonus = attackRange,
+            pickupRangeBonus = 0f
+        };
         return card;
+    }
+
+    /// <summary>
+    /// 将旧卡片的平铺加成字段迁移到 levelBonuses[0]。适用于从旧格式升级的项目。
+    /// </summary>
+    [MenuItem("EggRogue/迁移卡片到等级表格式")]
+    public static void MigrateCardsToLevelBonuses()
+    {
+        string[] guids = AssetDatabase.FindAssets("t:EggRogue.CardData", new[] { CardsDir });
+        int migrated = 0;
+        foreach (string guid in guids)
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            var card = AssetDatabase.LoadAssetAtPath<EggRogue.CardData>(path);
+            if (card == null) continue;
+
+            var so = new SerializedObject(card);
+            var damageProp = so.FindProperty("damageBonus");
+            var fireRateProp = so.FindProperty("fireRateBonus");
+            var maxHpProp = so.FindProperty("maxHealthBonus");
+            var moveSpeedProp = so.FindProperty("moveSpeedBonus");
+            var bulletSpeedProp = so.FindProperty("bulletSpeedBonus");
+            var attackRangeProp = so.FindProperty("attackRangeBonus");
+            var pickupRangeProp = so.FindProperty("pickupRangeBonus");
+
+            if (damageProp == null) continue;
+
+            float d = damageProp.floatValue, fr = fireRateProp.floatValue, hp = maxHpProp.floatValue;
+            float ms = moveSpeedProp.floatValue, bs = bulletSpeedProp.floatValue, ar = attackRangeProp.floatValue, pr = pickupRangeProp.floatValue;
+
+            if (d == 0f && fr == 0f && hp == 0f && ms == 0f && bs == 0f && ar == 0f && pr == 0f)
+                continue;
+
+            if (card.levelBonuses == null || card.levelBonuses.Length < 5)
+                card.levelBonuses = new EggRogue.CardLevelBonus[5];
+
+            card.levelBonuses[0] = new EggRogue.CardLevelBonus
+            {
+                level = 1,
+                damageBonus = d,
+                fireRateBonus = fr,
+                maxHealthBonus = hp,
+                moveSpeedBonus = ms,
+                bulletSpeedBonus = bs,
+                attackRangeBonus = ar,
+                pickupRangeBonus = pr
+            };
+            EditorUtility.SetDirty(card);
+            migrated++;
+        }
+        AssetDatabase.SaveAssets();
+        Debug.Log($"CardDatabaseSetup: 迁移完成，共 {migrated} 张卡片已写入 levelBonuses[0]。");
     }
 }
 #endif

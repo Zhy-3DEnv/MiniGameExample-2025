@@ -14,6 +14,16 @@ namespace EggRogue
 
         public const int MaxSlots = 6;
 
+        [Header("起始武器配置")]
+        [Tooltip("首次进入游戏时自动给玩家的起始武器数量（从槽位0开始连续填充），范围 1-6。用于在测试/正式之间快速切换。")]
+        [Range(1, MaxSlots)]
+        public int starterWeaponCount = 1;
+
+        [Header("槽位填充顺序")]
+        [Tooltip("购买/初始化时依次尝试的槽位索引，用于控制左右平衡等布阵。\n" +
+                 "例如默认值 {0,3,1,4,2,5} 表示：先填 0，再填 3，然后 1,4,2,5，使左右大致对称。")]
+        public int[] fillOrder = new int[] { 0, 3, 1, 4, 2, 5 };
+
         private readonly WeaponData[] _slots = new WeaponData[MaxSlots];
 
         /// <summary>武器槽变化时触发</summary>
@@ -42,6 +52,35 @@ namespace EggRogue
         {
             if (index < 0 || index >= MaxSlots) return null;
             return _slots[index];
+        }
+
+        /// <summary>
+        /// 按配置的填充顺序遍历槽位索引；若配置非法/不完整，则自动补齐 0..MaxSlots-1。
+        /// 用于控制“先填哪些槽位”，从而在角色左右做均衡排布。
+        /// </summary>
+        private IEnumerable<int> GetSlotIterationOrder()
+        {
+            bool[] used = new bool[MaxSlots];
+
+            if (fillOrder != null && fillOrder.Length > 0)
+            {
+                int len = Mathf.Min(fillOrder.Length, MaxSlots);
+                for (int i = 0; i < len; i++)
+                {
+                    int idx = fillOrder[i];
+                    if (idx < 0 || idx >= MaxSlots) continue;
+                    if (used[idx]) continue;
+                    used[idx] = true;
+                    yield return idx;
+                }
+            }
+
+            // 补齐未覆盖的槽位，保证始终遍历到 0..MaxSlots-1
+            for (int i = 0; i < MaxSlots; i++)
+            {
+                if (!used[i])
+                    yield return i;
+            }
         }
 
         /// <summary>
@@ -90,8 +129,10 @@ namespace EggRogue
         /// <summary>第一个空槽索引，无空槽返回 -1</summary>
         public int GetFirstEmptySlotIndex()
         {
-            for (int i = 0; i < MaxSlots; i++)
-                if (_slots[i] == null) return i;
+            foreach (int idx in GetSlotIterationOrder())
+            {
+                if (_slots[idx] == null) return idx;
+            }
             return -1;
         }
 
@@ -101,11 +142,11 @@ namespace EggRogue
         public bool TryAddWeapon(WeaponData weapon)
         {
             if (weapon == null) return false;
-            for (int i = 0; i < MaxSlots; i++)
+            foreach (int idx in GetSlotIterationOrder())
             {
-                if (_slots[i] == null)
+                if (_slots[idx] == null)
                 {
-                    _slots[i] = weapon;
+                    _slots[idx] = weapon;
                     OnWeaponsChanged?.Invoke();
                     return true;
                 }
@@ -126,8 +167,8 @@ namespace EggRogue
         }
 
         /// <summary>
-        /// 从 WeaponSelectionManager 初始化起始武器（首次进入游戏调用）
-        /// 测试用：填满 6 个槽位为同一把起始武器。
+        /// 从 WeaponSelectionManager 初始化起始武器（首次进入游戏调用）。
+        /// 根据 starterWeaponCount 决定首发武器数量：从槽位 0 开始连续填充。
         /// </summary>
         public void InitializeFromStarterWeapon()
         {
@@ -135,8 +176,15 @@ namespace EggRogue
             var starter = WeaponSelectionManager.Instance != null ? WeaponSelectionManager.Instance.SelectedStarterWeapon : null;
             if (starter != null)
             {
-                for (int i = 0; i < MaxSlots; i++)
-                    _slots[i] = starter;
+                int count = Mathf.Clamp(starterWeaponCount, 1, MaxSlots);
+                int filled = 0;
+                foreach (int idx in GetSlotIterationOrder())
+                {
+                    _slots[idx] = starter;
+                    filled++;
+                    if (filled >= count) break;
+                }
+                OnWeaponsChanged?.Invoke();
             }
         }
 

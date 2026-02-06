@@ -19,7 +19,7 @@ MonoBehaviour:
   level: 1
   basePrice: 5
   damage: 5
-  fireRate: 2
+  fireRate: 1.2
   attackRange: 2
   bulletSpeed: 20
   bulletLifeTime: 5

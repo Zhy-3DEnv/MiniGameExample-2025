@@ -20,9 +20,9 @@ MonoBehaviour:
     type: 3}
   baseLevel: 1
   baseDamage: 10
-  baseFireRate: 1.6
-  baseMaxHealth: 85
-  baseMoveSpeed: 8
+  baseFireRate: 0.5
+  baseMaxHealth: 2
+  baseMoveSpeed: 10
   baseBulletSpeed: 24
   baseAttackRange: 2
   basePickupRange: 1.5

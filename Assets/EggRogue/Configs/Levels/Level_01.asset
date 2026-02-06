@@ -19,18 +19,24 @@ MonoBehaviour:
     enemyPrefab: {fileID: 0}
     spawnWeight: 1
     maxAlive: 0
-    spawnRateScale: 0
+    spawnRateScale: 1
     spawnTimeStart: 0
     spawnTimeEnd: 0
-  spawnsPerSecond: 5
+  spawnsPerSecond: 1
   maxAliveEnemies: 0
   minTotalEnemies: 15
-  maxTotalEnemies: 500
+  maxTotalEnemies: 0
   randomOffsetRadius: 2
   spawnStartTime: 0
   spawnEndTime: 0
   levelDuration: 20
-  victoryRewardGold: 10
+  victoryRewardGold: 2
+  cardLevelWeights:
+  - 10
+  - 4
+  - 2
+  - 1
+  - 0
   enemyHealthMultiplier: 1
   enemyMoveSpeedMultiplier: 1
   coinDropMultiplier: 1

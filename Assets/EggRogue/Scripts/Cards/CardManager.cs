@@ -13,12 +13,12 @@ public class CardManager : MonoBehaviour
 
     [Header("已选择卡片")]
     [Tooltip("玩家已选择的卡片列表（用于存档/显示）")]
-    private List<CardData> selectedCards = new List<CardData>();
+    private List<CardOffer> selectedCards = new List<CardOffer>();
 
     /// <summary>
     /// 已选择的卡片列表（只读）。
     /// </summary>
-    public IReadOnlyList<CardData> SelectedCards => selectedCards;
+    public IReadOnlyList<CardOffer> SelectedCards => selectedCards;
 
     private void Awake()
     {
@@ -37,12 +37,13 @@ public class CardManager : MonoBehaviour
     /// <summary>
     /// 应用卡片加成到玩家。
     /// </summary>
-    public void ApplyCard(CardData card)
+    public void ApplyCard(CardData card, int level)
     {
         if (card == null)
             return;
 
-        selectedCards.Add(card);
+        var offer = new CardOffer(card, level);
+        selectedCards.Add(offer);
 
         // 优先使用 CharacterStats（新系统）
         CharacterStats stats = FindObjectOfType<CharacterStats>();
@@ -51,56 +52,42 @@ public class CardManager : MonoBehaviour
             float beforeMax = stats.CurrentMaxHealth;
             float beforeDamage = stats.CurrentDamage;
 
-            stats.ApplyCardBonus(card);
+            stats.ApplyCardBonus(card, level);
 
             Debug.Log(
-                $"CardManager: 通过 CharacterStats 应用卡片 {card.cardName} 加成。" +
+                $"CardManager: 通过 CharacterStats 应用卡片 {card.cardName} Lv{level} 加成。" +
                 $" MaxHealth: {beforeMax} -> {stats.CurrentMaxHealth}, Damage: {beforeDamage} -> {stats.CurrentDamage}");
             return;
         }
 
         Debug.LogWarning("CardManager: 未找到 CharacterStats，使用兼容旧系统路径应用卡片加成。");
 
-        // 兼容旧系统（如果没有 CharacterStats，直接修改组件）
+        var bonus = card.GetBonusForLevel(level);
         PlayerCombatController combat = FindObjectOfType<PlayerCombatController>();
         if (combat != null)
         {
-            if (card.damageBonus != 0f)
-            {
-                float newDamage = combat.damagePerShot + card.damageBonus;
-                combat.SetDamage(newDamage);
-            }
-            if (card.fireRateBonus != 0f)
-            {
-                float newFireRate = combat.fireRate + card.fireRateBonus;
-                combat.SetFireRate(newFireRate);
-            }
-            if (card.bulletSpeedBonus != 0f)
-            {
-                float newBulletSpeed = combat.bulletSpeed + card.bulletSpeedBonus;
-                combat.SetBulletSpeed(newBulletSpeed);
-            }
-            if (card.attackRangeBonus != 0f)
-            {
-                float newAttackRange = combat.attackRange + card.attackRangeBonus;
-                combat.SetAttackRange(newAttackRange);
-            }
+            if (bonus.damageBonus != 0f)
+                combat.SetDamage(combat.damagePerShot + bonus.damageBonus);
+            if (bonus.fireRateBonus != 0f)
+                combat.SetFireRate(combat.fireRate + bonus.fireRateBonus);
+            if (bonus.bulletSpeedBonus != 0f)
+                combat.SetBulletSpeed(combat.bulletSpeed + bonus.bulletSpeedBonus);
+            if (bonus.attackRangeBonus != 0f)
+                combat.SetAttackRange(combat.attackRange + bonus.attackRangeBonus);
         }
 
         Health health = FindObjectOfType<Health>();
-        if (health != null && card.maxHealthBonus != 0f)
+        if (health != null && bonus.maxHealthBonus != 0f)
         {
-            health.SetMaxHealth(health.maxHealth + card.maxHealthBonus);
+            health.SetMaxHealth(health.maxHealth + bonus.maxHealthBonus);
             health.FullHeal();
         }
 
         CharacterController character = FindObjectOfType<CharacterController>();
-        if (character != null && card.moveSpeedBonus != 0f)
-        {
-            character.SetMoveSpeed(character.moveSpeed + card.moveSpeedBonus);
-        }
+        if (character != null && bonus.moveSpeedBonus != 0f)
+            character.SetMoveSpeed(character.moveSpeed + bonus.moveSpeedBonus);
 
-        Debug.Log($"CardManager: 已应用卡片 {card.cardName} 的加成（兼容模式）");
+        Debug.Log($"CardManager: 已应用卡片 {card.cardName} Lv{level} 的加成（兼容模式）");
     }
 
     /// <summary>
@@ -125,16 +112,17 @@ public class CardManager : MonoBehaviour
         totalAttackRange = 0f;
         totalPickupRange = 0f;
 
-        foreach (var card in selectedCards)
+        foreach (var offer in selectedCards)
         {
-            if (card == null) continue;
-            totalDamage += card.damageBonus;
-            totalFireRate += card.fireRateBonus;
-            totalMaxHealth += card.maxHealthBonus;
-            totalMoveSpeed += card.moveSpeedBonus;
-            totalBulletSpeed += card.bulletSpeedBonus;
-            totalAttackRange += card.attackRangeBonus;
-            totalPickupRange += card.pickupRangeBonus;
+            if (offer.card == null) continue;
+            var b = offer.card.GetBonusForLevel(offer.level);
+            totalDamage += b.damageBonus;
+            totalFireRate += b.fireRateBonus;
+            totalMaxHealth += b.maxHealthBonus;
+            totalMoveSpeed += b.moveSpeedBonus;
+            totalBulletSpeed += b.bulletSpeedBonus;
+            totalAttackRange += b.attackRangeBonus;
+            totalPickupRange += b.pickupRangeBonus;
         }
     }
 }

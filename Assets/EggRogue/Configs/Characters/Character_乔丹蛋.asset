@@ -18,10 +18,10 @@ MonoBehaviour:
   characterModelPrefab: {fileID: 4144580196621053565, guid: 8a5fc3aa60490cf4182a8cb6a6cbbacb,
     type: 3}
   baseLevel: 1
-  baseDamage: 9
-  baseFireRate: 2.6
-  baseMaxHealth: 88
-  baseMoveSpeed: 8
+  baseDamage: 10
+  baseFireRate: 0.5
+  baseMaxHealth: 2
+  baseMoveSpeed: 10
   baseBulletSpeed: 21
   baseAttackRange: 2
   basePickupRange: 1.5

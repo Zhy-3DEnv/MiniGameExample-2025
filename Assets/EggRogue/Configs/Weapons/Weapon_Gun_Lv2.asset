@@ -12,14 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3242813c38511d6489c176af29c944c6, type: 3}
   m_Name: Weapon_Gun_Lv2
   m_EditorClassIdentifier: 
-  weaponId: gun_lv1
+  weaponId: gun_lv2
   weaponName: S12K
   icon: {fileID: 21300000, guid: 7f40b878928a9474dbd17b071d89b037, type: 3}
   weaponType: 0
   level: 1
-  basePrice: 50
-  damage: 10
-  fireRate: 2
+  basePrice: 4
+  damage: 16
+  fireRate: 1.2
   attackRange: 10
   bulletSpeed: 20
   bulletLifeTime: 5

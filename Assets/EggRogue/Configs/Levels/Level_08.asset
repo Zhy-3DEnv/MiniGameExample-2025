@@ -17,16 +17,26 @@ MonoBehaviour:
   spawnMix:
   - enemyData: {fileID: 11400000, guid: 968433df3a0cc744ab885c9e2996f104, type: 2}
     enemyPrefab: {fileID: 0}
-    spawnWeight: 0
+    spawnWeight: 5
     maxAlive: 0
-    spawnRateScale: 0
+    spawnRateScale: 1
+    spawnTimeStart: 0
+    spawnTimeEnd: 0
   spawnsPerSecond: 7
   maxAliveEnemies: 0
   minTotalEnemies: 0
   maxTotalEnemies: 0
   randomOffsetRadius: 2
+  spawnStartTime: 0
+  spawnEndTime: 0
   levelDuration: 60
   victoryRewardGold: 16
-  enemyHealthMultiplier: 1.35
+  cardLevelWeights:
+  - 10
+  - 4
+  - 2
+  - 1
+  - 0
+  enemyHealthMultiplier: 2.75
   enemyMoveSpeedMultiplier: 1.14
   coinDropMultiplier: 1.21

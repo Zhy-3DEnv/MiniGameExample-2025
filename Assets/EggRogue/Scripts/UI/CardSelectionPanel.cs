@@ -40,7 +40,7 @@ public class CardSelectionPanel : BaseUIPanel
     [Tooltip("每次随机价格递增")]
     public int rerollPriceIncrement = 5;
 
-    private CardData[] currentCards = new CardData[4];
+    private CardOffer[] currentCards = new CardOffer[4];
     private int selectedCount = 0;
     private int totalPicks = 1;
     private readonly bool[] selectedIndices = new bool[4];
@@ -84,8 +84,9 @@ public class CardSelectionPanel : BaseUIPanel
             return;
         }
 
-        // 随机选择 4 张卡片
-        currentCards = cardDatabase.GetRandomCards(4);
+        // 按当前关卡的卡牌等级权重随机选择 4 张卡片（返回 CardOffer[]）
+        var levelData = GetCurrentLevelData();
+        currentCards = cardDatabase.GetRandomCards(4, levelData);
         selectedCount = 0;
         rerollCount = 0;
         for (int i = 0; i < selectedIndices.Length; i++)
@@ -108,11 +109,18 @@ public class CardSelectionPanel : BaseUIPanel
         return 1;
     }
 
+    private LevelData GetCurrentLevelData()
+    {
+        var lm = LevelManager.Instance;
+        if (lm == null || lm.levelDatabase == null) return null;
+        return lm.levelDatabase.GetLevel(lm.CurrentLevel);
+    }
+
     private void RefreshCardDisplay()
     {
         for (int i = 0; i < cardButtons.Length && i < currentCards.Length; i++)
         {
-            UpdateCardButton(i, currentCards[i]);
+            UpdateCardButton(i, ref currentCards[i]);
         }
     }
 
@@ -188,14 +196,15 @@ public class CardSelectionPanel : BaseUIPanel
         return rerollBasePrice + rerollCount * rerollPriceIncrement;
     }
 
-    private void UpdateCardButton(int index, CardData card)
+    private void UpdateCardButton(int index, ref CardOffer offer)
     {
-        if (cardButtons[index] == null || card == null)
+        if (cardButtons[index] == null || offer.card == null)
             return;
 
+        CardData card = offer.card;
+        int level = offer.level;
         Transform btnTransform = cardButtons[index].transform;
 
-        // 查找子元素（Icon、Name、Description）
         Image icon = btnTransform.Find("Icon")?.GetComponent<Image>();
         Text nameText = btnTransform.Find("Name")?.GetComponent<Text>();
         Text descText = btnTransform.Find("Description")?.GetComponent<Text>();
@@ -203,27 +212,9 @@ public class CardSelectionPanel : BaseUIPanel
         if (icon != null)
             icon.sprite = card.icon;
         if (nameText != null)
-            nameText.text = card.cardName;
+            nameText.text = $"{card.cardName} Lv{level}";
         if (descText != null)
-        {
-            // 如果卡片没有填写描述，则根据属性加成自动生成一段说明
-            if (!string.IsNullOrEmpty(card.description))
-            {
-                descText.text = card.description;
-            }
-            else
-            {
-                System.Text.StringBuilder sb = new System.Text.StringBuilder();
-                if (card.damageBonus != 0f) sb.AppendLine($"伤害 +{card.damageBonus}");
-                if (card.fireRateBonus != 0f) sb.AppendLine($"攻击速度 +{card.fireRateBonus}");
-                if (card.maxHealthBonus != 0f) sb.AppendLine($"最大生命值 +{card.maxHealthBonus}");
-                if (card.moveSpeedBonus != 0f) sb.AppendLine($"移动速度 +{card.moveSpeedBonus}");
-                if (card.bulletSpeedBonus != 0f) sb.AppendLine($"子弹速度 +{card.bulletSpeedBonus}");
-                if (card.attackRangeBonus != 0f) sb.AppendLine($"攻击范围 +{card.attackRangeBonus}");
-
-                descText.text = sb.Length > 0 ? sb.ToString() : "无属性加成";
-            }
-        }
+            descText.text = card.GetDescriptionForLevel(level);
     }
 
     private void OnCardSelected(int index)
@@ -233,24 +224,23 @@ public class CardSelectionPanel : BaseUIPanel
         if (selectedCount >= totalPicks)
             return;
 
-        CardData selectedCard = currentCards[index];
-        if (selectedCard == null)
+        CardOffer selectedOffer = currentCards[index];
+        if (selectedOffer.card == null)
             return;
 
         selectedIndices[index] = true;
         selectedCount++;
 
-        // 应用卡片加成
         if (CardManager.Instance != null)
         {
-            CardManager.Instance.ApplyCard(selectedCard);
+            CardManager.Instance.ApplyCard(selectedOffer.card, selectedOffer.level);
         }
         else
         {
             Debug.LogWarning("CardSelectionPanel: 未找到 CardManager.Instance，卡片加成未能应用到角色。");
         }
 
-        Debug.Log($"CardSelectionPanel: 玩家选择了卡片 - {selectedCard.cardName} ({selectedCount}/{totalPicks})");
+        Debug.Log($"CardSelectionPanel: 玩家选择了卡片 - {selectedOffer.card.cardName} Lv{selectedOffer.level} ({selectedCount}/{totalPicks})");
 
         // 隐藏已选中的卡片
         RefreshSelectedVisibility();
@@ -275,7 +265,8 @@ public class CardSelectionPanel : BaseUIPanel
     private void RefillCards()
     {
         if (cardDatabase == null) return;
-        currentCards = cardDatabase.GetRandomCards(4);
+        var levelData = GetCurrentLevelData();
+        currentCards = cardDatabase.GetRandomCards(4, levelData);
         for (int i = 0; i < selectedIndices.Length; i++)
             selectedIndices[i] = false;
         RefreshCardDisplay();
@@ -293,7 +284,8 @@ public class CardSelectionPanel : BaseUIPanel
             return;
 
         rerollCount++;
-        currentCards = cardDatabase.GetRandomCards(4);
+        var levelData = GetCurrentLevelData();
+        currentCards = cardDatabase.GetRandomCards(4, levelData);
         RefreshCardDisplay();
         RefreshRerollButton();
     }
@@ -330,6 +322,10 @@ public class CardSelectionPanel : BaseUIPanel
     protected override void OnShow()
     {
         base.OnShow();
+        
+        // 行业标准做法：进入选卡界面时清理所有伤害飘字，避免它们显示在UI上并阻挡交互
+        ClearAllDamagePopups();
+        
         selectedCount = 0;
         for (int i = 0; i < selectedIndices.Length; i++)
             selectedIndices[i] = false;
@@ -359,6 +355,21 @@ public class CardSelectionPanel : BaseUIPanel
         if (EggRogue.GameplayPauseManager.Instance != null)
         {
             EggRogue.GameplayPauseManager.Instance.RequestPause("CardSelectionPanel");
+        }
+    }
+    
+    /// <summary>
+    /// 清理场景中所有活跃的伤害飘字（ScorePopup），避免它们显示在UI上并阻挡交互。
+    /// </summary>
+    private void ClearAllDamagePopups()
+    {
+        FlappyBird.ScorePopup[] popups = Object.FindObjectsOfType<FlappyBird.ScorePopup>();
+        foreach (var popup in popups)
+        {
+            if (popup != null && popup.gameObject != null)
+            {
+                Object.Destroy(popup.gameObject);
+            }
         }
     }
 

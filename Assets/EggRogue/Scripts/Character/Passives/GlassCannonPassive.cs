@@ -20,7 +20,9 @@ namespace EggRogue
             if (stats == null)
                 return;
 
-            stats.CurrentDamage *= damageMultiplier;
+            // 玻璃大炮设计约定：
+            // - 只在“最终伤害结算”时成倍放大（在 CharacterStats.GetBaseAttackDamage 里统一处理）；
+            // - 这里仅负责降低最大生命值。
             stats.CurrentMaxHealth *= healthMultiplier;
         }
     }

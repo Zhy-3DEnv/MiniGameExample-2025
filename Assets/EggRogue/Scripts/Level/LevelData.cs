@@ -80,6 +80,10 @@ public class LevelData : ScriptableObject
     [Tooltip("胜利奖励金币数")]
     public int victoryRewardGold = 50;
 
+    [Header("卡牌等级权重（选卡时按此权重随机；0=该等级不出）")]
+    [Tooltip("卡牌等级 1~5 的权重，对应 cardLevelWeights[0]~[4]")]
+    public float[] cardLevelWeights = new float[] { 10f, 4f, 2f, 1f, 0f };
+
     [Header("难度系数（可选，1=不变）")]
     [Tooltip("怪物血量倍率（相对 EnemyData.baseMaxHealth）")]
     public float enemyHealthMultiplier = 1f;
