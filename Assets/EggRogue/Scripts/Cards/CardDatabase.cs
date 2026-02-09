@@ -5,7 +5,7 @@ namespace EggRogue
 {
 /// <summary>
 /// 卡片数据库（ScriptableObject）。持有所有可用卡片类型，用于随机选择。
-/// 方案2：一种卡一张 CardData，抽卡时先按 cardLevelWeights 抽等级，再抽卡类型。
+/// 方案2：一种卡一张 CardData，抽卡时先按 cardStarWeights 抽星级，再抽卡类型。
 /// </summary>
 [CreateAssetMenu(fileName = "CardDatabase", menuName = "EggRogue/Card Database", order = 3)]
 public class CardDatabase : ScriptableObject
@@ -15,8 +15,8 @@ public class CardDatabase : ScriptableObject
 
     /// <summary>
     /// 随机选择 N 张不同的卡片。
-    /// 先按 LevelData.cardLevelWeights 抽等级，再抽卡类型，返回 (CardData, level) 组合。
-    /// 不传 levelData 时等级均匀随机。
+    /// 先按 LevelData.cardStarWeights 抽星级，再抽卡类型，返回 (CardData, star) 组合。
+    /// 不传 levelData 时星级均匀随机。
     /// </summary>
     public CardOffer[] GetRandomCards(int count, LevelData levelDataForWeights = null)
     {
@@ -43,13 +43,13 @@ public class CardDatabase : ScriptableObject
     }
 
     /// <summary>
-    /// 构建可抽卡池：(CardOffer, weight)。每个 (卡类型, 等级) 组合对应一条，权重来自 cardLevelWeights。
+    /// 构建可抽卡池：(CardOffer, weight)。每个 (卡类型, 星级) 组合对应一条，权重来自 cardStarWeights。
     /// </summary>
     private List<(CardOffer offer, float weight)> GetWeightedOfferPool(LevelData levelData)
     {
         var pool = new List<(CardOffer, float)>();
-        float[] weights = (levelData != null && levelData.cardLevelWeights != null && levelData.cardLevelWeights.Length >= 5)
-            ? levelData.cardLevelWeights
+        float[] weights = (levelData != null && levelData.cardStarWeights != null && levelData.cardStarWeights.Length >= 5)
+            ? levelData.cardStarWeights
             : null;
 
         for (int c = 0; c < allCards.Length; c++)

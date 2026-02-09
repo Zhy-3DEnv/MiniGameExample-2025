@@ -34,6 +34,7 @@ public static class CardDatabaseSetup
         cards.Add(CreateCard("移速提升", "移动速度 +1", 0f, 0f, 0f, 1f, 0f, 0f));
         cards.Add(CreateCard("子弹加速", "子弹速度 +10", 0f, 0f, 0f, 0f, 10f, 0f));
         cards.Add(CreateCard("射程提升", "攻击范围 +2", 0f, 0f, 0f, 0f, 0f, 2f));
+        cards.Add(CreatePickupRangeCard());
         cards.Add(CreateCard("全面强化", "伤害 +3, 攻速 +0.5, 生命 +15", 3f, 0.5f, 15f, 0f, 0f, 0f));
         cards.Add(CreateCard("极速射击", "攻击速度 +2, 子弹速度 +5", 0f, 2f, 0f, 0f, 5f, 0f));
 
@@ -51,6 +52,51 @@ public static class CardDatabaseSetup
         Debug.Log("CardDatabaseSetup: 已创建 CardDatabase 与默认卡片。在 CardSelectionPanel 上指定 CardDatabase 引用。");
     }
 
+    /// <summary>
+    /// 单独创建拾取范围卡片并加入 CardDatabase（若已存在则更新）。
+    /// </summary>
+    [MenuItem("EggRogue/创建拾取范围卡片")]
+    public static void CreatePickupRangeCardOnly()
+    {
+        if (!AssetDatabase.IsValidFolder("Assets/EggRogue/Configs/Cards"))
+        {
+            Debug.LogError("CardDatabaseSetup: 请先运行 EggRogue/创建 CardDatabase 与默认卡片。");
+            return;
+        }
+        var card = CreatePickupRangeCard();
+        string path = CardsDir + "/拾取范围.asset";
+        var existing = AssetDatabase.LoadAssetAtPath<EggRogue.CardData>(path);
+        if (existing != null)
+        {
+            existing.cardTypeId = card.cardTypeId;
+            existing.cardName = card.cardName;
+            existing.description = card.description;
+            existing.starBonuses = card.starBonuses;
+            EditorUtility.SetDirty(existing);
+            Debug.Log("CardDatabaseSetup: 已更新拾取范围卡片。");
+        }
+        else
+        {
+            AssetDatabase.CreateAsset(card, path);
+            Debug.Log("CardDatabaseSetup: 已创建拾取范围卡片。");
+        }
+        var db = AssetDatabase.LoadAssetAtPath<EggRogue.CardDatabase>(ConfigsDir + "/CardDatabase.asset");
+        if (db != null && db.allCards != null)
+        {
+            var list = new System.Collections.Generic.List<EggRogue.CardData>(db.allCards);
+            var loaded = AssetDatabase.LoadAssetAtPath<EggRogue.CardData>(path);
+            if (loaded != null && !list.Contains(loaded))
+            {
+                list.Add(loaded);
+                db.allCards = list.ToArray();
+                EditorUtility.SetDirty(db);
+                Debug.Log("CardDatabaseSetup: 已将拾取范围卡片加入 CardDatabase。");
+            }
+        }
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+    }
+
     private static EggRogue.CardData CreateCard(string name, string desc, float damage, float fireRate,
         float health, float moveSpeed, float bulletSpeed, float attackRange)
     {
@@ -58,11 +104,11 @@ public static class CardDatabaseSetup
         card.cardTypeId = name;
         card.cardName = name;
         card.description = desc;
-        card.levelBonuses = new EggRogue.CardLevelBonus[5];
-        // 默认只填等级1的加成
-        card.levelBonuses[0] = new EggRogue.CardLevelBonus
+        card.starBonuses = new EggRogue.CardStarBonus[5];
+        // 默认只填1星的加成
+        card.starBonuses[0] = new EggRogue.CardStarBonus
         {
-            level = 1,
+            star = 1,
             damageBonus = damage,
             fireRateBonus = fireRate,
             maxHealthBonus = health,
@@ -75,7 +121,34 @@ public static class CardDatabaseSetup
     }
 
     /// <summary>
-    /// 将旧卡片的平铺加成字段迁移到 levelBonuses[0]。适用于从旧格式升级的项目。
+    /// 创建拾取范围卡片。5 个星级，每星 +0.5（1星 +0.5，2星 +1，3星 +1.5，4星 +2，5星 +2.5）。
+    /// </summary>
+    private static EggRogue.CardData CreatePickupRangeCard()
+    {
+        var card = ScriptableObject.CreateInstance<EggRogue.CardData>();
+        card.cardTypeId = "拾取范围";
+        card.cardName = "拾取范围";
+        card.description = "拾取范围";
+        card.starBonuses = new EggRogue.CardStarBonus[5];
+        for (int i = 0; i < 5; i++)
+        {
+            card.starBonuses[i] = new EggRogue.CardStarBonus
+            {
+                star = i + 1,
+                damageBonus = 0f,
+                fireRateBonus = 0f,
+                maxHealthBonus = 0f,
+                moveSpeedBonus = 0f,
+                bulletSpeedBonus = 0f,
+                attackRangeBonus = 0f,
+                pickupRangeBonus = (i + 1) * 0.5f
+            };
+        }
+        return card;
+    }
+
+    /// <summary>
+    /// 将旧卡片的平铺加成字段迁移到 starBonuses[0]。适用于从旧格式升级的项目。
     /// </summary>
     [MenuItem("EggRogue/迁移卡片到等级表格式")]
     public static void MigrateCardsToLevelBonuses()
@@ -105,12 +178,12 @@ public static class CardDatabaseSetup
             if (d == 0f && fr == 0f && hp == 0f && ms == 0f && bs == 0f && ar == 0f && pr == 0f)
                 continue;
 
-            if (card.levelBonuses == null || card.levelBonuses.Length < 5)
-                card.levelBonuses = new EggRogue.CardLevelBonus[5];
+            if (card.starBonuses == null || card.starBonuses.Length < 5)
+                card.starBonuses = new EggRogue.CardStarBonus[5];
 
-            card.levelBonuses[0] = new EggRogue.CardLevelBonus
+            card.starBonuses[0] = new EggRogue.CardStarBonus
             {
-                level = 1,
+                star = 1,
                 damageBonus = d,
                 fireRateBonus = fr,
                 maxHealthBonus = hp,
@@ -123,7 +196,7 @@ public static class CardDatabaseSetup
             migrated++;
         }
         AssetDatabase.SaveAssets();
-        Debug.Log($"CardDatabaseSetup: 迁移完成，共 {migrated} 张卡片已写入 levelBonuses[0]。");
+        Debug.Log($"CardDatabaseSetup: 迁移完成，共 {migrated} 张卡片已写入 starBonuses[0]。");
     }
 }
 #endif

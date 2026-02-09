@@ -154,7 +154,7 @@ public static class EggRogueBalanceImporter
     }
 
     /// <summary>
-    /// 从 Level-Base.csv 导入关卡基础数据（不含 spawnMix、cardLevelWeights）。
+    /// 从 Level-Base.csv 导入关卡基础数据（不含 spawnMix、cardStarWeights）。
     /// 表头：关卡编号,关卡名称,每秒刷怪,最大同时怪物数,最少总怪物,最多总怪物,随机偏移半径,刷怪开始时间,刷怪结束时间,关卡时长,胜利奖励金币,血量倍率,移速倍率,金币倍率
     /// </summary>
     private static void ImportLevelBaseFromCsv(string csvPath, string levelsFolder)
@@ -405,7 +405,7 @@ public static class EggRogueBalanceImporter
 
     /// <summary>
     /// 从 Level-CardWeight.csv 导入卡牌等级权重。
-    /// 表头：关卡编号,W_Lv1,W_Lv2,W_Lv3,W_Lv4,W_Lv5
+    /// 表头：关卡编号,W_Star1,W_Star2,W_Star3,W_Star4,W_Star5（兼容 W_Lv1~5）
     /// </summary>
     private static void ImportLevelCardWeightFromCsv(string csvPath, string levelsFolder)
     {
@@ -445,13 +445,18 @@ public static class EggRogueBalanceImporter
                 if (!int.TryParse(GetColumn(cols, headerIndex["关卡编号"]), out int levelNumber) || levelNumber <= 0) continue;
 
                 LevelData levelData = GetOrCreateLevelData(levelsFolder, levelNumber);
-                if (levelData.cardLevelWeights == null || levelData.cardLevelWeights.Length < 5)
-                    levelData.cardLevelWeights = new float[5];
+                if (levelData.cardStarWeights == null || levelData.cardStarWeights.Length < 5)
+                    levelData.cardStarWeights = new float[5];
                 for (int i = 1; i <= 5; i++)
                 {
-                    string key = $"W_Lv{i}";
-                    if (headerIndex.TryGetValue(key, out int idx) && float.TryParse(GetColumn(cols, idx), NumberStyles.Float, inv, out float w))
-                        levelData.cardLevelWeights[i - 1] = w;
+                    string keyStar = $"W_Star{i}";
+                    string keyLv = $"W_Lv{i}";
+                    int idx = -1;
+                    if (headerIndex.TryGetValue(keyStar, out idx) || headerIndex.TryGetValue(keyLv, out idx))
+                    {
+                        if (float.TryParse(GetColumn(cols, idx), NumberStyles.Float, inv, out float w))
+                            levelData.cardStarWeights[i - 1] = w;
+                    }
                 }
                 EditorUtility.SetDirty(levelData);
                 success++;
@@ -1022,9 +1027,9 @@ public static class EggRogueBalanceImporter
     #region 卡片导入
 
     /// <summary>
-    /// 从 CSV 导入 CardData（方案2：等级加成表）。
-    /// 约定表头：cardTypeId, level, 卡片名称, 描述, 伤害加成, 攻速加成, 生命加成, 移速加成, 子弹速度加成, 攻击范围加成, 拾取范围加成
-    /// 每行对应一个 (cardTypeId, level) 的等级加成；多行相同 cardTypeId 合并为一张卡。
+    /// 从 CSV 导入 CardData（方案2：星级加成表）。
+    /// 约定表头：cardTypeId, star(或level), 卡片名称, 描述, 伤害加成, 攻速加成, 生命加成, 移速加成, 子弹速度加成, 攻击范围加成, 拾取范围加成
+    /// 每行对应一个 (cardTypeId, star) 的星级加成；多行相同 cardTypeId 合并为一张卡。
     /// </summary>
     private static void ImportCardsFromCsv(string csvPath, string cardsFolder)
     {
@@ -1058,9 +1063,9 @@ public static class EggRogueBalanceImporter
                 Debug.LogError("[EggRogueBalanceImporter] 卡片 CSV 缺少必需表头：cardTypeId");
                 return;
             }
-            if (!headerIndex.ContainsKey("level") && !headerIndex.ContainsKey("等级"))
+            if (!headerIndex.ContainsKey("star") && !headerIndex.ContainsKey("level") && !headerIndex.ContainsKey("等级") && !headerIndex.ContainsKey("星级"))
             {
-                Debug.LogError("[EggRogueBalanceImporter] 卡片 CSV 缺少必需表头：level");
+                Debug.LogError("[EggRogueBalanceImporter] 卡片 CSV 缺少必需表头：star 或 level");
                 return;
             }
 
@@ -1091,10 +1096,10 @@ public static class EggRogueBalanceImporter
                     if (string.IsNullOrEmpty(cardTypeId))
                         throw new Exception("cardTypeId 为空");
 
-                    int lvIdx = headerIndex.TryGetValue("level", out int l) ? l : headerIndex["等级"];
-                    if (!int.TryParse(GetColumn(cols, lvIdx), out int lv))
-                        throw new Exception("level 无法解析");
-                    lv = Mathf.Clamp(lv, 1, 5);
+                    int starIdx = headerIndex.TryGetValue("star", out int s) ? s : (headerIndex.TryGetValue("星级", out int sx) ? sx : (headerIndex.TryGetValue("level", out int l) ? l : headerIndex["等级"]));
+                    if (!int.TryParse(GetColumn(cols, starIdx), out int starVal))
+                        throw new Exception("star/level 无法解析");
+                    starVal = Mathf.Clamp(starVal, 1, 5);
 
                     string assetPath = $"{cardsFolder}/{cardTypeId}.asset";
                     if (headerIndex.TryGetValue("AssetName", out int anIdx))
@@ -1113,8 +1118,8 @@ public static class EggRogueBalanceImporter
                             AssetDatabase.CreateAsset(card, assetPath);
                         }
                         card.cardTypeId = cardTypeId;
-                        if (card.levelBonuses == null || card.levelBonuses.Length < 5)
-                            card.levelBonuses = new CardLevelBonus[5];
+                        if (card.starBonuses == null || card.starBonuses.Length < 5)
+                            card.starBonuses = new CardStarBonus[5];
                         cardByTypeId[cardTypeId] = card;
                     }
 
@@ -1131,9 +1136,9 @@ public static class EggRogueBalanceImporter
                             card.description = desc;
                     }
 
-                    int idx = lv - 1;
-                    ref var bonus = ref card.levelBonuses[idx];
-                    bonus.level = lv;
+                    int idx = starVal - 1;
+                    ref var bonus = ref card.starBonuses[idx];
+                    bonus.star = starVal;
                     if (headerIndex.TryGetValue("伤害加成", out int dmgIdx) && float.TryParse(GetColumn(cols, dmgIdx), NumberStyles.Float, inv, out float dmg))
                         bonus.damageBonus = dmg;
                     if (headerIndex.TryGetValue("攻速加成", out int frIdx) && float.TryParse(GetColumn(cols, frIdx), NumberStyles.Float, inv, out float fr))

@@ -16,8 +16,8 @@ MonoBehaviour:
   cardName: "\u79FB\u901F\u63D0\u5347"
   description: "\u79FB\u52A8\u901F\u5EA6 +1"
   icon: {fileID: 21300000, guid: 7720ed897d6e0b742881d60b6ba279f7, type: 3}
-  levelBonuses:
-  - level: 1
+  starBonuses:
+  - star: 1
     damageBonus: 0
     fireRateBonus: 0
     maxHealthBonus: 0
@@ -25,35 +25,35 @@ MonoBehaviour:
     bulletSpeedBonus: 0
     attackRangeBonus: 0
     pickupRangeBonus: 0
-  - level: 2
+  - star: 2
     damageBonus: 0
     fireRateBonus: 0
     maxHealthBonus: 0
-    moveSpeedBonus: 0
+    moveSpeedBonus: 2
     bulletSpeedBonus: 0
     attackRangeBonus: 0
     pickupRangeBonus: 0
-  - level: 3
+  - star: 3
     damageBonus: 0
     fireRateBonus: 0
     maxHealthBonus: 0
-    moveSpeedBonus: 0
+    moveSpeedBonus: 3
     bulletSpeedBonus: 0
     attackRangeBonus: 0
     pickupRangeBonus: 0
-  - level: 4
+  - star: 4
     damageBonus: 0
     fireRateBonus: 0
     maxHealthBonus: 0
-    moveSpeedBonus: 0
+    moveSpeedBonus: 4
     bulletSpeedBonus: 0
     attackRangeBonus: 0
     pickupRangeBonus: 0
-  - level: 5
+  - star: 5
     damageBonus: 0
     fireRateBonus: 0
     maxHealthBonus: 0
-    moveSpeedBonus: 0
+    moveSpeedBonus: 5
     bulletSpeedBonus: 0
     attackRangeBonus: 0
     pickupRangeBonus: 0

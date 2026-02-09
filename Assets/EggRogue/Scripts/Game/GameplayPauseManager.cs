@@ -47,7 +47,6 @@ namespace EggRogue
             }
 
             _instance = this;
-            DontDestroyOnLoad(rootGO);
         }
 
         /// <summary>

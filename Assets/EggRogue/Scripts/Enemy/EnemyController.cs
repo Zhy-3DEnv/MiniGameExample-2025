@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using EggRogue;
 
 /// <summary>
@@ -293,7 +294,8 @@ using EggRogue;
             Vector2 r = Random.insideUnitCircle * radius;
             Vector3 pos = basePos + new Vector3(r.x, 0f, r.y);
             pos.y = groundHeight;
-            Instantiate(coinPrefab, pos, Quaternion.identity);
+            GameObject coin = Instantiate(coinPrefab, pos, Quaternion.identity);
+            SceneManager.MoveGameObjectToScene(coin, gameObject.scene);
         }
     }
 

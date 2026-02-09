@@ -104,7 +104,7 @@ public class LevelFlowManager : MonoBehaviour
         //debug.log($"[Gold Debug] 本关结束时场景中剩余可拾取金币总价值 = {remainingCoinValue}");
 
         // 清空场景内的怪物、子弹等 GamePlay 元素，避免进入选卡/商店后点继续时看到上一关残留
-        ClearGameplayElements();
+        LevelFlowManager.ClearGameplayElements();
 
         if (UIManager.Instance == null)
         {
@@ -115,7 +115,7 @@ public class LevelFlowManager : MonoBehaviour
         // 最后一关：跳过 ResultPanel，先发胜利奖励再直接显示完整通关界面
         if (EggRogue.LevelManager.Instance != null && EggRogue.LevelManager.Instance.IsLastLevel())
         {
-            ClearGameplayElements();
+            LevelFlowManager.ClearGameplayElements();
             if (GoldManager.Instance != null)
             {
                 GoldManager.Instance.AddGold(victoryReward);
@@ -160,8 +160,9 @@ public class LevelFlowManager : MonoBehaviour
 
     /// <summary>
     /// 清空场景内所有 GamePlay 元素（怪物、子弹、金币等），避免选卡/商店后点继续时看到上一关残留。
+    /// 可被 GameManager 等外部调用（如再试一次、返回主菜单时）。
     /// </summary>
-    private void ClearGameplayElements()
+    public static void ClearGameplayElements()
     {
         // 敌人
         if (EnemyManager.Instance != null)

@@ -35,7 +35,6 @@ namespace EggRogue
             }
 
             _instance = this;
-            DontDestroyOnLoad(rootGO);
 
             if (SelectedStarterWeapon == null)
                 SelectedStarterWeapon = defaultStarterWeapon;

@@ -75,6 +75,31 @@ public class CharacterController : MonoBehaviour
             rb.drag = 4f;
             rb.angularDrag = 4f;
         }
+
+        // 应用零摩擦物理材质，使角色撞墙时沿墙面滑动而非停顿
+        ApplySlideMaterial();
+    }
+
+    private static PhysicMaterial _slideMaterial;
+
+    /// <summary>
+    /// 为碰撞体应用零摩擦材质，撞墙时沿墙面滑动而非停顿。
+    /// </summary>
+    private void ApplySlideMaterial()
+    {
+        Collider col = GetComponent<Collider>();
+        if (col == null) return;
+
+        if (_slideMaterial == null)
+        {
+            _slideMaterial = new PhysicMaterial("PlayerSlide");
+            _slideMaterial.dynamicFriction = 0f;
+            _slideMaterial.staticFriction = 0f;
+            _slideMaterial.bounciness = 0f;
+            _slideMaterial.frictionCombine = PhysicMaterialCombine.Minimum;
+            _slideMaterial.bounceCombine = PhysicMaterialCombine.Minimum;
+        }
+        col.material = _slideMaterial;
     }
 
     /// <summary>

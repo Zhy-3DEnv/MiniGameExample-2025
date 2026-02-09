@@ -40,7 +40,6 @@ public class LevelManager : MonoBehaviour
             return;
         }
         _instance = this;
-        DontDestroyOnLoad(rootGO);
     }
 
     private void OnEnable()

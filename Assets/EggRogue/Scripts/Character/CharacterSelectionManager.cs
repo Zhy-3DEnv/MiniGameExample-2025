@@ -34,7 +34,6 @@ namespace EggRogue
             }
 
             _instance = this;
-            DontDestroyOnLoad(rootGO);
 
             // 初始化：使用默认角色
             if (SelectedCharacter == null)

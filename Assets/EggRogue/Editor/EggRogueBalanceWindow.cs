@@ -309,7 +309,7 @@ public class EggRogueBalanceWindow : EditorWindow
     {
         string path = DefaultCsvFolder + "/Level-CardWeight.csv";
         var sb = new StringBuilder();
-        sb.AppendLine("关卡编号,W_Lv1,W_Lv2,W_Lv3,W_Lv4,W_Lv5");
+        sb.AppendLine("关卡编号,W_Star1,W_Star2,W_Star3,W_Star4,W_Star5");
         sb.AppendLine("1,10,4,2,1,0");
         sb.AppendLine("5,4,6,6,3,1");
         sb.AppendLine("10,2,3,5,6,4");
@@ -353,7 +353,7 @@ public class EggRogueBalanceWindow : EditorWindow
     {
         string path = DefaultCsvFolder + "/EggRogue_Cards.csv";
         var sb = new StringBuilder();
-        sb.AppendLine("AssetName,cardTypeId,level,卡片名称,描述,伤害加成,攻速加成,生命加成,移速加成,子弹速度加成,攻击范围加成,拾取范围加成");
+        sb.AppendLine("AssetName,cardTypeId,star,卡片名称,描述,伤害加成,攻速加成,生命加成,移速加成,子弹速度加成,攻击范围加成,拾取范围加成");
         sb.AppendLine("Card_力量提升_Lv1,力量提升,1,力量提升 Lv1,伤害 +5,5,0,0,0,0,0,0");
         sb.AppendLine("Card_攻速提升_Lv1,攻速提升,1,攻速提升 Lv1,攻击速度 +1,0,1,0,0,0,0,0");
         sb.AppendLine("Card_生命提升_Lv1,生命提升,1,生命提升 Lv1,最大生命值 +20,0,0,20,0,0,0,0");

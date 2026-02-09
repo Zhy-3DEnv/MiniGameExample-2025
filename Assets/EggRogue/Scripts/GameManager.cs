@@ -11,7 +11,7 @@ using UnityEngine.SceneManagement;
 /// 3. 在 UI 按钮的 OnClick 中调用对应的公开方法（StartGame、ReturnToMenu、RestartGame）。
 /// 
 /// 注意：
-/// - 本脚本采用简单的单例模式，在场景切换时通过 DontDestroyOnLoad 保持常驻。
+/// - 本脚本采用简单的单例模式，位于 PersistentScene 中，该场景通过附加加载保持常驻。
 /// - 仅负责场景切换与基础游戏状态，不包含具体玩法逻辑，后续可以在此基础上扩展。
 /// </summary>
 public class GameManager : MonoBehaviour
@@ -39,6 +39,11 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public bool IsInGame { get; private set; }
 
+    /// <summary>
+    /// 加载主菜单后是否应显示选英雄界面（用于「再试一次」重置流程）。
+    /// </summary>
+    private static bool _pendingShowCharacterSelection;
+
     private void Awake()
     {
         // Unity 限制：DontDestroyOnLoad 只能作用于“根 GameObject”（或挂在根物体上的组件）。
@@ -53,7 +58,7 @@ public class GameManager : MonoBehaviour
         }
 
         _instance = this;
-        DontDestroyOnLoad(rootGO);
+        // PersistentScene 使用附加加载保持常驻，无需 DontDestroyOnLoad
     }
 
     private void OnEnable()
@@ -91,9 +96,61 @@ public class GameManager : MonoBehaviour
             return;
 
         if (scene.name == mainMenuSceneName)
-            UIManager.Instance.ShowMainMenu();
+        {
+            if (_pendingShowCharacterSelection)
+            {
+                _pendingShowCharacterSelection = false;
+                UIManager.Instance.ShowCharacterSelection();
+            }
+            else
+            {
+                UIManager.Instance.ShowMainMenu();
+            }
+        }
         else if (scene.name == gameSceneName)
+        {
             UIManager.Instance.ShowGameHUD();
+        }
+    }
+
+    /// <summary>
+    /// 失败后「再试一次」：重置本局状态（武器、卡片、金币等），返回选英雄界面重新开始。
+    /// 会先清理场景内敌人/子弹/金币，确保重新进入时状态干净。
+    /// </summary>
+    public void ReturnToCharacterSelectionForRetry()
+    {
+        if (string.IsNullOrEmpty(mainMenuSceneName))
+        {
+            Debug.LogError("GameManager: mainMenuSceneName 为空，请在 Inspector 中配置。");
+            return;
+        }
+
+        // 0. 立即清理场景内 GamePlay 元素（敌人、子弹、金币），避免残留导致新局异常
+        LevelFlowManager.ClearGameplayElements();
+
+        // 1. 重置关卡
+        if (EggRogue.LevelManager.Instance != null)
+            EggRogue.LevelManager.Instance.SetLevelAndNotifyLoaded(1);
+
+        // 2. 清空卡片
+        if (EggRogue.CardManager.Instance != null)
+            EggRogue.CardManager.Instance.ClearAllCards();
+
+        // 3. 清空武器
+        if (EggRogue.WeaponInventoryManager.Instance != null)
+            EggRogue.WeaponInventoryManager.Instance.ClearAll();
+
+        // 4. 重置单局状态（金币、等级、经验、物品、商店锁定等）
+        if (EggRogue.PlayerRunState.Instance != null)
+            EggRogue.PlayerRunState.Instance.ResetRunState();
+
+        if (EggRogue.GoldManager.Instance != null)
+            EggRogue.GoldManager.Instance.NotifyGoldChanged();
+
+        // 5. 标记加载主菜单后显示选英雄界面
+        _pendingShowCharacterSelection = true;
+        IsInGame = false;
+        LoadMainMenuScene();
     }
 
     /// <summary>
@@ -119,11 +176,12 @@ public class GameManager : MonoBehaviour
             EggRogue.LevelManager.Instance.SetLevelAndNotifyLoaded(level);
 
         IsInGame = true;
-        SceneManager.LoadScene(gameSceneName);
+        LoadGameSceneAdditive();
     }
 
     /// <summary>
     /// 从游戏返回主菜单。可挂在暂停/结算界面按钮上。
+    /// 会先清理场景内敌人/子弹/金币，确保离开时无残留。
     /// </summary>
     public void ReturnToMenu()
     {
@@ -133,8 +191,62 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        LevelFlowManager.ClearGameplayElements();
         IsInGame = false;
-        SceneManager.LoadScene(mainMenuSceneName);
+        LoadMainMenuScene();
+    }
+
+    /// <summary>
+    /// 加载主菜单（附加模式）。先卸载 GameScene，再附加加载 MainMenu。
+    /// </summary>
+    private void LoadMainMenuScene()
+    {
+        StartCoroutine(SwitchToSceneAsync(gameSceneName, mainMenuSceneName));
+    }
+
+    /// <summary>
+    /// 加载游戏场景（附加模式）。先卸载 MainMenu 或 GameScene（ whichever 已加载），再附加加载新 GameScene。
+    /// 从主菜单进入时卸载 MainMenu；关卡切换时卸载当前 GameScene，避免出现两个 GameScene。
+    /// </summary>
+    private void LoadGameSceneAdditive()
+    {
+        StartCoroutine(LoadGameSceneCoroutine());
+    }
+
+    private IEnumerator LoadGameSceneCoroutine()
+    {
+        // 卸载 MainMenu（从主菜单进入）或 GameScene（关卡切换），避免重复加载
+        yield return UnloadSceneIfLoadedAsync(mainMenuSceneName);
+        yield return UnloadSceneIfLoadedAsync(gameSceneName);
+
+        SceneManager.LoadScene(gameSceneName, LoadSceneMode.Additive);
+        Scene newScene = SceneManager.GetSceneByName(gameSceneName);
+        if (newScene.isLoaded)
+            SceneManager.SetActiveScene(newScene);
+    }
+
+    /// <summary>
+    /// 卸载指定场景（若已加载），返回可 yield 的 AsyncOperation 或 null。
+    /// </summary>
+    private AsyncOperation UnloadSceneIfLoadedAsync(string sceneName)
+    {
+        if (string.IsNullOrEmpty(sceneName) || sceneName == persistentSceneName)
+            return null;
+        Scene s = SceneManager.GetSceneByName(sceneName);
+        return s.isLoaded ? SceneManager.UnloadSceneAsync(s) : null;
+    }
+
+    /// <summary>
+    /// 切换场景：先卸载 fromScene，再附加加载 toScene，并设为活动场景。
+    /// </summary>
+    private IEnumerator SwitchToSceneAsync(string fromScene, string toScene)
+    {
+        yield return UnloadSceneIfLoadedAsync(fromScene);
+
+        SceneManager.LoadScene(toScene, LoadSceneMode.Additive);
+        Scene newScene = SceneManager.GetSceneByName(toScene);
+        if (newScene.isLoaded)
+            SceneManager.SetActiveScene(newScene);
     }
 
     /// <summary>

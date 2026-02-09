@@ -14,29 +14,22 @@ public class TouchInputHandler : MonoBehaviour
     [Tooltip("虚拟摇杆组件")]
     public VirtualJoystick virtualJoystick;
 
-    [Tooltip("角色控制器（可以留空，自动查找）")]
-    public CharacterController characterController;
-
     [Header("参数")]
     [Tooltip("死区（摇杆长度小于该值时视为无输入，不覆盖键盘）")]
     public float deadZone = 0.1f;
 
-    // 不再在 Awake 里查找，改为在 Update 里按需查找（场景切换后也能找到新场景的角色）
+    private CharacterController _characterController;
 
     private void Update()
     {
         if (virtualJoystick == null)
             return;
 
-        // 如果角色引用为空（例如刚切换到新场景），尝试自动查找
-        if (characterController == null)
+        if (_characterController == null)
         {
-            characterController = FindObjectOfType<CharacterController>();
-            if (characterController == null)
-            {
-                // 当前场景还没有载入角色，等下一帧再试
+            _characterController = FindObjectOfType<CharacterController>();
+            if (_characterController == null)
                 return;
-            }
         }
 
         // 读取摇杆输入
@@ -51,6 +44,6 @@ public class TouchInputHandler : MonoBehaviour
         // 始终把摇杆输入传给角色：
         // - 没有键盘输入时：0 会让角色停下来
         // - 有键盘输入时：CharacterController.Update 会用键盘方向覆盖非零输入
-        characterController.SetMoveInput(input);
+        _characterController.SetMoveInput(input);
     }
 }

@@ -1022,7 +1022,6 @@ MonoBehaviour:
   separationForce: 5
   detectionRadius: 2
   minSeparationDistance: 0.5
-  updateInterval: 0.1
   maxEnemiesPerFrame: 50
 --- !u!1 &1472801395
 GameObject:
@@ -1179,7 +1178,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   target: {fileID: 0}
   useSmoothFollow: 1
-  smoothSpeed: 10
+  smoothSpeed: 5
   offsetX: 7
   offsetY: 12
   offsetZ: -10

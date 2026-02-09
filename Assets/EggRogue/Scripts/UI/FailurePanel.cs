@@ -24,7 +24,7 @@ public class FailurePanel : BaseUIPanel
     [Tooltip("返回主菜单按钮")]
     public Button returnToMenuButton;
 
-    [Tooltip("再试一次按钮（从第 1 关重新开始）")]
+    [Tooltip("再试一次按钮（重置到选英雄界面，重新开始挑战）")]
     public Button retryButton;
 
     private void Start()
@@ -70,10 +70,18 @@ public class FailurePanel : BaseUIPanel
     private void OnRetryClicked()
     {
         Hide();
-        if (LevelManager.Instance != null)
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.ReturnToCharacterSelectionForRetry();
+        }
+        else if (LevelManager.Instance != null)
+        {
             LevelManager.Instance.RestartFromLevel1();
-        else if (GameManager.Instance != null)
-            GameManager.Instance.LoadGameScene(1);
+        }
+        else
+        {
+            UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
+        }
     }
 
     protected override void OnShow()

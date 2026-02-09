@@ -21,7 +21,7 @@ MonoBehaviour:
   baseLevel: 1
   baseDamage: 10
   baseFireRate: 0.5
-  baseMaxHealth: 2
+  baseMaxHealth: 10
   baseMoveSpeed: 10
   baseBulletSpeed: 24
   baseAttackRange: 2

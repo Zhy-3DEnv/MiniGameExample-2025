@@ -57,6 +57,14 @@ public class GameHudPanel : BaseUIPanel
     [Tooltip("头像图标（AvatarButton 上的 Image，用于显示当前选中角色）")]
     public Image avatarIcon;
 
+    [Header("低血量警告")]
+    [Tooltip("低血量时显示的图片（血量≤20%时显示，拖入你的全屏边框图）")]
+    public Image lowHealthWarningImage;
+
+    [Tooltip("低血量阈值（0.2=20%）")]
+    [Range(0.01f, 0.5f)]
+    public float lowHealthThreshold = 0.2f;
+
     private void Start()
     {
         SetupButtons();
@@ -195,24 +203,23 @@ public class GameHudPanel : BaseUIPanel
 
             RefreshPlayerLevelDisplay();
 
-            // 更新血量条和血量文本（通过 CharacterStats 找到玩家的 Health，避免找到敌人的）
+            // 更新血量条、血量文本和低血量提示
             CharacterStats playerStats = FindObjectOfType<CharacterStats>();
-            if (playerStats != null)
+            Health playerHealth = playerStats != null ? playerStats.GetComponent<Health>() : null;
+            if (playerHealth != null)
             {
-                Health playerHealth = playerStats.GetComponent<Health>();
-                if (playerHealth != null)
-                {
-                    if (healthBar != null)
-                    {
-                        UpdateHealthBar(playerHealth.CurrentHealth, playerHealth.maxHealth);
-                    }
+                if (healthBar != null)
+                    UpdateHealthBar(playerHealth.CurrentHealth, playerHealth.maxHealth);
 
-                    // 更新血量文本（显示：当前HP/最大HP）
-                    if (healthText != null)
-                    {
-                        healthText.text = $"{playerHealth.CurrentHealth:F0}/{playerHealth.maxHealth:F0}";
-                    }
-                }
+                if (healthText != null)
+                    healthText.text = $"{playerHealth.CurrentHealth:F0}/{playerHealth.maxHealth:F0}";
+
+                if (lowHealthWarningImage != null)
+                    lowHealthWarningImage.enabled = !playerHealth.IsDead && playerHealth.HealthPercent <= lowHealthThreshold;
+            }
+            else if (lowHealthWarningImage != null)
+            {
+                lowHealthWarningImage.enabled = false;
             }
         }
     }

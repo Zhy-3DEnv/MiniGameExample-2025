@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using EggRogue;
 
 /// <summary>
@@ -51,6 +52,8 @@ public class PlayerSpawner : MonoBehaviour
         _spawnedPlayer = Instantiate(playerPrefab, pos, rot);
         _spawnedPlayer.name = "Player";
         _spawnedPlayer.tag = "Player";
+        // 确保玩家生成在 GameScene（附加加载时活动场景可能仍为 PersistentScene）
+        SceneManager.MoveGameObjectToScene(_spawnedPlayer, gameObject.scene);
 
         Transform modelRoot = _spawnedPlayer.transform.Find("ModelRoot");
         if (modelRoot == null)

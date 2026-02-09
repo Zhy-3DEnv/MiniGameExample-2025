@@ -180,13 +180,13 @@ public static class EggRogueBalanceExporter
     private static void ExportLevelCardWeight(string csvPath)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("关卡编号,W_Lv1,W_Lv2,W_Lv3,W_Lv4,W_Lv5");
+        sb.AppendLine("关卡编号,W_Star1,W_Star2,W_Star3,W_Star4,W_Star5");
         var levels = GetSortedLevels();
         var inv = CultureInfo.InvariantCulture;
         foreach (var ld in levels)
         {
             if (ld == null) continue;
-            var w = ld.cardLevelWeights;
+            var w = ld.cardStarWeights;
             if (w == null || w.Length < 5) w = new float[5];
             sb.AppendLine(ld.levelNumber + "," + (w.Length > 0 ? w[0].ToString(inv) : "0") + "," + (w.Length > 1 ? w[1].ToString(inv) : "0") + "," + (w.Length > 2 ? w[2].ToString(inv) : "0") + "," + (w.Length > 3 ? w[3].ToString(inv) : "0") + "," + (w.Length > 4 ? w[4].ToString(inv) : "0"));
         }
@@ -314,12 +314,12 @@ public static class EggRogueBalanceExporter
     }
 
     /// <summary>
-    /// 导出所有 CardData 的等级加成表（方案2）。每张卡输出 5 行（level 1-5）。
+    /// 导出所有 CardData 的星级加成表（方案2）。每张卡输出 5 行（star 1-5）。
     /// </summary>
     private static void ExportCards(string csvPath)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("cardTypeId,level,卡片名称,描述,伤害加成,攻速加成,生命加成,移速加成,子弹速度加成,攻击范围加成,拾取范围加成");
+        sb.AppendLine("cardTypeId,star,卡片名称,描述,伤害加成,攻速加成,生命加成,移速加成,子弹速度加成,攻击范围加成,拾取范围加成");
 
         var cards = new List<CardData>();
         var db = AssetDatabase.LoadAssetAtPath<CardDatabase>("Assets/EggRogue/Configs/CardDatabase.asset");
@@ -344,17 +344,17 @@ public static class EggRogueBalanceExporter
             string name = Escape(c.cardName);
             string desc = Escape(c.description);
 
-            var bonuses = c.levelBonuses;
+            var bonuses = c.starBonuses;
             if (bonuses == null || bonuses.Length < 5)
-                bonuses = new CardLevelBonus[5];
+                bonuses = new CardStarBonus[5];
 
-            for (int lv = 1; lv <= 5; lv++)
+            for (int star = 1; star <= 5; star++)
             {
-                int idx = lv - 1;
+                int idx = star - 1;
                 var b = idx < bonuses.Length ? bonuses[idx] : default;
                 string line =
                     ctId + "," +
-                    lv + "," +
+                    star + "," +
                     name + "," +
                     desc + "," +
                     b.damageBonus.ToString(inv) + "," +

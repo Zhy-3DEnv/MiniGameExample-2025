@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.InputSystem;
 using System.Collections.Generic;
 using EggRogue;
 
@@ -21,10 +20,6 @@ public class CardSelectionPanel : BaseUIPanel
     [Header("卡片数据库")]
     [Tooltip("卡片数据库（ScriptableObject）")]
     public CardDatabase cardDatabase;
-
-    [Header("选卡后进入商店")]
-    [Tooltip("选卡后显示的「继续」按钮，点击进入商店")]
-    public Button nextLevelButton;
 
     [Header("选择次数显示")]
     [Tooltip("显示可选次数，如 2/4（已选/总额）")]
@@ -59,13 +54,6 @@ public class CardSelectionPanel : BaseUIPanel
             }
         }
 
-        if (nextLevelButton != null)
-        {
-            nextLevelButton.onClick.RemoveAllListeners();
-            nextLevelButton.onClick.AddListener(OnContinueClicked);
-            nextLevelButton.gameObject.SetActive(false);
-        }
-
         if (rerollButton != null)
         {
             rerollButton.onClick.RemoveAllListeners();
@@ -97,8 +85,13 @@ public class CardSelectionPanel : BaseUIPanel
         RefreshCardDisplay();
         RefreshSelectedVisibility();
         RefreshRerollButton();
-        RefreshContinueButton();
         RefreshSelectionCountText();
+
+        if (totalPicks <= 0)
+        {
+            GoToShop();
+            return;
+        }
         Show();
     }
 
@@ -158,20 +151,6 @@ public class CardSelectionPanel : BaseUIPanel
         }
     }
 
-    private void RefreshContinueButton()
-    {
-        if (nextLevelButton == null) return;
-        bool canContinue = selectedCount >= totalPicks;
-        nextLevelButton.gameObject.SetActive(canContinue);
-        if (canContinue)
-        {
-            nextLevelButton.interactable = true;
-            var btnText = nextLevelButton.GetComponentInChildren<Text>();
-            if (btnText != null)
-                btnText.text = selectedCount > 0 ? "继续" : "继续";
-        }
-    }
-
     private void RefreshSelectionCountText()
     {
         if (selectionCountText != null)
@@ -188,7 +167,7 @@ public class CardSelectionPanel : BaseUIPanel
         var text = rerollButton.GetComponentInChildren<Text>();
         if (text != null)
             text.text = $"随机 ({price}金币)";
-        rerollButton.interactable = selectedCount == 0 && GoldManager.Instance != null && GoldManager.Instance.Gold >= price;
+        rerollButton.interactable = selectedCount < totalPicks && GoldManager.Instance != null && GoldManager.Instance.Gold >= price;
     }
 
     private int GetCurrentRerollPrice()
@@ -202,7 +181,7 @@ public class CardSelectionPanel : BaseUIPanel
             return;
 
         CardData card = offer.card;
-        int level = offer.level;
+        int star = offer.star;
         Transform btnTransform = cardButtons[index].transform;
 
         Image icon = btnTransform.Find("Icon")?.GetComponent<Image>();
@@ -212,9 +191,9 @@ public class CardSelectionPanel : BaseUIPanel
         if (icon != null)
             icon.sprite = card.icon;
         if (nameText != null)
-            nameText.text = $"{card.cardName} Lv{level}";
+            nameText.text = $"{card.cardName} ★{star}";
         if (descText != null)
-            descText.text = card.GetDescriptionForLevel(level);
+            descText.text = card.GetDescriptionForStar(star);
     }
 
     private void OnCardSelected(int index)
@@ -233,33 +212,25 @@ public class CardSelectionPanel : BaseUIPanel
 
         if (CardManager.Instance != null)
         {
-            CardManager.Instance.ApplyCard(selectedOffer.card, selectedOffer.level);
+            CardManager.Instance.ApplyCard(selectedOffer.card, selectedOffer.star);
         }
         else
         {
             Debug.LogWarning("CardSelectionPanel: 未找到 CardManager.Instance，卡片加成未能应用到角色。");
         }
 
-        Debug.Log($"CardSelectionPanel: 玩家选择了卡片 - {selectedOffer.card.cardName} Lv{selectedOffer.level} ({selectedCount}/{totalPicks})");
+        Debug.Log($"CardSelectionPanel: 玩家选择了卡片 - {selectedOffer.card.cardName} ★{selectedOffer.star} ({selectedCount}/{totalPicks})");
 
-        // 隐藏已选中的卡片
         RefreshSelectedVisibility();
         RefreshRerollButton();
-        RefreshContinueButton();
         RefreshSelectionCountText();
 
-        // 当卡池空了但还有选择次数时，自动补充新卡片
-        if (selectedCount < totalPicks && AreAllSlotsSelected())
-            RefillCards();
-    }
-
-    private bool AreAllSlotsSelected()
-    {
-        for (int i = 0; i < selectedIndices.Length && i < cardButtons.Length; i++)
+        if (selectedCount >= totalPicks)
         {
-            if (!selectedIndices[i]) return false;
+            GoToShop();
+            return;
         }
-        return true;
+        RefillCards();
     }
 
     private void RefillCards()
@@ -272,13 +243,12 @@ public class CardSelectionPanel : BaseUIPanel
         RefreshCardDisplay();
         RefreshSelectedVisibility();
         RefreshRerollButton();
-        RefreshContinueButton();
         RefreshSelectionCountText();
     }
 
     private void OnRerollClicked()
     {
-        if (selectedCount > 0) return;
+        if (selectedCount >= totalPicks) return;
         int price = GetCurrentRerollPrice();
         if (GoldManager.Instance == null || !GoldManager.Instance.SpendGold(price))
             return;
@@ -290,14 +260,8 @@ public class CardSelectionPanel : BaseUIPanel
         RefreshRerollButton();
     }
 
-    /// <summary>
-    /// 玩家点击「继续」后进入商店，再在商店中点击「继续」进入下一关。
-    /// </summary>
-    private void OnContinueClicked()
+    private void GoToShop()
     {
-        if (selectedCount < totalPicks)
-            return;
-
         Hide();
         if (UIManager.Instance != null)
             UIManager.Instance.ShowShop();
@@ -308,15 +272,6 @@ public class CardSelectionPanel : BaseUIPanel
     private void Update()
     {
         RefreshRerollButton();
-        // 选够卡后按 Enter 进入商店
-        if (IsVisible() && selectedCount >= totalPicks)
-        {
-            Keyboard keyboard = Keyboard.current;
-            if (keyboard != null && (keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame))
-            {
-                OnContinueClicked();
-            }
-        }
     }
 
     protected override void OnShow()
@@ -338,15 +293,6 @@ public class CardSelectionPanel : BaseUIPanel
                 cardButtons[i].gameObject.SetActive(true);
                 cardButtons[i].interactable = true;
             }
-        }
-
-        if (nextLevelButton != null)
-        {
-            nextLevelButton.gameObject.SetActive(false);
-            nextLevelButton.interactable = false;
-            var btnText = nextLevelButton.GetComponentInChildren<Text>();
-            if (btnText != null)
-                btnText.text = "继续";
         }
 
         RefreshSelectionCountText();

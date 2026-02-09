@@ -1,13 +1,14 @@
 using UnityEngine;
 using UnityEngine.Events;
-using EggRogue;
 
-/// <summary>
-/// 金币管理器 - 委托 PlayerRunState 存储，保留事件与双倍拾取逻辑。
-/// </summary>
-public class GoldManager : MonoBehaviour
+namespace EggRogue
 {
-    private static GoldManager _instance;
+    /// <summary>
+    /// 金币管理器 - 委托 PlayerRunState 存储，保留事件与双倍拾取逻辑。
+    /// </summary>
+    public class GoldManager : MonoBehaviour
+    {
+        private static GoldManager _instance;
     public static GoldManager Instance => _instance;
 
     [Header("事件")]
@@ -127,4 +128,5 @@ public class GoldManager : MonoBehaviour
     {
         OnGoldChanged?.Invoke(Gold);
     }
+}
 }

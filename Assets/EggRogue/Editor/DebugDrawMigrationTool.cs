@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+#pragma warning disable CS0618 // 迁移工具需要引用旧类型以查找并移除
 using UnityEditor;
 using UnityEngine;
 using EggRogue;

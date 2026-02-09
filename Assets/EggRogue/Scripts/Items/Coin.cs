@@ -1,4 +1,5 @@
 using UnityEngine;
+using EggRogue;
 
 /// <summary>
 /// 金币可收集物 - 根据 CharacterStats.CurrentPickupRange 进行距离检测，玩家在范围内自动收集。
@@ -44,7 +45,7 @@ public class Coin : MonoBehaviour
 
     private void OnEnable()
     {
-        if (debugLog || DebugMode) Debug.Log("[Coin] OnEnable 被调用");
+        // if (debugLog || DebugMode) Debug.Log("[Coin] OnEnable 被调用");
     }
 
     private void Update()

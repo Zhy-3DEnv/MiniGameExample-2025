@@ -31,11 +31,11 @@ MonoBehaviour:
   spawnEndTime: 0
   levelDuration: 60
   victoryRewardGold: 30
-  cardLevelWeights:
-  - 10
-  - 4
-  - 2
-  - 1
+  cardStarWeights:
+  - 0.3
+  - 0.3
+  - 0.2
+  - 0.2
   - 0
   enemyHealthMultiplier: 3.5
   enemyMoveSpeedMultiplier: 1.2

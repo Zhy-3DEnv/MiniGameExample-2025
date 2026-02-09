@@ -161,18 +161,18 @@ public class CharacterStats : MonoBehaviour
     }
 
     /// <summary>
-    /// 应用卡片加成（CardManager 调用）。按等级加成表取值并应用。
+    /// 应用卡片加成（CardManager 调用）。按星级加成表取值并应用。
     /// </summary>
-    public void ApplyCardBonus(CardData card, int level)
+    public void ApplyCardBonus(CardData card, int star)
     {
         if (card == null) return;
-        ApplyCardBonus(card.GetBonusForLevel(level));
+        ApplyCardBonus(card.GetBonusForStar(star));
     }
 
     /// <summary>
-    /// 应用卡片等级加成（内部使用）。
+    /// 应用卡片星级加成（内部使用）。
     /// </summary>
-    public void ApplyCardBonus(CardLevelBonus bonus)
+    public void ApplyCardBonus(CardStarBonus bonus)
     {
         float oldDamage = CurrentDamage;
         float oldFireRate = CurrentFireRate;
@@ -190,7 +190,7 @@ public class CharacterStats : MonoBehaviour
         CurrentPickupRange += bonus.pickupRangeBonus;
 
         Debug.Log(
-            $"CharacterStats: ApplyCardBonus Lv{bonus.level} " +
+            $"CharacterStats: ApplyCardBonus ★{bonus.star} " +
             $"Damage {oldDamage}->{CurrentDamage}, FireRate {oldFireRate}->{CurrentFireRate}, " +
             $"MaxHealth {oldMaxHealth}->{CurrentMaxHealth}, MoveSpeed {oldMoveSpeed}->{CurrentMoveSpeed}, " +
             $"BulletSpeed {oldBulletSpeed}->{CurrentBulletSpeed}, AttackRange {oldAttackRange}->{CurrentAttackRange}");

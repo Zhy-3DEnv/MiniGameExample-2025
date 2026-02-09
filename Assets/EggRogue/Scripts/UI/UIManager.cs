@@ -71,16 +71,16 @@ public class UIManager : MonoBehaviour
         }
 
         _instance = this;
-        DontDestroyOnLoad(rootGO);
-
+        // 不在此处调用 DontDestroyOnLoad，改由 PersistentBootstrap 统一处理，避免触发 Unity 内部断言
         if (loadingOverlayPanel == null)
             loadingOverlayPanel = GetComponent<EggRogue.LoadingOverlayPanel>();
-        if (loadingOverlayPanel == null)
-            loadingOverlayPanel = gameObject.AddComponent<EggRogue.LoadingOverlayPanel>();
     }
 
     private void Start()
     {
+        if (loadingOverlayPanel == null)
+            loadingOverlayPanel = gameObject.AddComponent<EggRogue.LoadingOverlayPanel>();
+
         LevelManager.OnGameClear += OnGameClear;
         ShowMainMenu();
     }

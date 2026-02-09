@@ -36,13 +36,13 @@ MonoBehaviour:
   randomOffsetRadius: 2
   spawnStartTime: 0
   spawnEndTime: 0
-  levelDuration: 25
+  levelDuration: 30
   victoryRewardGold: 4
-  cardLevelWeights:
-  - 10
-  - 4
-  - 2
-  - 1
+  cardStarWeights:
+  - 0.7
+  - 0.3
+  - 0
+  - 0
   - 0
   enemyHealthMultiplier: 1.25
   enemyMoveSpeedMultiplier: 1.02

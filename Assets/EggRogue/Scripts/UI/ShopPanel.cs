@@ -56,6 +56,8 @@ public class ShopPanel : BaseUIPanel
     {
         public Image icon;
         public Text nameText;
+        [Tooltip("功能描述/数值（道具：效果说明；武器：伤害+攻速），可选")]
+        public Text descriptionText;
         public Text priceText;
         public Button buyButton;
         public Button lockButton;
@@ -93,9 +95,10 @@ public class ShopPanel : BaseUIPanel
             var slotGO = Instantiate(itemSlotPrefab, itemSlotsContainer);
             slotGO.name = $"ItemSlot_{i}";
 
-            // 约定结构：Icon, Name, Price, BuyButton, LockButton（可选）
+            // 约定结构：Icon, Name, Description（可选）, Price, BuyButton, LockButton
             var icon = slotGO.transform.Find("Icon")?.GetComponent<Image>();
             var nameText = slotGO.transform.Find("Name")?.GetComponent<Text>();
+            var descriptionText = slotGO.transform.Find("Description")?.GetComponent<Text>();
             var priceText = slotGO.transform.Find("Price")?.GetComponent<Text>();
             var buyButton = slotGO.transform.Find("BuyButton")?.GetComponent<Button>();
             var lockButton = slotGO.transform.Find("LockButton")?.GetComponent<Button>();
@@ -104,6 +107,7 @@ public class ShopPanel : BaseUIPanel
             {
                 icon = icon,
                 nameText = nameText,
+                descriptionText = descriptionText,
                 priceText = priceText,
                 buyButton = buyButton,
                 lockButton = lockButton
@@ -253,6 +257,7 @@ public class ShopPanel : BaseUIPanel
             {
                 if (slot.icon != null) { slot.icon.enabled = false; slot.icon.sprite = null; }
                 if (slot.nameText != null) slot.nameText.text = "-";
+                if (slot.descriptionText != null) { slot.descriptionText.text = ""; slot.descriptionText.gameObject.SetActive(false); }
                 if (slot.priceText != null) slot.priceText.text = "";
                 if (slot.buyButton != null)
                 {
@@ -271,6 +276,11 @@ public class ShopPanel : BaseUIPanel
             }
             if (slot.nameText != null)
                 slot.nameText.text = item.DisplayName;
+            if (slot.descriptionText != null)
+            {
+                slot.descriptionText.text = item.GetDescriptionOrStats();
+                slot.descriptionText.gameObject.SetActive(!string.IsNullOrEmpty(slot.descriptionText.text));
+            }
             bool canBuy = gold >= item.Price;
 
             if (slot.priceText != null)

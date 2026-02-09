@@ -21,7 +21,6 @@ namespace EggRogue
                 return;
             }
             _instance = this;
-            DontDestroyOnLoad(root);
         }
 
         private void OnDestroy()

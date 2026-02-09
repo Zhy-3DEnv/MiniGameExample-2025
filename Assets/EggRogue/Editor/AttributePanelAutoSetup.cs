@@ -146,229 +146,120 @@ public static class CharacterInfoPanelAutoSetup
                 return fieldName;
         }
     }
-}
 
-/// <summary>
-/// 旧版 Text 自动生成与绑定工具：
-/// - 仍然使用 CharacterInfoPanel 上的旧字段（damageText / fireRateText ...）
-/// - 根据 CharacterData 中存在的基础属性，自动在当前面板下创建 Text，并写入到对应引用
-/// - 适合你继续使用“旧版模式”，但不想手动创建和拖引用
-/// </summary>
-public static class CharacterInfoPanelLegacyTextSetup
-{
-    [MenuItem("EggRogue/Attribute Panel/一键生成旧版 Text 并自动绑定")]
-    private static void GenerateLegacyTexts()
+    /// <summary>
+    /// 为 CharacterInfoPanel 添加道具区（PurchasedItems 形式）与道具说明弹窗
+    /// </summary>
+    [MenuItem("EggRogue/Attribute Panel/添加道具区与说明弹窗（PurchasedItems 形式）")]
+    private static void AddItemsSectionAndDescriptionPopup()
     {
         GameObject go = Selection.activeGameObject;
         if (go == null)
         {
-            EditorUtility.DisplayDialog("CharacterInfoPanel 旧版 Text 自动生成",
-                "请先在层级（Hierarchy）中选中一个包含 CharacterInfoPanel 组件的对象。", "确定");
+            EditorUtility.DisplayDialog("CharacterInfoPanel 道具区",
+                "请先在层级（Hierarchy）中选中包含 CharacterInfoPanel 的对象。", "确定");
             return;
         }
 
         CharacterInfoPanel panel = go.GetComponent<CharacterInfoPanel>();
         if (panel == null)
         {
-            EditorUtility.DisplayDialog("CharacterInfoPanel 旧版 Text 自动生成",
-                "当前选中的对象上没有 CharacterInfoPanel 组件。\n\n请选中包含 CharacterInfoPanel 的 UI 根节点再执行此命令。", "确定");
+            EditorUtility.DisplayDialog("CharacterInfoPanel 道具区",
+                "当前选中的对象上没有 CharacterInfoPanel 组件。", "确定");
             return;
         }
 
-        CharacterStats stats = Object.FindObjectOfType<CharacterStats>();
-        if (stats == null || stats.characterData == null)
+        Undo.RecordObject(panel, "Add Items Section");
+
+        // 1. 道具区容器
+        Transform itemsContainer = panel.transform.Find("ItemsContainer");
+        if (itemsContainer == null)
         {
-            EditorUtility.DisplayDialog("CharacterInfoPanel 旧版 Text 自动生成",
-                "场景中未找到 CharacterStats，或 CharacterStats 的 characterData 未设置。\n\n" +
-                "请确保：\n- 场景中存在角色对象并挂载 CharacterStats\n- 且 CharacterStats.characterData 已正确指定。",
-                "确定");
-            return;
+            var goContainer = new GameObject("ItemsContainer", typeof(RectTransform), typeof(GridLayoutGroup), typeof(ContentSizeFitter));
+            Undo.RegisterCreatedObjectUndo(goContainer, "Create ItemsContainer");
+            goContainer.transform.SetParent(panel.transform, false);
+
+            var rt = goContainer.GetComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0f, 0f);
+            rt.anchorMax = new Vector2(1f, 0f);
+            rt.pivot = new Vector2(0.5f, 0f);
+            rt.sizeDelta = new Vector2(0, 120);
+            rt.anchoredPosition = new Vector2(0, 20);
+
+            var grid = goContainer.GetComponent<GridLayoutGroup>();
+            grid.cellSize = new Vector2(44, 44);
+            grid.spacing = new Vector2(6, 6);
+            grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            grid.constraintCount = 5;
+            grid.childAlignment = TextAnchor.UpperLeft;
+
+            var fitter = goContainer.GetComponent<ContentSizeFitter>();
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+
+            itemsContainer = goContainer.transform;
         }
+        panel.itemsContainer = itemsContainer;
 
-        // 记录 Undo，方便撤销
-        Undo.RecordObject(panel, "Setup CharacterInfoPanel Legacy Texts");
-
-        // 内部辅助：确保有 AttributePanelContainers 作为 Text 的父节点（保留旧名以兼容场景）
-        Transform EnsureContainer()
+        // 2. 道具槽预制体（PurchasedItems）
+        if (panel.itemSlotPrefab == null)
         {
-            Transform container = panel.transform.Find("AttributePanelContainers");
-            if (container == null)
-            {
-                GameObject goContainer = new GameObject("AttributePanelContainers", typeof(RectTransform), typeof(UnityEngine.UI.VerticalLayoutGroup));
-                Undo.RegisterCreatedObjectUndo(goContainer, "Create AttributePanelContainers");
-
-                goContainer.transform.SetParent(panel.transform, false);
-                goContainer.transform.localScale = Vector3.one;
-
-                RectTransform rect = goContainer.GetComponent<RectTransform>();
-                rect.anchorMin = new Vector2(0f, 0f);
-                rect.anchorMax = new Vector2(1f, 1f);
-                rect.offsetMin = new Vector2(20f, 20f);
-                rect.offsetMax = new Vector2(-20f, -80f); // 留出顶部/底部一点空白
-
-                var layout = goContainer.GetComponent<UnityEngine.UI.VerticalLayoutGroup>();
-                layout.childAlignment = TextAnchor.UpperLeft;
-                layout.childForceExpandHeight = false;
-                layout.childForceExpandWidth = true;
-                layout.spacing = 5f;
-
-                container = goContainer.transform;
-            }
-
-            // 顺便把 CharacterInfoPanel 上的 attributesContainer 指向它（方便你如果之后用新模式）
-            if (panel.attributesContainer == null)
-            {
-                panel.attributesContainer = container;
-            }
-
-            return container;
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/EggRogue/UI/PurchasedItems.prefab");
+            if (prefab != null)
+                panel.itemSlotPrefab = prefab;
         }
-
-        Transform containerTransform = EnsureContainer();
-
-        // 内部辅助：如果某个 Text 引用为空，则按名字在子节点中查找，没有就创建一个
-        Text EnsureText(ref Text field, string goName, string defaultText)
-        {
-            if (field != null && field.gameObject != null)
-            {
-                return field;
-            }
-
-            // 先尝试在容器子节点中查找
-            Transform found = containerTransform.Find(goName);
-            Text textComp = found != null ? found.GetComponent<Text>() : null;
-
-            if (textComp == null)
-            {
-                // 创建新的 Text 对象
-                GameObject textGO = new GameObject(goName, typeof(RectTransform), typeof(Text));
-                Undo.RegisterCreatedObjectUndo(textGO, "Create Attribute Text");
-
-                textGO.transform.SetParent(containerTransform, false);
-                textGO.transform.localScale = Vector3.one;
-
-                RectTransform rect = textGO.GetComponent<RectTransform>();
-                rect.sizeDelta = new Vector2(300, 30);
-
-                textComp = textGO.GetComponent<Text>();
-                textComp.text = defaultText;
-                textComp.alignment = TextAnchor.MiddleLeft;
-                textComp.font = EggRogue.GameFont.GetDefault();
-                textComp.color = Color.white;
-            }
-
-            field = textComp;
-            return textComp;
-        }
-
-        // 内部辅助：如果关闭按钮为空，则创建一个简单的 CloseButton，并绑定到 panel.closeButton
-        void EnsureCloseButton()
-        {
-            if (panel.closeButton != null && panel.closeButton.gameObject != null)
-                return;
-
-            // 优先查找是否已有 CloseButton 物体
-            Transform found = panel.transform.Find("CloseButton");
-            Button btn = found != null ? found.GetComponent<Button>() : null;
-
-            if (btn == null)
-            {
-                // 创建新的 Button（Image + Button + Text）
-                GameObject goBtn = new GameObject("CloseButton", typeof(RectTransform), typeof(UnityEngine.UI.Image), typeof(Button));
-                Undo.RegisterCreatedObjectUndo(goBtn, "Create Close Button");
-
-                goBtn.transform.SetParent(panel.transform, false);
-                goBtn.transform.localScale = Vector3.one;
-
-                RectTransform rect = goBtn.GetComponent<RectTransform>();
-                rect.sizeDelta = new Vector2(100, 40);
-                rect.anchorMin = new Vector2(1f, 1f);
-                rect.anchorMax = new Vector2(1f, 1f);
-                rect.pivot = new Vector2(1f, 1f);
-                rect.anchoredPosition = new Vector2(-20f, -20f); // 面板右上角稍微往内一点
-
-                var img = goBtn.GetComponent<UnityEngine.UI.Image>();
-                img.color = new Color(0.2f, 0.2f, 0.2f, 0.8f);
-
-                btn = goBtn.GetComponent<Button>();
-
-                // 在 Button 下创建一个 Text 作为按钮文字
-                GameObject textGO = new GameObject("Text", typeof(RectTransform), typeof(Text));
-                Undo.RegisterCreatedObjectUndo(textGO, "Create Close Button Text");
-
-                textGO.transform.SetParent(goBtn.transform, false);
-                RectTransform textRect = textGO.GetComponent<RectTransform>();
-                textRect.anchorMin = Vector2.zero;
-                textRect.anchorMax = Vector2.one;
-                textRect.offsetMin = Vector2.zero;
-                textRect.offsetMax = Vector2.zero;
-
-                Text textComp = textGO.GetComponent<Text>();
-                textComp.text = "关闭";
-                textComp.alignment = TextAnchor.MiddleCenter;
-                textComp.color = Color.white;
-                textComp.font = EggRogue.GameFont.GetDefault();
-                textComp.resizeTextForBestFit = true;
-            }
-
-            panel.closeButton = btn;
-        }
-
-        // 这里根据当前 CharacterData 中“已存在”的基础属性，决定生成哪些 Text
-        var data = stats.characterData;
-
-        // 伤害
-        if (HasField(data, "baseDamage"))
-        {
-            EnsureText(ref panel.damageText, "DamageText", "伤害: 0");
-        }
-
-        // 攻击速度
-        if (HasField(data, "baseFireRate"))
-        {
-            EnsureText(ref panel.fireRateText, "FireRateText", "攻击速度: 0");
-        }
-
-        // 最大生命值
-        if (HasField(data, "baseMaxHealth"))
-        {
-            EnsureText(ref panel.maxHealthText, "MaxHealthText", "最大生命值: 0");
-        }
-
-        // 移动速度
-        if (HasField(data, "baseMoveSpeed"))
-        {
-            EnsureText(ref panel.moveSpeedText, "MoveSpeedText", "移动速度: 0");
-        }
-
-        // 子弹速度
-        if (HasField(data, "baseBulletSpeed"))
-        {
-            EnsureText(ref panel.bulletSpeedText, "BulletSpeedText", "子弹速度: 0");
-        }
-
-        // 攻击范围
-        if (HasField(data, "baseAttackRange"))
-        {
-            EnsureText(ref panel.attackRangeText, "AttackRangeText", "攻击范围: 0");
-        }
-
-        // 关闭按钮
-        EnsureCloseButton();
 
         EditorUtility.SetDirty(panel);
         EditorSceneManager.MarkSceneDirty(panel.gameObject.scene);
 
-        EditorUtility.DisplayDialog("CharacterInfoPanel 旧版 Text 自动生成",
-            "已根据 CharacterData 中存在的基础属性，在当前面板下自动创建并绑定旧版 Text。\n\n" +
-            "你可以在场景中调整这些 Text 的位置与样式，运行时 CharacterInfoPanel 会自动填充值。", "确定");
+        EditorUtility.DisplayDialog("CharacterInfoPanel 道具区",
+            "已添加道具区。\n\n" +
+            "请确保已设置 itemSlotPrefab（PurchasedItems.prefab）。点击道具图标时会在图标旁显示说明。", "确定");
     }
 
-    private static bool HasField(EggRogue.CharacterData data, string fieldName)
+    /// <summary>
+    /// 从 ItemDatabase 加载前 N 个道具到 editorPreviewItems，用于编辑状态下的布局预览
+    /// </summary>
+    [MenuItem("EggRogue/Attribute Panel/加载预览道具（编辑状态用）")]
+    private static void LoadPreviewItems()
     {
-        var type = data.GetType();
-        var field = type.GetField(fieldName, BindingFlags.Public | BindingFlags.Instance);
-        return field != null;
+        GameObject go = Selection.activeGameObject;
+        if (go == null)
+        {
+            EditorUtility.DisplayDialog("加载预览道具",
+                "请先选中包含 CharacterInfoPanel 的对象。", "确定");
+            return;
+        }
+
+        CharacterInfoPanel panel = go.GetComponent<CharacterInfoPanel>();
+        if (panel == null)
+        {
+            EditorUtility.DisplayDialog("加载预览道具",
+                "当前选中的对象上没有 CharacterInfoPanel 组件。", "确定");
+            return;
+        }
+
+        var db = AssetDatabase.LoadAssetAtPath<EggRogue.ItemDatabase>("Assets/EggRogue/Configs/ItemDatabase.asset");
+        if (db == null || db.items == null || db.items.Length == 0)
+        {
+            EditorUtility.DisplayDialog("加载预览道具",
+                "未找到 ItemDatabase 或其中没有道具数据。", "确定");
+            return;
+        }
+
+        int count = Mathf.Min(8, db.items.Length);
+        var preview = new EggRogue.ItemData[count];
+        for (int i = 0; i < count; i++)
+            preview[i] = db.items[i];
+
+        Undo.RecordObject(panel, "Load Preview Items");
+        panel.editorPreviewItems = preview;
+        EditorUtility.SetDirty(panel);
+        EditorSceneManager.MarkSceneDirty(panel.gameObject.scene);
+
+        EditorUtility.DisplayDialog("加载预览道具",
+            $"已加载 {count} 个道具到 editorPreviewItems。\n\n" +
+            "编辑状态下将显示这些道具用于调整布局，运行时会显示真实已购买道具。", "确定");
     }
 }
 #endif
