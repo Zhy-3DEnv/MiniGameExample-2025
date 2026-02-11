@@ -16,16 +16,18 @@ MonoBehaviour:
   weaponName: S12K
   icon: {fileID: 21300000, guid: 61bb90c29923ae045a6dddf5eabfc8c8, type: 3}
   weaponType: 0
-  level: 1
+  level: 5
   basePrice: 50
   damage: 10
   fireRate: 1.2
-  attackRange: 10
+  attackRange: 15
   bulletSpeed: 20
   bulletLifeTime: 5
   bulletPrefab: {fileID: 2903440007014586367, guid: 9c64ee27a38bee244af0d4e6c3afd790,
     type: 3}
   meleeHitPrefab: {fileID: 0}
+  meleeSwingClip: {fileID: 0}
+  meleeSwingVolume: 1
   modelPrefab: {fileID: 4889238492278348137, guid: 8f60c12a16283844aa1da92ca1dca996,
     type: 3}
   nextLevelWeapon: {fileID: 0}

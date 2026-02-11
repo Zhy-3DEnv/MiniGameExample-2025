@@ -144,6 +144,7 @@ public class UIManager : MonoBehaviour
         {
             Debug.LogWarning("UIManager: mainMenuPanel 未设置，请在 Inspector 中拖入引用。");
         }
+        StartCoroutine(RefreshButtonClickSfxNextFrame());
     }
 
     /// <summary>
@@ -164,6 +165,7 @@ public class UIManager : MonoBehaviour
                 GameManager.Instance.LoadGameScene(1);
             }
         }
+        StartCoroutine(RefreshButtonClickSfxNextFrame());
     }
 
     [Header("关卡过渡设置")]
@@ -238,6 +240,7 @@ public class UIManager : MonoBehaviour
         {
             Debug.LogWarning("UIManager: gameHudPanel 未设置，请在 Inspector 中拖入引用。");
         }
+        StartCoroutine(RefreshButtonClickSfxNextFrame());
     }
 
     /// <summary>
@@ -259,6 +262,7 @@ public class UIManager : MonoBehaviour
             // 如果没有结算界面，直接进入卡片选择
             ShowCardSelection();
         }
+        StartCoroutine(RefreshButtonClickSfxNextFrame());
     }
 
     /// <summary>
@@ -279,6 +283,7 @@ public class UIManager : MonoBehaviour
             if (GameManager.Instance != null)
                 GameManager.Instance.ReturnToMenu();
         }
+        StartCoroutine(RefreshButtonClickSfxNextFrame());
     }
 
     /// <summary>
@@ -300,6 +305,7 @@ public class UIManager : MonoBehaviour
             if (GameManager.Instance != null)
                 GameManager.Instance.ReturnToMenu();
         }
+        StartCoroutine(RefreshButtonClickSfxNextFrame());
     }
 
     /// <summary>
@@ -320,6 +326,7 @@ public class UIManager : MonoBehaviour
             if (GameManager.Instance != null)
                 GameManager.Instance.LoadGameScene(1);
         }
+        StartCoroutine(RefreshButtonClickSfxNextFrame());
     }
 
     /// <summary>
@@ -346,6 +353,7 @@ public class UIManager : MonoBehaviour
             if (LevelManager.Instance != null)
                 LevelManager.Instance.NextLevel();
         }
+        StartCoroutine(RefreshButtonClickSfxNextFrame());
     }
 
     /// <summary>
@@ -362,6 +370,7 @@ public class UIManager : MonoBehaviour
         {
             Debug.LogWarning("UIManager: cardSelectionPanel 未设置，请在 Inspector 中拖入引用。");
         }
+        StartCoroutine(RefreshButtonClickSfxNextFrame());
     }
 
     /// <summary>
@@ -377,6 +386,17 @@ public class UIManager : MonoBehaviour
         {
             Debug.LogWarning("UIManager: settingsPanel 未设置，请在 Inspector 中拖入引用。");
         }
+        StartCoroutine(RefreshButtonClickSfxNextFrame());
+    }
+
+    /// <summary>
+    /// 延迟一帧后刷新全局按钮点击音效绑定（Panel 的 RemoveAllListeners 会移除音效，需在 Panel 完成 Setup 后重新绑定）。
+    /// </summary>
+    private System.Collections.IEnumerator RefreshButtonClickSfxNextFrame()
+    {
+        yield return null;
+        if (EggRogue.GlobalUIButtonClickSfx.Instance != null)
+            EggRogue.GlobalUIButtonClickSfx.Instance.RefreshBindings();
     }
 
     /// <summary>

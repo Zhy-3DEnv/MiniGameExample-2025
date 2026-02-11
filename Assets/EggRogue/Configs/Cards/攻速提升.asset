@@ -14,53 +14,52 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardTypeId: "\u653B\u901F\u63D0\u5347"
   cardName: "\u653B\u901F\u63D0\u5347"
-  description: "\u653B\u51FB\u901F\u5EA6 +1"
+  description: 
   icon: {fileID: 21300000, guid: 37fa0ef1188a01e48ac40430817407d4, type: 3}
   starBonuses:
   - star: 1
     damageBonus: 0
-    fireRateBonus: 1
+    fireRateBonus: 0.2
     maxHealthBonus: 0
     moveSpeedBonus: 0
-    bulletSpeedBonus: 0
+    armorPercentBonus: 0
     attackRangeBonus: 0
     pickupRangeBonus: 0
   - star: 2
     damageBonus: 0
-    fireRateBonus: 0
+    fireRateBonus: 0.3
     maxHealthBonus: 0
     moveSpeedBonus: 0
-    bulletSpeedBonus: 0
+    armorPercentBonus: 0
     attackRangeBonus: 0
     pickupRangeBonus: 0
   - star: 3
     damageBonus: 0
-    fireRateBonus: 0
+    fireRateBonus: 0.4
     maxHealthBonus: 0
     moveSpeedBonus: 0
-    bulletSpeedBonus: 0
+    armorPercentBonus: 0
     attackRangeBonus: 0
     pickupRangeBonus: 0
   - star: 4
     damageBonus: 0
-    fireRateBonus: 0
+    fireRateBonus: 0.5
     maxHealthBonus: 0
     moveSpeedBonus: 0
-    bulletSpeedBonus: 0
+    armorPercentBonus: 0
     attackRangeBonus: 0
     pickupRangeBonus: 0
   - star: 5
     damageBonus: 0
-    fireRateBonus: 0
+    fireRateBonus: 0.6
     maxHealthBonus: 0
     moveSpeedBonus: 0
-    bulletSpeedBonus: 0
+    armorPercentBonus: 0
     attackRangeBonus: 0
     pickupRangeBonus: 0
   damageBonus: 0
   fireRateBonus: 1
   maxHealthBonus: 0
   moveSpeedBonus: 0
-  bulletSpeedBonus: 0
   attackRangeBonus: 0
   pickupRangeBonus: 0

@@ -22,7 +22,6 @@ MonoBehaviour:
   baseFireRate: 0.5
   baseMaxHealth: 10
   baseMoveSpeed: 10
-  baseBulletSpeed: 21
   baseAttackRange: 2
   basePickupRange: 1.5
   passiveAbilities:

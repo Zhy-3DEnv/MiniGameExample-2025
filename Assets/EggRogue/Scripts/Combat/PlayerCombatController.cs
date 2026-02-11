@@ -1,4 +1,5 @@
 using UnityEngine;
+using EggRogue;
 
 /// <summary>
 /// 玩家战斗控制器 - 自动瞄准最近的敌人并发射子弹。
@@ -180,8 +181,9 @@ public class PlayerCombatController : MonoBehaviour
         if (bulletPrefab == null || firePoint == null)
             return;
 
-        // 实例化子弹
-        GameObject bullet = Instantiate(bulletPrefab, firePoint.position, Quaternion.identity);
+        // 实例化子弹（挂到 GameScene 的 GameplayRoot 下，避免留在 PersistentScene）
+        Transform bulletParent = GameplayRoot.BulletsParent;
+        GameObject bullet = Instantiate(bulletPrefab, firePoint.position, Quaternion.identity, bulletParent);
 
         // 初始化子弹（设置方向、伤害和速度）
         Projectile projectile = bullet.GetComponent<Projectile>();

@@ -16,15 +16,17 @@ MonoBehaviour:
   weaponName: "\u5C0F\u5200"
   icon: {fileID: 21300000, guid: 86058e92eec2b0d41a6e5716f7a7d12e, type: 3}
   weaponType: 1
-  level: 1
+  level: 5
   basePrice: 40
   damage: 24
-  fireRate: 1.2
-  attackRange: 2
+  fireRate: 1.6
+  attackRange: 2.8
   bulletSpeed: 20
   bulletLifeTime: 5
   bulletPrefab: {fileID: 0}
   meleeHitPrefab: {fileID: 0}
+  meleeSwingClip: {fileID: 8300000, guid: 854e6c21834df2a409f548ab0875d543, type: 3}
+  meleeSwingVolume: 0.5
   modelPrefab: {fileID: 2750633297595489994, guid: f98bb42d0846f9b4b8779dd245443acc,
     type: 3}
   nextLevelWeapon: {fileID: 0}

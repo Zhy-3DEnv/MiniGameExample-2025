@@ -50,7 +50,7 @@ public static class CharacterBatchCreator
         {
             c.characterName = "戈登蛋";
             c.description = "原型：戈登·拉姆齐。暴躁主厨，但你的蛋是可爱版。稳健型，生命与伤害均衡。";
-            SetBaseStats(c, 10f, 2f, 110f, 4.8f, 19f, 9.5f);
+            SetBaseStats(c, 10f, 2f, 110f, 4.8f, 9.5f);
             c.passiveAbilities = new[] { passives[6] }; // Tank 钢铁堡垒
         });
 
@@ -59,7 +59,7 @@ public static class CharacterBatchCreator
         {
             c.characterName = "爱因斯蛋";
             c.description = "原型：爱因斯坦。这名字已经是满分答案。精准远程型，攻击范围与子弹速度提升。";
-            SetBaseStats(c, 11f, 1.6f, 85f, 4.5f, 22f, 12f);
+            SetBaseStats(c, 11f, 1.6f, 85f, 4.5f, 12f);
             c.passiveAbilities = new[] { passives[8] }; // Sniper
         });
 
@@ -68,7 +68,7 @@ public static class CharacterBatchCreator
         {
             c.characterName = "梵高蛋";
             c.description = "原型：梵高。彩色泼溅 = 灵魂附体。创意爆发型，伤害加成提升。";
-            SetBaseStats(c, 10f, 2.2f, 88f, 5.2f, 20f, 10f);
+            SetBaseStats(c, 10f, 2.2f, 88f, 5.2f, 10f);
             c.passiveAbilities = new[] { passives[0] }; // DamageMultiplier
         });
 
@@ -77,7 +77,7 @@ public static class CharacterBatchCreator
         {
             c.characterName = "白求蛋";
             c.description = "原型：白求恩。在中文语境里非常正面、专业。生存型角色，最大生命值提升。";
-            SetBaseStats(c, 9f, 1.8f, 100f, 4.5f, 18f, 9f);
+            SetBaseStats(c, 9f, 1.8f, 100f, 4.5f, 9f);
             c.passiveAbilities = new[] { passives[4] }; // MaxHealthBoost
         });
 
@@ -86,7 +86,7 @@ public static class CharacterBatchCreator
         {
             c.characterName = "阿姆斯蛋";
             c.description = "原型：尼尔·阿姆斯特朗。“蛋的一小步”。机动型角色，移动速度提升。";
-            SetBaseStats(c, 9f, 2f, 82f, 6f, 21f, 10f);
+            SetBaseStats(c, 9f, 2f, 82f, 6f, 10f);
             c.passiveAbilities = new[] { passives[3] }; // MoveSpeedBoost
         });
 
@@ -95,7 +95,7 @@ public static class CharacterBatchCreator
         {
             c.characterName = "福尔摩蛋·蓝";
             c.description = "原型：福尔摩斯。偏英伦警探风。均衡输出型，伤害加成提升。";
-            SetBaseStats(c, 11f, 2f, 95f, 5f, 20f, 10f);
+            SetBaseStats(c, 11f, 2f, 95f, 5f, 10f);
             c.passiveAbilities = new[] { passives[0] }; // DamageMultiplier
         });
 
@@ -104,7 +104,7 @@ public static class CharacterBatchCreator
         {
             c.characterName = "梅林蛋";
             c.description = "原型：亚瑟王传奇·梅林。魔法师里最稳的一个。高伤脆皮型，伤害翻倍但生命减半。";
-            SetBaseStats(c, 14f, 2.2f, 70f, 5.2f, 24f, 11f);
+            SetBaseStats(c, 14f, 2.2f, 70f, 5.2f, 11f);
             c.passiveAbilities = new[] { passives[5] }; // GlassCannon
         });
 
@@ -113,7 +113,7 @@ public static class CharacterBatchCreator
         {
             c.characterName = "袁隆蛋";
             c.description = "原型：袁隆平。非常中国、非常有分量。血牛型角色，最大生命值转化为攻击力。";
-            SetBaseStats(c, 7f, 1.8f, 140f, 4.2f, 17f, 9f);
+            SetBaseStats(c, 7f, 1.8f, 140f, 4.2f, 9f);
             c.passiveAbilities = new[] { passives[1] }; // HealthToDamage
         });
 
@@ -122,7 +122,7 @@ public static class CharacterBatchCreator
         {
             c.characterName = "贝多蛋";
             c.description = "原型：贝多芬。音乐一响就对了。节奏型角色，射速提升。";
-            SetBaseStats(c, 8f, 2.5f, 85f, 5.5f, 20f, 9.5f);
+            SetBaseStats(c, 8f, 2.5f, 85f, 5.5f, 9.5f);
             c.passiveAbilities = new[] { passives[2] }; // FireRateBoost
         });
 
@@ -131,7 +131,7 @@ public static class CharacterBatchCreator
         {
             c.characterName = "柯南蛋";
             c.description = "原型：柯南·道尔 / 名侦探柯南。商业亲和力极强。精准型角色，攻击范围与子弹速度提升。";
-            SetBaseStats(c, 10f, 1.5f, 88f, 4.8f, 23f, 12f);
+            SetBaseStats(c, 10f, 1.5f, 88f, 4.8f, 12f);
             c.passiveAbilities = new[] { passives[8] }; // Sniper
         });
 
@@ -140,7 +140,7 @@ public static class CharacterBatchCreator
         {
             c.characterName = "火焰蛋";
             c.description = "原型：现代消防英雄形象。消防员不太适合真人直指，用英雄 archetype。肉盾型，生命翻倍但移速略降。";
-            SetBaseStats(c, 10f, 1.6f, 105f, 4.8f, 18f, 8.5f);
+            SetBaseStats(c, 10f, 1.6f, 105f, 4.8f, 8.5f);
             c.passiveAbilities = new[] { passives[6] }; // Tank
         });
 
@@ -149,7 +149,7 @@ public static class CharacterBatchCreator
         {
             c.characterName = "伊丽莎蛋";
             c.description = "原型：伊丽莎白公主 / 女王。王冠 + 优雅。优雅生存型，最大生命值提升。";
-            SetBaseStats(c, 9f, 1.9f, 100f, 5f, 19f, 9.5f);
+            SetBaseStats(c, 9f, 1.9f, 100f, 5f, 9.5f);
             c.passiveAbilities = new[] { passives[4] }; // MaxHealthBoost
         });
 
@@ -158,7 +158,7 @@ public static class CharacterBatchCreator
         {
             c.characterName = "杰克蛋";
             c.description = "原型：杰克·斯派洛。海盗蛋，一看就知道是他。近战爆发型，伤害与攻速提升、范围略降。";
-            SetBaseStats(c, 12f, 2.4f, 92f, 5.5f, 20f, 9f);
+            SetBaseStats(c, 12f, 2.4f, 92f, 5.5f, 9f);
             c.passiveAbilities = new[] { passives[7] }; // Berserker
         });
 
@@ -167,7 +167,7 @@ public static class CharacterBatchCreator
         {
             c.characterName = "乔丹蛋";
             c.description = "原型：迈克尔·乔丹。运动员蛋，篮球纹理完美匹配。敏捷型，移速与射速双修。";
-            SetBaseStats(c, 9f, 2.6f, 88f, 6.2f, 21f, 9.5f);
+            SetBaseStats(c, 9f, 2.6f, 88f, 6.2f, 9.5f);
             c.passiveAbilities = new[] { passives[3] }; // MoveSpeedBoost
         });
 
@@ -176,7 +176,7 @@ public static class CharacterBatchCreator
         {
             c.characterName = "莫奈蛋";
             c.description = "原型：莫奈。园丁蛋，花园、自然、色彩，很有文艺气质。生存型，最大生命值提升。";
-            SetBaseStats(c, 8f, 1.8f, 115f, 4.5f, 18f, 9.5f);
+            SetBaseStats(c, 8f, 1.8f, 115f, 4.5f, 9.5f);
             c.passiveAbilities = new[] { passives[4] }; // MaxHealthBoost
         });
 
@@ -185,7 +185,7 @@ public static class CharacterBatchCreator
         {
             c.characterName = "莱特蛋";
             c.description = "原型：莱特兄弟。飞行员蛋，飞行史开端。机动型，移速提升；围巾飘扬。";
-            SetBaseStats(c, 9f, 2f, 80f, 6.2f, 22f, 10f);
+            SetBaseStats(c, 9f, 2f, 80f, 6.2f, 10f);
             c.passiveAbilities = new[] { passives[3] }; // MoveSpeedBoost
         });
 
@@ -194,7 +194,7 @@ public static class CharacterBatchCreator
         {
             c.characterName = "达尔文蛋";
             c.description = "原型：达尔文。恐龙蛋，从蛋开始进化，逻辑闭环。血牛向，生命值转化为攻击力。";
-            SetBaseStats(c, 8f, 1.7f, 130f, 4.5f, 19f, 9f);
+            SetBaseStats(c, 8f, 1.7f, 130f, 4.5f, 9f);
             c.passiveAbilities = new[] { passives[1] }; // HealthToDamage
         });
 
@@ -203,7 +203,7 @@ public static class CharacterBatchCreator
         {
             c.characterName = "爱因蜂蛋";
             c.description = "原型：爱因斯坦（“没有蜜蜂就没有人类”的名言梗）。蜜蜂蛋，偏彩蛋向名字。节奏型，射速提升。";
-            SetBaseStats(c, 8f, 2.6f, 82f, 5.8f, 20f, 9.5f);
+            SetBaseStats(c, 8f, 2.6f, 82f, 5.8f, 9.5f);
             c.passiveAbilities = new[] { passives[2] }; // FireRateBoost
         });
 
@@ -212,7 +212,7 @@ public static class CharacterBatchCreator
         {
             c.characterName = "加菲蛋";
             c.description = "原型：加菲猫。猫咪蛋，超级大众化 IP 气质。爆发型，伤害加成提升。";
-            SetBaseStats(c, 11f, 2.2f, 90f, 4.8f, 20f, 9.5f);
+            SetBaseStats(c, 11f, 2.2f, 90f, 4.8f, 9.5f);
             c.passiveAbilities = new[] { passives[0] }; // DamageMultiplier
         });
 
@@ -221,7 +221,7 @@ public static class CharacterBatchCreator
         {
             c.characterName = "图灵蛋";
             c.description = "原型：艾伦·图灵。机器人蛋，科技感、AI 感都对位。精准型，攻击范围与子弹速度提升。";
-            SetBaseStats(c, 10f, 1.6f, 85f, 4.8f, 24f, 12f);
+            SetBaseStats(c, 10f, 1.6f, 85f, 4.8f, 12f);
             c.passiveAbilities = new[] { passives[8] }; // Sniper
         });
 
@@ -232,13 +232,12 @@ public static class CharacterBatchCreator
         Debug.Log("[CharacterBatchCreator] 蛋蛋职业角色创建完成！20 个角色已按图标文件名绑定 CharacterIcon 文件夹，并已更新 CharacterDatabase。");
     }
 
-    private static void SetBaseStats(CharacterData c, float damage, float fireRate, float maxHealth, float moveSpeed, float bulletSpeed, float attackRange)
+    private static void SetBaseStats(CharacterData c, float damage, float fireRate, float maxHealth, float moveSpeed, float attackRange)
     {
         c.baseDamage = damage;
         c.baseFireRate = fireRate;
         c.baseMaxHealth = maxHealth;
         c.baseMoveSpeed = moveSpeed;
-        c.baseBulletSpeed = bulletSpeed;
         c.baseAttackRange = attackRange;
     }
 
@@ -398,7 +397,6 @@ public static class CharacterBatchCreator
             c.baseFireRate = 2f;
             c.baseMaxHealth = 80f;
             c.baseMoveSpeed = 5f;
-            c.baseBulletSpeed = 20f;
             c.baseAttackRange = 10f;
             c.passiveAbilities = new[] { passives[0] };
         });
@@ -412,7 +410,6 @@ public static class CharacterBatchCreator
             c.baseFireRate = 2f;
             c.baseMaxHealth = 150f;
             c.baseMoveSpeed = 4.5f;
-            c.baseBulletSpeed = 18f;
             c.baseAttackRange = 10f;
             c.passiveAbilities = new[] { passives[1] };
         });
@@ -426,7 +423,6 @@ public static class CharacterBatchCreator
             c.baseFireRate = 3f;
             c.baseMaxHealth = 90f;
             c.baseMoveSpeed = 5.5f;
-            c.baseBulletSpeed = 22f;
             c.baseAttackRange = 9f;
             c.passiveAbilities = new[] { passives[2] };
         });
@@ -440,7 +436,6 @@ public static class CharacterBatchCreator
             c.baseFireRate = 2f;
             c.baseMaxHealth = 85f;
             c.baseMoveSpeed = 7f;
-            c.baseBulletSpeed = 20f;
             c.baseAttackRange = 10f;
             c.passiveAbilities = new[] { passives[3] };
         });
@@ -454,7 +449,6 @@ public static class CharacterBatchCreator
             c.baseFireRate = 1.8f;
             c.baseMaxHealth = 120f;
             c.baseMoveSpeed = 4.5f;
-            c.baseBulletSpeed = 18f;
             c.baseAttackRange = 9f;
             c.passiveAbilities = new[] { passives[4] };
         });
@@ -468,7 +462,6 @@ public static class CharacterBatchCreator
             c.baseFireRate = 2.5f;
             c.baseMaxHealth = 60f;
             c.baseMoveSpeed = 5.5f;
-            c.baseBulletSpeed = 25f;
             c.baseAttackRange = 11f;
             c.passiveAbilities = new[] { passives[5] };
         });
@@ -482,7 +475,6 @@ public static class CharacterBatchCreator
             c.baseFireRate = 1.5f;
             c.baseMaxHealth = 100f;
             c.baseMoveSpeed = 5f;
-            c.baseBulletSpeed = 15f;
             c.baseAttackRange = 8f;
             c.passiveAbilities = new[] { passives[6] };
         });
@@ -496,7 +488,6 @@ public static class CharacterBatchCreator
             c.baseFireRate = 2.5f;
             c.baseMaxHealth = 100f;
             c.baseMoveSpeed = 5.5f;
-            c.baseBulletSpeed = 20f;
             c.baseAttackRange = 12f;
             c.passiveAbilities = new[] { passives[7] };
         });

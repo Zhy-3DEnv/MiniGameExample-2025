@@ -90,7 +90,8 @@ namespace EggRogue
                 case ItemEffectType.ShieldGenerator:
                     return $"受到伤害减少 {item.effectPercent:F0}%";
                 case ItemEffectType.Thorns:
-                    return $"受到攻击时反弹 {item.effectPercent:F0}% 伤害";
+                    // 荆棘甲：受到攻击时反弹伤害，并提供等量护甲减伤（可叠加，上限 80%）
+                    return $"受到攻击时反弹 {item.effectPercent:F0}% 伤害，并获得 {item.effectPercent:F0}% 护甲减伤（可叠加，上限 80%）";
                 case ItemEffectType.IcePack:
                     return $"范围内敌人移速 -{item.effectPercent:F0}%";
                 case ItemEffectType.Burning:

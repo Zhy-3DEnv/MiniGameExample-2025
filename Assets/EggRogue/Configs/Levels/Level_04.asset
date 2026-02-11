@@ -51,6 +51,12 @@ MonoBehaviour:
   - 0
   - 0
   - 0
+  weaponLevelWeights:
+  - 0.5
+  - 0.3
+  - 0.2
+  - 0
+  - 0
   enemyHealthMultiplier: 1.75
   enemyMoveSpeedMultiplier: 1.06
   coinDropMultiplier: 1.09

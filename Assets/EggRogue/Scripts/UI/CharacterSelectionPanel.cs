@@ -420,7 +420,6 @@ public class CharacterSelectionPanel : BaseUIPanel
             sb.AppendLine($"射速: {_selectedCharacter.baseFireRate} 发/秒");
             sb.AppendLine($"生命: {_selectedCharacter.baseMaxHealth}");
             sb.AppendLine($"移速: {_selectedCharacter.baseMoveSpeed}");
-            sb.AppendLine($"子弹速度: {_selectedCharacter.baseBulletSpeed}");
             sb.AppendLine($"攻击范围: {_selectedCharacter.baseAttackRange}");
             baseStatsText.text = sb.ToString();
         }

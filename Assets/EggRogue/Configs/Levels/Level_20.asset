@@ -17,7 +17,21 @@ MonoBehaviour:
   spawnMix:
   - enemyData: {fileID: 11400000, guid: 968433df3a0cc744ab885c9e2996f104, type: 2}
     enemyPrefab: {fileID: 0}
-    spawnWeight: 5
+    spawnWeight: 2
+    maxAlive: 0
+    spawnRateScale: 1
+    spawnTimeStart: 0
+    spawnTimeEnd: 0
+  - enemyData: {fileID: 11400000, guid: 915e5b5149627164fa90ad784b53c3c3, type: 2}
+    enemyPrefab: {fileID: 0}
+    spawnWeight: 1
+    maxAlive: 0
+    spawnRateScale: 1
+    spawnTimeStart: 0
+    spawnTimeEnd: 0
+  - enemyData: {fileID: 11400000, guid: af35571ff4453084f9d1c5ccfda9816c, type: 2}
+    enemyPrefab: {fileID: 0}
+    spawnWeight: 0.5
     maxAlive: 0
     spawnRateScale: 1
     spawnTimeStart: 0
@@ -36,6 +50,12 @@ MonoBehaviour:
   - 0.2
   - 0.2
   - 0.3
+  - 0.2
+  weaponLevelWeights:
+  - 0.2
+  - 0.2
+  - 0.2
+  - 0.2
   - 0.2
   enemyHealthMultiplier: 5.75
   enemyMoveSpeedMultiplier: 1.38

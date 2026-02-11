@@ -289,13 +289,15 @@ using EggRogue;
 
         int n = Random.Range(min, max + 1);
         Vector3 basePos = _transform.position;
+        Transform coinParent = GameplayRoot.CoinsParent;
         for (int i = 0; i < n; i++)
         {
             Vector2 r = Random.insideUnitCircle * radius;
             Vector3 pos = basePos + new Vector3(r.x, 0f, r.y);
             pos.y = groundHeight;
-            GameObject coin = Instantiate(coinPrefab, pos, Quaternion.identity);
-            SceneManager.MoveGameObjectToScene(coin, gameObject.scene);
+            GameObject coin = Instantiate(coinPrefab, pos, Quaternion.identity, coinParent);
+            if (coinParent == null)
+                SceneManager.MoveGameObjectToScene(coin, gameObject.scene);
         }
     }
 

@@ -85,6 +85,10 @@ public class LevelData : ScriptableObject
     [UnityEngine.Serialization.FormerlySerializedAs("cardLevelWeights")]
     public float[] cardStarWeights = new float[] { 10f, 4f, 2f, 1f, 0f };
 
+    [Header("商店武器等级权重（按关卡进度；0=该等级不出）")]
+    [Tooltip("商店中武器 1~5 级的出现权重，对应 weaponLevelWeights[0]~[4]。关卡越靠后可适当提高高等级权重。")]
+    public float[] weaponLevelWeights = new float[] { 10f, 5f, 3f, 2f, 1f };
+
     [Header("难度系数（可选，1=不变）")]
     [Tooltip("怪物血量倍率（相对 EnemyData.baseMaxHealth）")]
     public float enemyHealthMultiplier = 1f;

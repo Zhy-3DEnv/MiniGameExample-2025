@@ -95,7 +95,6 @@ public static class WeaponSetup
             go.transform.SetParent(parent);
             var c = go.AddComponent<WeaponSelectionManager>();
             c.weaponDatabase = AssetDatabase.LoadAssetAtPath<WeaponDatabase>(DatabasePath);
-            c.defaultStarterWeapon = AssetDatabase.LoadAssetAtPath<WeaponData>("Assets/EggRogue/Configs/Weapons/Weapon_Gun_Lv1.asset");
             Undo.RegisterCreatedObjectUndo(go, "Add WeaponSelectionManager");
         }
         if (GameObject.Find("WeaponInventoryManager") == null)

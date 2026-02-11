@@ -16,14 +16,14 @@ public class CardDatabase : ScriptableObject
     /// <summary>
     /// 随机选择 N 张不同的卡片。
     /// 先按 LevelData.cardStarWeights 抽星级，再抽卡类型，返回 (CardData, star) 组合。
-    /// 不传 levelData 时星级均匀随机。
+    /// luck &gt; 0 时高星级权重提升，更容易刷出高星卡。
     /// </summary>
-    public CardOffer[] GetRandomCards(int count, LevelData levelDataForWeights = null)
+    public CardOffer[] GetRandomCards(int count, LevelData levelDataForWeights = null, float luck = 0f)
     {
         if (allCards == null || allCards.Length == 0)
             return new CardOffer[0];
 
-        var pool = GetWeightedOfferPool(levelDataForWeights);
+        var pool = GetWeightedOfferPool(levelDataForWeights, luck);
         if (pool.Count == 0)
             return new CardOffer[0];
 
@@ -43,9 +43,9 @@ public class CardDatabase : ScriptableObject
     }
 
     /// <summary>
-    /// 构建可抽卡池：(CardOffer, weight)。每个 (卡类型, 星级) 组合对应一条，权重来自 cardStarWeights。
+    /// 构建可抽卡池：(CardOffer, weight)。每个 (卡类型, 星级) 组合对应一条，权重来自 cardStarWeights；luck 提升高星级权重。
     /// </summary>
-    private List<(CardOffer offer, float weight)> GetWeightedOfferPool(LevelData levelData)
+    private List<(CardOffer offer, float weight)> GetWeightedOfferPool(LevelData levelData, float luck = 0f)
     {
         var pool = new List<(CardOffer, float)>();
         float[] weights = (levelData != null && levelData.cardStarWeights != null && levelData.cardStarWeights.Length >= 5)
@@ -65,6 +65,8 @@ public class CardDatabase : ScriptableObject
                     w = lv <= weights.Length ? weights[lv - 1] : 0f;
                     if (w <= 0f) continue;
                 }
+                if (luck > 0.0001f)
+                    w *= (1f + luck * 0.1f * lv);
                 pool.Add((new CardOffer(card, lv), w));
             }
         }

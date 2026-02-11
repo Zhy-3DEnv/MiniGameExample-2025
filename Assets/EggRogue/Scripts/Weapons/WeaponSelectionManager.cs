@@ -16,11 +16,8 @@ namespace EggRogue
         [Tooltip("武器数据库")]
         public WeaponDatabase weaponDatabase;
 
-        [Tooltip("默认起始武器（未选择时使用）")]
-        public WeaponData defaultStarterWeapon;
-
         /// <summary>
-        /// 玩家选择的起始武器（仅首次进入游戏时有效）
+        /// 玩家选择的起始武器（仅首次进入游戏时有效）。未选择时为 null，无法进入下一关。
         /// </summary>
         public WeaponData SelectedStarterWeapon { get; private set; }
 
@@ -35,9 +32,6 @@ namespace EggRogue
             }
 
             _instance = this;
-
-            if (SelectedStarterWeapon == null)
-                SelectedStarterWeapon = defaultStarterWeapon;
         }
 
         /// <summary>
@@ -50,11 +44,11 @@ namespace EggRogue
         }
 
         /// <summary>
-        /// 重置为默认（重新开始游戏时）
+        /// 重置为未选择（重新开始游戏时）
         /// </summary>
         public void ResetToDefault()
         {
-            SelectedStarterWeapon = defaultStarterWeapon;
+            SelectedStarterWeapon = null;
         }
     }
 }

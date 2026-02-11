@@ -50,6 +50,16 @@ public static class EggRogueBalanceExporter
         AssetDatabase.Refresh();
     }
 
+    [MenuItem("EggRogue/Excel/导出当前配置为 CSV/Level-WeaponWeight")]
+    public static void ExportLevelWeaponWeightMenu()
+    {
+        EnsureFolder();
+        string path = Path.Combine(CsvFolder, "Level-WeaponWeight_Export.csv");
+        ExportLevelWeaponWeight(path);
+        EditorUtility.DisplayDialog("导出 Level-WeaponWeight", $"已导出到：\n{path}", "确定");
+        AssetDatabase.Refresh();
+    }
+
     [MenuItem("EggRogue/Excel/导出当前配置为 CSV/导出怪物 CSV")]
     public static void ExportEnemiesMenu()
     {
@@ -97,6 +107,7 @@ public static class EggRogueBalanceExporter
         ExportLevelBase(Path.Combine(CsvFolder, "Level-Base_Export.csv"));
         ExportLevelSpawnMix(Path.Combine(CsvFolder, "Level-SpawnMix_Export.csv"));
         ExportLevelCardWeight(Path.Combine(CsvFolder, "Level-CardWeight_Export.csv"));
+        ExportLevelWeaponWeight(Path.Combine(CsvFolder, "Level-WeaponWeight_Export.csv"));
         ExportEnemies(Path.Combine(CsvFolder, "EggRogue_Enemies_Export.csv"));
         ExportCharacters(Path.Combine(CsvFolder, "EggRogue_Characters_Export.csv"));
         ExportWeapons(Path.Combine(CsvFolder, "EggRogue_Weapons_Export.csv"));
@@ -193,6 +204,27 @@ public static class EggRogueBalanceExporter
         File.WriteAllText(csvPath, sb.ToString(), new UTF8Encoding(true));
     }
 
+    private static void ExportLevelWeaponWeight(string csvPath)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("关卡编号,W_WeaponLv1,W_WeaponLv2,W_WeaponLv3,W_WeaponLv4,W_WeaponLv5");
+        var levels = GetSortedLevels();
+        var inv = CultureInfo.InvariantCulture;
+        foreach (var ld in levels)
+        {
+            if (ld == null) continue;
+            var w = ld.weaponLevelWeights;
+            if (w == null || w.Length < 5) w = new float[5];
+            sb.AppendLine(ld.levelNumber + "," +
+                          (w.Length > 0 ? w[0].ToString(inv) : "0") + "," +
+                          (w.Length > 1 ? w[1].ToString(inv) : "0") + "," +
+                          (w.Length > 2 ? w[2].ToString(inv) : "0") + "," +
+                          (w.Length > 3 ? w[3].ToString(inv) : "0") + "," +
+                          (w.Length > 4 ? w[4].ToString(inv) : "0"));
+        }
+        File.WriteAllText(csvPath, sb.ToString(), new UTF8Encoding(true));
+    }
+
     /// <summary>
     /// 导出所有 EnemyData。
     /// </summary>
@@ -237,7 +269,7 @@ public static class EggRogueBalanceExporter
     private static void ExportCharacters(string csvPath)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("AssetName,角色名称,描述,基础等级,基础伤害,基础攻速,基础生命,基础移速,基础子弹速度,基础攻击范围,基础拾取范围");
+        sb.AppendLine("AssetName,角色名称,描述,基础等级,基础伤害,基础攻速,基础生命,基础移速,基础攻击范围,基础拾取范围,基础护甲,基础闪避,基础奖励加成,基础暴击率,基础暴击伤害,幸运值,击退");
 
         string[] guids = AssetDatabase.FindAssets("t:EggRogue.CharacterData", new[] { "Assets/EggRogue/Configs/Characters" });
         var inv = CultureInfo.InvariantCulture;
@@ -261,9 +293,15 @@ public static class EggRogueBalanceExporter
                 ch.baseFireRate.ToString(inv) + "," +
                 ch.baseMaxHealth.ToString(inv) + "," +
                 ch.baseMoveSpeed.ToString(inv) + "," +
-                ch.baseBulletSpeed.ToString(inv) + "," +
                 ch.baseAttackRange.ToString(inv) + "," +
-                ch.basePickupRange.ToString(inv);
+                ch.basePickupRange.ToString(inv) + "," +
+                ch.baseArmorPercent.ToString(inv) + "," +
+                ch.baseDodgePercent.ToString(inv) + "," +
+                ch.baseRewardBonus + "," +
+                ch.baseCritRatePercent.ToString(inv) + "," +
+                ch.baseCritDamageMultiplier.ToString(inv) + "," +
+                ch.baseLuck.ToString(inv) + "," +
+                ch.baseKnockback.ToString(inv);
 
             sb.AppendLine(line);
         }
@@ -319,7 +357,7 @@ public static class EggRogueBalanceExporter
     private static void ExportCards(string csvPath)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("cardTypeId,star,卡片名称,描述,伤害加成,攻速加成,生命加成,移速加成,子弹速度加成,攻击范围加成,拾取范围加成");
+        sb.AppendLine("cardTypeId,star,卡片名称,描述,伤害加成,攻速加成,生命加成,移速加成,护甲减伤加成,攻击范围加成,拾取范围加成,闪避加成,关卡奖励加成,暴击率加成,暴击伤害加成,幸运加成,击退加成");
 
         var cards = new List<CardData>();
         var db = AssetDatabase.LoadAssetAtPath<CardDatabase>("Assets/EggRogue/Configs/CardDatabase.asset");
@@ -337,8 +375,11 @@ public static class EggRogueBalanceExporter
         }
 
         var inv = CultureInfo.InvariantCulture;
-        foreach (var c in cards)
+        foreach (var cardRef in cards)
         {
+            if (cardRef == null) continue;
+            string path = AssetDatabase.GetAssetPath(cardRef);
+            CardData c = string.IsNullOrEmpty(path) ? cardRef : AssetDatabase.LoadAssetAtPath<CardData>(path);
             if (c == null) continue;
             string ctId = Escape(c.cardTypeId);
             string name = Escape(c.cardName);
@@ -361,9 +402,15 @@ public static class EggRogueBalanceExporter
                     b.fireRateBonus.ToString(inv) + "," +
                     b.maxHealthBonus.ToString(inv) + "," +
                     b.moveSpeedBonus.ToString(inv) + "," +
-                    b.bulletSpeedBonus.ToString(inv) + "," +
+                    b.armorPercentBonus.ToString(inv) + "," +
                     b.attackRangeBonus.ToString(inv) + "," +
-                    b.pickupRangeBonus.ToString(inv);
+                    b.pickupRangeBonus.ToString(inv) + "," +
+                    b.dodgePercentBonus.ToString(inv) + "," +
+                    b.rewardBonus + "," +
+                    b.critRatePercentBonus.ToString(inv) + "," +
+                    b.critDamageMultiplierBonus.ToString(inv) + "," +
+                    b.luckBonus.ToString(inv) + "," +
+                    b.knockbackBonus.ToString(inv);
                 sb.AppendLine(line);
             }
         }

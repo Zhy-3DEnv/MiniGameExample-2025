@@ -18,7 +18,7 @@ MonoBehaviour:
   enemyPrefab: {fileID: 1405202925373373295, guid: 8bb3666b53f16d747a3b9748049c5a2b,
     type: 3}
   baseMaxHealth: 120
-  baseMoveSpeed: 5
+  baseMoveSpeed: 4
   baseDamage: 4
   xpValue: 3
   coinDropMin: 2

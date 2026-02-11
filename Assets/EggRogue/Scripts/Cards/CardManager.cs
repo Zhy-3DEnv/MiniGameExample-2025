@@ -37,58 +37,67 @@ namespace EggRogue
     /// <summary>
     /// 应用卡片加成到玩家。
     /// </summary>
-    public void ApplyCard(CardData card, int star)
-    {
-        if (card == null)
-            return;
-
-        var offer = new CardOffer(card, star);
-        selectedCards.Add(offer);
-
-        // 优先使用 CharacterStats（新系统）
-        CharacterStats stats = FindObjectOfType<CharacterStats>();
-        if (stats != null)
+        public void ApplyCard(CardData card, int star)
         {
-            float beforeMax = stats.CurrentMaxHealth;
-            float beforeDamage = stats.CurrentDamage;
+            if (card == null)
+                return;
 
-            stats.ApplyCardBonus(card, star);
+            var offer = new CardOffer(card, star);
+            selectedCards.Add(offer);
 
-            Debug.Log(
-                $"CardManager: 通过 CharacterStats 应用卡片 {card.cardName} ★{star} 加成。" +
-                $" MaxHealth: {beforeMax} -> {stats.CurrentMaxHealth}, Damage: {beforeDamage} -> {stats.CurrentDamage}");
-            return;
+            // 优先使用 CharacterStats（新系统）
+            CharacterStats stats = FindObjectOfType<CharacterStats>();
+            if (stats != null)
+            {
+                float beforeMax = stats.CurrentMaxHealth;
+                float beforeDamage = stats.CurrentDamage;
+
+                var bonus = card.GetBonusForStar(star);
+                stats.ApplyCardBonus(bonus);
+
+                // 如果该卡有护甲减伤加成，则叠加到角色护甲属性（armorPercentBonus 为百分比，例如 10 = 10%）
+                if (bonus.armorPercentBonus != 0f)
+                {
+                    float beforeArmor = stats.CurrentArmorPercent;
+                    float addArmor = Mathf.Clamp(bonus.armorPercentBonus / 100f, 0f, 0.8f);
+                    stats.CurrentArmorPercent = Mathf.Clamp01(beforeArmor + addArmor);
+                    Debug.Log(
+                        $"CardManager: {card.cardName} ★{star} 护甲减伤 {beforeArmor * 100f:F1}% -> {stats.CurrentArmorPercent * 100f:F1}%");
+                }
+
+                Debug.Log(
+                    $"CardManager: 通过 CharacterStats 应用卡片 {card.cardName} ★{star} 加成。" +
+                    $" MaxHealth: {beforeMax} -> {stats.CurrentMaxHealth}, Damage: {beforeDamage} -> {stats.CurrentDamage}");
+                return;
+            }
+
+            Debug.LogWarning("CardManager: 未找到 CharacterStats，使用兼容旧系统路径应用卡片加成。");
+
+            var legacyBonus = card.GetBonusForStar(star);
+            PlayerCombatController legacyCombat = FindObjectOfType<PlayerCombatController>();
+            if (legacyCombat != null)
+            {
+                if (legacyBonus.damageBonus != 0f)
+                    legacyCombat.SetDamage(legacyCombat.damagePerShot + legacyBonus.damageBonus);
+                if (legacyBonus.fireRateBonus != 0f)
+                    legacyCombat.SetFireRate(legacyCombat.fireRate + legacyBonus.fireRateBonus);
+                if (legacyBonus.attackRangeBonus != 0f)
+                    legacyCombat.SetAttackRange(legacyCombat.attackRange + legacyBonus.attackRangeBonus);
+            }
+
+            Health legacyHealth = FindObjectOfType<Health>();
+            if (legacyHealth != null && legacyBonus.maxHealthBonus != 0f)
+            {
+                legacyHealth.SetMaxHealth(legacyHealth.maxHealth + legacyBonus.maxHealthBonus);
+                legacyHealth.FullHeal();
+            }
+
+            CharacterController legacyCharacter = FindObjectOfType<CharacterController>();
+            if (legacyCharacter != null && legacyBonus.moveSpeedBonus != 0f)
+                legacyCharacter.SetMoveSpeed(legacyCharacter.moveSpeed + legacyBonus.moveSpeedBonus);
+
+            Debug.Log($"CardManager: 已应用卡片 {card.cardName} ★{star} 的加成（兼容模式）");
         }
-
-        Debug.LogWarning("CardManager: 未找到 CharacterStats，使用兼容旧系统路径应用卡片加成。");
-
-        var bonus = card.GetBonusForStar(star);
-        PlayerCombatController combat = FindObjectOfType<PlayerCombatController>();
-        if (combat != null)
-        {
-            if (bonus.damageBonus != 0f)
-                combat.SetDamage(combat.damagePerShot + bonus.damageBonus);
-            if (bonus.fireRateBonus != 0f)
-                combat.SetFireRate(combat.fireRate + bonus.fireRateBonus);
-            if (bonus.bulletSpeedBonus != 0f)
-                combat.SetBulletSpeed(combat.bulletSpeed + bonus.bulletSpeedBonus);
-            if (bonus.attackRangeBonus != 0f)
-                combat.SetAttackRange(combat.attackRange + bonus.attackRangeBonus);
-        }
-
-        Health health = FindObjectOfType<Health>();
-        if (health != null && bonus.maxHealthBonus != 0f)
-        {
-            health.SetMaxHealth(health.maxHealth + bonus.maxHealthBonus);
-            health.FullHeal();
-        }
-
-        CharacterController character = FindObjectOfType<CharacterController>();
-        if (character != null && bonus.moveSpeedBonus != 0f)
-            character.SetMoveSpeed(character.moveSpeed + bonus.moveSpeedBonus);
-
-        Debug.Log($"CardManager: 已应用卡片 {card.cardName} ★{star} 的加成（兼容模式）");
-    }
 
     /// <summary>
     /// 清除所有已选择的卡片（用于重新开始游戏）。
@@ -99,18 +108,26 @@ namespace EggRogue
     }
 
     /// <summary>
-    /// 计算所有卡片的累计加成（用于显示）。
+    /// 计算所有卡片的累计加成（用于显示与初始化）。
     /// </summary>
     public void GetTotalBonuses(out float totalDamage, out float totalFireRate, out float totalMaxHealth,
-        out float totalMoveSpeed, out float totalBulletSpeed, out float totalAttackRange, out float totalPickupRange)
+        out float totalMoveSpeed, out float totalAttackRange, out float totalPickupRange,
+        out float totalArmorPercent, out float totalDodgePercent, out int totalReward, out float totalCritRate,
+        out float totalCritDamageMult, out float totalLuck, out float totalKnockback)
     {
         totalDamage = 0f;
         totalFireRate = 0f;
         totalMaxHealth = 0f;
         totalMoveSpeed = 0f;
-        totalBulletSpeed = 0f;
         totalAttackRange = 0f;
         totalPickupRange = 0f;
+        totalArmorPercent = 0f;
+        totalDodgePercent = 0f;
+        totalReward = 0;
+        totalCritRate = 0f;
+        totalCritDamageMult = 0f;
+        totalLuck = 0f;
+        totalKnockback = 0f;
 
         foreach (var offer in selectedCards)
         {
@@ -120,10 +137,17 @@ namespace EggRogue
             totalFireRate += b.fireRateBonus;
             totalMaxHealth += b.maxHealthBonus;
             totalMoveSpeed += b.moveSpeedBonus;
-            totalBulletSpeed += b.bulletSpeedBonus;
             totalAttackRange += b.attackRangeBonus;
             totalPickupRange += b.pickupRangeBonus;
+            totalArmorPercent += b.armorPercentBonus;
+            totalDodgePercent += b.dodgePercentBonus;
+            totalReward += b.rewardBonus;
+            totalCritRate += b.critRatePercentBonus;
+            totalCritDamageMult += b.critDamageMultiplierBonus;
+            totalLuck += b.luckBonus;
+            totalKnockback += b.knockbackBonus;
         }
     }
+
 }
 }

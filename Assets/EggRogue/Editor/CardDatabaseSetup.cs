@@ -27,16 +27,16 @@ public static class CardDatabaseSetup
         EggRogue.CardDatabase db = ScriptableObject.CreateInstance<EggRogue.CardDatabase>();
         System.Collections.Generic.List<EggRogue.CardData> cards = new System.Collections.Generic.List<EggRogue.CardData>();
 
-        // 创建默认卡片
-        cards.Add(CreateCard("力量提升", "伤害 +5", 5f, 0f, 0f, 0f, 0f, 0f));
-        cards.Add(CreateCard("攻速提升", "攻击速度 +1", 0f, 1f, 0f, 0f, 0f, 0f));
-        cards.Add(CreateCard("生命提升", "最大生命值 +20", 0f, 0f, 20f, 0f, 0f, 0f));
-        cards.Add(CreateCard("移速提升", "移动速度 +1", 0f, 0f, 0f, 1f, 0f, 0f));
-        cards.Add(CreateCard("子弹加速", "子弹速度 +10", 0f, 0f, 0f, 0f, 10f, 0f));
-        cards.Add(CreateCard("射程提升", "攻击范围 +2", 0f, 0f, 0f, 0f, 0f, 2f));
+        // 创建默认卡片（子弹速度相关数值已移除，后续如需可改为其他属性）
+        cards.Add(CreateCard("力量提升", "伤害 +5", 5f, 0f, 0f, 0f, 0f));
+        cards.Add(CreateCard("攻速提升", "攻击速度 +1", 0f, 1f, 0f, 0f, 0f));
+        cards.Add(CreateCard("生命提升", "最大生命值 +20", 0f, 0f, 20f, 0f, 0f));
+        cards.Add(CreateCard("移速提升", "移动速度 +1", 0f, 0f, 0f, 1f, 0f));
+        cards.Add(CreateCard("子弹加速", "子弹速度 +10", 0f, 0f, 0f, 0f, 0f));
+        cards.Add(CreateCard("射程提升", "攻击范围 +2", 0f, 0f, 0f, 0f, 2f));
         cards.Add(CreatePickupRangeCard());
-        cards.Add(CreateCard("全面强化", "伤害 +3, 攻速 +0.5, 生命 +15", 3f, 0.5f, 15f, 0f, 0f, 0f));
-        cards.Add(CreateCard("极速射击", "攻击速度 +2, 子弹速度 +5", 0f, 2f, 0f, 0f, 5f, 0f));
+        cards.Add(CreateCard("全面强化", "伤害 +3, 攻速 +0.5, 生命 +15", 3f, 0.5f, 15f, 0f, 0f));
+        cards.Add(CreateCard("极速射击", "攻击速度 +2, 子弹速度 +5", 0f, 2f, 0f, 0f, 0f));
 
         foreach (var card in cards)
         {
@@ -98,7 +98,7 @@ public static class CardDatabaseSetup
     }
 
     private static EggRogue.CardData CreateCard(string name, string desc, float damage, float fireRate,
-        float health, float moveSpeed, float bulletSpeed, float attackRange)
+        float health, float moveSpeed, float attackRange)
     {
         var card = ScriptableObject.CreateInstance<EggRogue.CardData>();
         card.cardTypeId = name;
@@ -113,7 +113,6 @@ public static class CardDatabaseSetup
             fireRateBonus = fireRate,
             maxHealthBonus = health,
             moveSpeedBonus = moveSpeed,
-            bulletSpeedBonus = bulletSpeed,
             attackRangeBonus = attackRange,
             pickupRangeBonus = 0f
         };
@@ -139,7 +138,6 @@ public static class CardDatabaseSetup
                 fireRateBonus = 0f,
                 maxHealthBonus = 0f,
                 moveSpeedBonus = 0f,
-                bulletSpeedBonus = 0f,
                 attackRangeBonus = 0f,
                 pickupRangeBonus = (i + 1) * 0.5f
             };
@@ -175,7 +173,7 @@ public static class CardDatabaseSetup
             float d = damageProp.floatValue, fr = fireRateProp.floatValue, hp = maxHpProp.floatValue;
             float ms = moveSpeedProp.floatValue, bs = bulletSpeedProp.floatValue, ar = attackRangeProp.floatValue, pr = pickupRangeProp.floatValue;
 
-            if (d == 0f && fr == 0f && hp == 0f && ms == 0f && bs == 0f && ar == 0f && pr == 0f)
+            if (d == 0f && fr == 0f && hp == 0f && ms == 0f && ar == 0f && pr == 0f)
                 continue;
 
             if (card.starBonuses == null || card.starBonuses.Length < 5)
@@ -188,7 +186,6 @@ public static class CardDatabaseSetup
                 fireRateBonus = fr,
                 maxHealthBonus = hp,
                 moveSpeedBonus = ms,
-                bulletSpeedBonus = bs,
                 attackRangeBonus = ar,
                 pickupRangeBonus = pr
             };

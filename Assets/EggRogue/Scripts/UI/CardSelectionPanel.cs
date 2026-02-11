@@ -72,9 +72,11 @@ public class CardSelectionPanel : BaseUIPanel
             return;
         }
 
-        // 按当前关卡的卡牌等级权重随机选择 4 张卡片（返回 CardOffer[]）
+        // 按当前关卡的卡牌等级权重 + 幸运值随机选择 4 张卡片（幸运值越高越容易出高星）
         var levelData = GetCurrentLevelData();
-        currentCards = cardDatabase.GetRandomCards(4, levelData);
+        var stats = FindObjectOfType<CharacterStats>();
+        float luck = stats != null ? stats.CurrentLuck : 0f;
+        currentCards = cardDatabase.GetRandomCards(4, levelData, luck);
         selectedCount = 0;
         rerollCount = 0;
         for (int i = 0; i < selectedIndices.Length; i++)
@@ -237,7 +239,9 @@ public class CardSelectionPanel : BaseUIPanel
     {
         if (cardDatabase == null) return;
         var levelData = GetCurrentLevelData();
-        currentCards = cardDatabase.GetRandomCards(4, levelData);
+        var stats = FindObjectOfType<CharacterStats>();
+        float luck = stats != null ? stats.CurrentLuck : 0f;
+        currentCards = cardDatabase.GetRandomCards(4, levelData, luck);
         for (int i = 0; i < selectedIndices.Length; i++)
             selectedIndices[i] = false;
         RefreshCardDisplay();
@@ -255,7 +259,9 @@ public class CardSelectionPanel : BaseUIPanel
 
         rerollCount++;
         var levelData = GetCurrentLevelData();
-        currentCards = cardDatabase.GetRandomCards(4, levelData);
+        var stats = FindObjectOfType<CharacterStats>();
+        float luck = stats != null ? stats.CurrentLuck : 0f;
+        currentCards = cardDatabase.GetRandomCards(4, levelData, luck);
         RefreshCardDisplay();
         RefreshRerollButton();
     }

@@ -23,6 +23,7 @@ public class EggRogueBalanceWindow : EditorWindow
     private string _levelBaseCsvPath = DefaultCsvFolder + "/Level-Base.csv";
     private string _levelSpawnMixCsvPath = DefaultCsvFolder + "/Level-SpawnMix.csv";
     private string _levelCardWeightCsvPath = DefaultCsvFolder + "/Level-CardWeight.csv";
+    private string _levelWeaponWeightCsvPath = DefaultCsvFolder + "/Level-WeaponWeight.csv";
     private string _enemiesCsvPath = DefaultCsvFolder + "/EggRogue_Enemies.csv";
     private string _charactersCsvPath = DefaultCsvFolder + "/EggRogue_Characters.csv";
     private string _weaponsCsvPath = DefaultCsvFolder + "/EggRogue_Weapons.csv";
@@ -41,6 +42,7 @@ public class EggRogueBalanceWindow : EditorWindow
         _levelBaseCsvPath = EditorPrefs.GetString("EggRogue.LevelBaseCsvPath", _levelBaseCsvPath);
         _levelSpawnMixCsvPath = EditorPrefs.GetString("EggRogue.LevelSpawnMixCsvPath", _levelSpawnMixCsvPath);
         _levelCardWeightCsvPath = EditorPrefs.GetString("EggRogue.LevelCardWeightCsvPath", _levelCardWeightCsvPath);
+        _levelWeaponWeightCsvPath = EditorPrefs.GetString("EggRogue.LevelWeaponWeightCsvPath", _levelWeaponWeightCsvPath);
         _enemiesCsvPath = EditorPrefs.GetString("EggRogue.EnemiesCsvPath", _enemiesCsvPath);
         _charactersCsvPath = EditorPrefs.GetString("EggRogue.CharactersCsvPath", _charactersCsvPath);
         _weaponsCsvPath = EditorPrefs.GetString("EggRogue.WeaponsCsvPath", _weaponsCsvPath);
@@ -52,6 +54,7 @@ public class EggRogueBalanceWindow : EditorWindow
         EditorPrefs.SetString("EggRogue.LevelBaseCsvPath", _levelBaseCsvPath);
         EditorPrefs.SetString("EggRogue.LevelSpawnMixCsvPath", _levelSpawnMixCsvPath);
         EditorPrefs.SetString("EggRogue.LevelCardWeightCsvPath", _levelCardWeightCsvPath);
+        EditorPrefs.SetString("EggRogue.LevelWeaponWeightCsvPath", _levelWeaponWeightCsvPath);
         EditorPrefs.SetString("EggRogue.EnemiesCsvPath", _enemiesCsvPath);
         EditorPrefs.SetString("EggRogue.CharactersCsvPath", _charactersCsvPath);
         EditorPrefs.SetString("EggRogue.WeaponsCsvPath", _weaponsCsvPath);
@@ -71,6 +74,7 @@ public class EggRogueBalanceWindow : EditorWindow
         DrawCsvPathField("Level-Base", ref _levelBaseCsvPath);
         DrawCsvPathField("Level-SpawnMix", ref _levelSpawnMixCsvPath);
         DrawCsvPathField("Level-CardWeight", ref _levelCardWeightCsvPath);
+        DrawCsvPathField("Level-WeaponWeight", ref _levelWeaponWeightCsvPath);
         DrawCsvPathField("怪物 CSV", ref _enemiesCsvPath);
         DrawCsvPathField("角色 CSV", ref _charactersCsvPath);
         DrawCsvPathField("武器 CSV", ref _weaponsCsvPath);
@@ -155,6 +159,10 @@ public class EggRogueBalanceWindow : EditorWindow
         {
             ImportLevelCardWeight();
         }
+        if (GUILayout.Button("导入 Level-WeaponWeight", GUILayout.Height(25)))
+        {
+            ImportLevelWeaponWeight();
+        }
         if (GUILayout.Button("导入怪物", GUILayout.Height(25)))
         {
             ImportEnemies();
@@ -183,11 +191,28 @@ public class EggRogueBalanceWindow : EditorWindow
     private void DrawExportButtons()
     {
         EditorGUILayout.LabelField("导出操作", EditorStyles.boldLabel);
-        EditorGUILayout.HelpBox("将当前 ScriptableObject 导出为 CSV，导出到 " + DefaultCsvFolder + " 目录。", MessageType.None);
-        if (GUILayout.Button("一键导出全部（所有 SO → CSV）", GUILayout.Height(30)))
-        {
+        EditorGUILayout.HelpBox("将当前 ScriptableObject 导出为 CSV，导出到 " + DefaultCsvFolder + " 目录（文件名带 _Export 后缀）。", MessageType.None);
+
+        EditorGUILayout.BeginHorizontal();
+        if (GUILayout.Button("关卡Base", GUILayout.Height(22)))
+            EggRogueBalanceExporter.ExportLevelBaseMenu();
+        if (GUILayout.Button("SpawnMix", GUILayout.Height(22)))
+            EggRogueBalanceExporter.ExportLevelSpawnMixMenu();
+        if (GUILayout.Button("卡牌权重", GUILayout.Height(22)))
+            EggRogueBalanceExporter.ExportLevelCardWeightMenu();
+        if (GUILayout.Button("武器权重", GUILayout.Height(22)))
+            EggRogueBalanceExporter.ExportLevelWeaponWeightMenu();
+        if (GUILayout.Button("怪物", GUILayout.Height(22)))
+            EggRogueBalanceExporter.ExportEnemiesMenu();
+        if (GUILayout.Button("角色", GUILayout.Height(22)))
+            EggRogueBalanceExporter.ExportCharactersMenu();
+        if (GUILayout.Button("武器", GUILayout.Height(22)))
+            EggRogueBalanceExporter.ExportWeaponsMenu();
+        if (GUILayout.Button("卡片", GUILayout.Height(22)))
+            EggRogueBalanceExporter.ExportCardsMenu();
+        if (GUILayout.Button("全部", GUILayout.Height(22)))
             EggRogueBalanceExporter.ExportAllMenu();
-        }
+        EditorGUILayout.EndHorizontal();
     }
 
     #region 导入封装
@@ -210,6 +235,12 @@ public class EggRogueBalanceWindow : EditorWindow
         EggRogueBalanceImporter.ImportLevelCardWeightFromCsvPath(_levelCardWeightCsvPath);
     }
 
+        private void ImportLevelWeaponWeight()
+        {
+            if (!CheckCsvExists(_levelWeaponWeightCsvPath, "Level-WeaponWeight CSV")) return;
+            EggRogueBalanceImporter.ImportLevelWeaponWeightFromCsvPath(_levelWeaponWeightCsvPath);
+        }
+
     private void ImportEnemies()
     {
         if (!CheckCsvExists(_enemiesCsvPath, "怪物 CSV")) return;
@@ -228,6 +259,7 @@ public class EggRogueBalanceWindow : EditorWindow
         ImportLevelBase();
         ImportLevelSpawnMix();
         ImportLevelCardWeight();
+            ImportLevelWeaponWeight();
         ImportCharacters();
         ImportWeapons();
         ImportCards();
@@ -332,8 +364,8 @@ public class EggRogueBalanceWindow : EditorWindow
     {
         string path = DefaultCsvFolder + "/EggRogue_Characters.csv";
         var sb = new StringBuilder();
-        sb.AppendLine("AssetName,角色名称,描述,基础等级,基础伤害,基础攻速,基础生命,基础移速,基础子弹速度,基础攻击范围,基础拾取范围");
-        sb.AppendLine("Character_爱因斯蛋,爱因斯蛋,远程型角色,1,11,1.6,85,8,22,2,1.5");
+        sb.AppendLine("AssetName,角色名称,描述,基础等级,基础伤害,基础攻速,基础生命,基础移速,基础攻击范围,基础拾取范围,基础护甲,基础闪避,基础奖励加成,基础暴击率,基础暴击伤害,幸运值,击退");
+        sb.AppendLine("Character_爱因斯蛋,爱因斯蛋,远程型角色,1,11,1.6,85,8,22,0.5,0,0,0,0,1.2,0,0");
         File.WriteAllText(path, sb.ToString(), new UTF8Encoding(true));
         _charactersCsvPath = path;
     }

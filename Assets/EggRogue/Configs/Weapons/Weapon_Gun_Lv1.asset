@@ -26,6 +26,8 @@ MonoBehaviour:
   bulletPrefab: {fileID: 2903440007014586367, guid: 9c64ee27a38bee244af0d4e6c3afd790,
     type: 3}
   meleeHitPrefab: {fileID: 0}
+  meleeSwingClip: {fileID: 0}
+  meleeSwingVolume: 1
   modelPrefab: {fileID: 4889238492278348137, guid: 23493e654800e094d951bc28a509a9c8,
     type: 3}
   nextLevelWeapon: {fileID: 11400000, guid: 6801ee9d5d4d4af40a7aa5a92763225b, type: 2}

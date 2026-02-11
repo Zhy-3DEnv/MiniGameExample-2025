@@ -59,6 +59,14 @@ namespace EggRogue
         [Tooltip("近战挥砍判定预制体（近战，Phase 4 实现）")]
         public GameObject meleeHitPrefab;
 
+        [Header("音效")]
+        [Tooltip("近战挥砍音效（挥砍开始时播放）；不填则不播放")]
+        public AudioClip meleeSwingClip;
+
+        [Range(0f, 1f)]
+        [Tooltip("近战挥砍音效音量")]
+        public float meleeSwingVolume = 1f;
+
         [Tooltip("武器模型预制体")]
         public GameObject modelPrefab;
 

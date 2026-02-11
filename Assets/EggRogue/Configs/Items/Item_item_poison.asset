@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemId: item_poison
   itemName: "\u6BD2\u74F6"
-  description: "\u653B\u51FB\u9644\u5E26\u6BD2\uFF0C3\u4F24\u5BB3/\u79D2\uFF0C\u6301\u7EED4\u79D2"
+  description: 
   icon: {fileID: 21300000, guid: 37982b880ec8ab748a6218273e2381f4, type: 3}
   basePrice: 3
   effectType: 8

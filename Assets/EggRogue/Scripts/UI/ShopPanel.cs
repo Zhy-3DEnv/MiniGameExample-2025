@@ -275,7 +275,21 @@ public class ShopPanel : BaseUIPanel
                 slot.icon.enabled = item.Icon != null;
             }
             if (slot.nameText != null)
-                slot.nameText.text = item.DisplayName;
+            {
+                // 武器在商店中显示星级（根据 WeaponData.level，1~5 显示对应数量的 ★）
+                if (item.ItemType == ShopItemType.Weapon && item.WeaponData != null)
+                {
+                    int lv = Mathf.Clamp(item.WeaponData.level, 1, 5);
+                    string stars = lv > 0 ? new string('★', lv) : "";
+                    slot.nameText.text = string.IsNullOrEmpty(stars)
+                        ? item.DisplayName
+                        : $"{item.DisplayName} {stars}";
+                }
+                else
+                {
+                    slot.nameText.text = item.DisplayName;
+                }
+            }
             if (slot.descriptionText != null)
             {
                 slot.descriptionText.text = item.GetDescriptionOrStats();

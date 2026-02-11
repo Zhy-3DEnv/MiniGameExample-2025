@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemId: item_shield
   itemName: "\u62A4\u76FE\u53D1\u751F\u5668"
-  description: "\u53D7\u5230\u4F24\u5BB3\u51CF\u5C1115%"
+  description: 
   icon: {fileID: 21300000, guid: e528c456f851d4b44946b546055578e9, type: 3}
   basePrice: 3
   effectType: 4

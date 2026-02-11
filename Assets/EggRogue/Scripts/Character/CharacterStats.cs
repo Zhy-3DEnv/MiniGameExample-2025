@@ -13,7 +13,7 @@ public class CharacterStats : MonoBehaviour
     [Tooltip("角色数据（ScriptableObject）。若为空，会尝试从 CharacterSelectionManager 获取选中角色")]
     public CharacterData characterData;
 
-    // 当前属性（运行时，包含卡片加成，只读）
+    // 当前属性（运行时，包含基础 + 卡片 + 道具 + 被动等加成，只读）
     // 注意：属性（property）不能使用 [Header] 和 [Tooltip]，所以这些属性在 Inspector 中不会显示
     // 可以通过 CharacterInfoPanel 查看当前属性值
     public float CurrentDamage { get; set; }
@@ -23,6 +23,24 @@ public class CharacterStats : MonoBehaviour
     public float CurrentBulletSpeed { get; set; }
     public float CurrentAttackRange { get; set; }
     public float CurrentPickupRange { get; set; }
+    /// <summary>当前生命恢复百分比（自然恢复，每秒恢复最大生命的百分比，例如 0.01 = 每秒 1% 最大生命）。</summary>
+    public float CurrentHealthRegenPercent { get; set; }
+    /// <summary>当前吸血比例（攻击造成的伤害中有多少比例转换为治疗，例如 0.08 = 8% 吸血）。</summary>
+    public float CurrentLifestealPercent { get; set; }
+    /// <summary>当前护甲减伤比例（例如 0.20 = 20% 伤害减免，上限 0.80）。</summary>
+    public float CurrentArmorPercent { get; set; }
+    /// <summary>当前闪避率（0~1，有 x% 几率闪避单次受击，上限 0.80）。</summary>
+    public float CurrentDodgePercent { get; set; }
+    /// <summary>当前关卡通关奖励加成（每关胜利奖励的额外金币）。</summary>
+    public int CurrentRewardBonus { get; set; }
+    /// <summary>当前暴击率（0~1）。</summary>
+    public float CurrentCritRatePercent { get; set; }
+    /// <summary>当前暴击伤害倍率（暴击时伤害乘以此值，上限 2.5）。</summary>
+    public float CurrentCritDamageMultiplier { get; set; }
+    /// <summary>幸运值（选卡/商店刷出高等级物品的权重）。</summary>
+    public float CurrentLuck { get; set; }
+    /// <summary>击退距离（攻击命中时敌人后退距离，0 表示无）。</summary>
+    public float CurrentKnockback { get; set; }
 
     private Health health;
     private CharacterController characterController;
@@ -65,9 +83,19 @@ public class CharacterStats : MonoBehaviour
         CurrentFireRate = characterData.baseFireRate;
         CurrentMaxHealth = characterData.baseMaxHealth;
         CurrentMoveSpeed = characterData.baseMoveSpeed;
-        CurrentBulletSpeed = characterData.baseBulletSpeed;
+        // 子弹速度由武器提供；此处为倍率（默认 1），被动（如狙击手）可修改
+        CurrentBulletSpeed = 1f;
         CurrentAttackRange = characterData.baseAttackRange;
         CurrentPickupRange = characterData.basePickupRange;
+        CurrentHealthRegenPercent = 0f;
+        CurrentLifestealPercent = 0f;
+        CurrentArmorPercent = Mathf.Clamp(characterData.baseArmorPercent / 100f, 0f, 0.8f);
+        CurrentDodgePercent = Mathf.Clamp(characterData.baseDodgePercent / 100f, 0f, 0.8f);
+        CurrentRewardBonus = characterData.baseRewardBonus;
+        CurrentCritRatePercent = Mathf.Clamp01(characterData.baseCritRatePercent / 100f);
+        CurrentCritDamageMultiplier = Mathf.Clamp(characterData.baseCritDamageMultiplier, 1f, 2.5f);
+        CurrentLuck = characterData.baseLuck;
+        CurrentKnockback = Mathf.Max(0f, characterData.baseKnockback);
 
         // 如果有卡片管理器，叠加当前已选卡片的总加成（用于跨关卡继承成长）
         if (CardManager.Instance != null)
@@ -77,17 +105,29 @@ public class CharacterStats : MonoBehaviour
                 out float bonusFireRate,
                 out float bonusMaxHealth,
                 out float bonusMoveSpeed,
-                out float bonusBulletSpeed,
                 out float bonusAttackRange,
-                out float bonusPickupRange);
+                out float bonusPickupRange,
+                out float bonusArmorPercent,
+                out float bonusDodgePercent,
+                out int bonusReward,
+                out float bonusCritRate,
+                out float bonusCritDamageMult,
+                out float bonusLuck,
+                out float bonusKnockback);
 
             CurrentDamage += bonusDamage;
             CurrentFireRate += bonusFireRate;
             CurrentMaxHealth += bonusMaxHealth;
             CurrentMoveSpeed += bonusMoveSpeed;
-            CurrentBulletSpeed += bonusBulletSpeed;
             CurrentAttackRange += bonusAttackRange;
             CurrentPickupRange += bonusPickupRange;
+            CurrentArmorPercent = Mathf.Clamp(CurrentArmorPercent + bonusArmorPercent / 100f, 0f, 0.8f);
+            CurrentDodgePercent = Mathf.Clamp(CurrentDodgePercent + bonusDodgePercent / 100f, 0f, 0.8f);
+            CurrentRewardBonus += bonusReward;
+            CurrentCritRatePercent = Mathf.Clamp01(CurrentCritRatePercent + bonusCritRate / 100f);
+            CurrentCritDamageMultiplier = Mathf.Clamp(CurrentCritDamageMultiplier + bonusCritDamageMult, 1f, 2.5f);
+            CurrentLuck += bonusLuck;
+            CurrentKnockback += bonusKnockback;
         }
 
         // 应用角色被动能力（在卡片加成之后，最终应用到组件之前）
@@ -102,6 +142,11 @@ public class CharacterStats : MonoBehaviour
             if (health != null)
                 health.SetCurrentHealth(Mathf.Clamp(savedCurrent, 0f, CurrentMaxHealth));
         }
+
+        // 初始化会把护甲/生命恢复/吸血等置 0，需根据已拥有道具重新汇总到 CurrentArmorPercent 等
+        var itemEffect = GetComponent<ItemEffectManager>();
+        if (itemEffect != null)
+            itemEffect.RecalculateItemStatBonuses();
     }
 
     /// <summary>
@@ -117,7 +162,8 @@ public class CharacterStats : MonoBehaviour
         {
             combatController.SetDamage(CurrentDamage);
             combatController.SetFireRate(CurrentFireRate);
-            combatController.SetBulletSpeed(CurrentBulletSpeed);
+            // 无武器时沿用旧逻辑：默认 20 * 倍率 作为子弹速度
+            combatController.SetBulletSpeed(20f * CurrentBulletSpeed);
             combatController.SetAttackRange(CurrentAttackRange);
         }
 
@@ -178,22 +224,26 @@ public class CharacterStats : MonoBehaviour
         float oldFireRate = CurrentFireRate;
         float oldMaxHealth = CurrentMaxHealth;
         float oldMoveSpeed = CurrentMoveSpeed;
-        float oldBulletSpeed = CurrentBulletSpeed;
         float oldAttackRange = CurrentAttackRange;
 
         CurrentDamage += bonus.damageBonus;
         CurrentFireRate += bonus.fireRateBonus;
         CurrentMaxHealth += bonus.maxHealthBonus;
         CurrentMoveSpeed += bonus.moveSpeedBonus;
-        CurrentBulletSpeed += bonus.bulletSpeedBonus;
         CurrentAttackRange += bonus.attackRangeBonus;
         CurrentPickupRange += bonus.pickupRangeBonus;
+        CurrentDodgePercent = Mathf.Clamp(CurrentDodgePercent + bonus.dodgePercentBonus / 100f, 0f, 0.8f);
+        CurrentRewardBonus += bonus.rewardBonus;
+        CurrentCritRatePercent = Mathf.Clamp01(CurrentCritRatePercent + bonus.critRatePercentBonus / 100f);
+        CurrentCritDamageMultiplier = Mathf.Clamp(CurrentCritDamageMultiplier + bonus.critDamageMultiplierBonus, 1f, 2.5f);
+        CurrentLuck += bonus.luckBonus;
+        CurrentKnockback += bonus.knockbackBonus;
 
         Debug.Log(
             $"CharacterStats: ApplyCardBonus ★{bonus.star} " +
             $"Damage {oldDamage}->{CurrentDamage}, FireRate {oldFireRate}->{CurrentFireRate}, " +
             $"MaxHealth {oldMaxHealth}->{CurrentMaxHealth}, MoveSpeed {oldMoveSpeed}->{CurrentMoveSpeed}, " +
-            $"BulletSpeed {oldBulletSpeed}->{CurrentBulletSpeed}, AttackRange {oldAttackRange}->{CurrentAttackRange}");
+            $"AttackRange {oldAttackRange}->{CurrentAttackRange}");
 
         // 重新应用到组件，但不强制回满生命值，而是按“最大生命值增量”调整当前生命
         ApplyStatsToComponents(fullHeal: false);
@@ -203,7 +253,7 @@ public class CharacterStats : MonoBehaviour
     /// 获取基础属性（用于显示，不包含卡片加成）
     /// </summary>
     public void GetBaseStats(out float damage, out float fireRate, out float maxHealth,
-        out float moveSpeed, out float bulletSpeed, out float attackRange, out float pickupRange)
+        out float moveSpeed, out float attackRange, out float pickupRange)
     {
         if (characterData != null)
         {
@@ -211,7 +261,6 @@ public class CharacterStats : MonoBehaviour
             fireRate = characterData.baseFireRate;
             maxHealth = characterData.baseMaxHealth;
             moveSpeed = characterData.baseMoveSpeed;
-            bulletSpeed = characterData.baseBulletSpeed;
             attackRange = characterData.baseAttackRange;
             pickupRange = characterData.basePickupRange;
         }
@@ -221,7 +270,6 @@ public class CharacterStats : MonoBehaviour
             fireRate = 0f;
             maxHealth = 0f;
             moveSpeed = 0f;
-            bulletSpeed = 0f;
             attackRange = 0f;
             pickupRange = 0.5f;
         }
@@ -248,7 +296,7 @@ public class CharacterStats : MonoBehaviour
     /// 获取卡片累计加成（用于显示）
     /// </summary>
     public void GetCardBonuses(out float damage, out float fireRate, out float maxHealth,
-        out float moveSpeed, out float bulletSpeed, out float attackRange, out float pickupRange)
+        out float moveSpeed, out float attackRange, out float pickupRange)
     {
         if (characterData == null)
         {
@@ -256,7 +304,6 @@ public class CharacterStats : MonoBehaviour
             fireRate = 0f;
             maxHealth = 0f;
             moveSpeed = 0f;
-            bulletSpeed = 0f;
             attackRange = 0f;
             pickupRange = 0f;
             return;
@@ -267,7 +314,6 @@ public class CharacterStats : MonoBehaviour
         fireRate = CurrentFireRate - characterData.baseFireRate;
         maxHealth = CurrentMaxHealth - characterData.baseMaxHealth;
         moveSpeed = CurrentMoveSpeed - characterData.baseMoveSpeed;
-        bulletSpeed = CurrentBulletSpeed - characterData.baseBulletSpeed;
         attackRange = CurrentAttackRange - characterData.baseAttackRange;
         pickupRange = CurrentPickupRange - characterData.basePickupRange;
     }

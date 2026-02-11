@@ -25,8 +25,8 @@ namespace EggRogue
         [Tooltip("随机重刷基础价格")]
         public int rerollBasePrice = 10;
 
-        [Tooltip("每次重刷价格递增")]
-        public int rerollPriceIncrement = 10;
+        [Tooltip("每次重刷价格倍率（例如 1.2 表示每次在上一价格基础上 *1.2）")]
+        public float rerollPriceMultiplier = 1.2f;
 
         private readonly ShopItemData[] _currentItems = new ShopItemData[5];
         private readonly bool[] _lockedSlots = new bool[5];
@@ -37,7 +37,18 @@ namespace EggRogue
         public IReadOnlyList<ShopItemData> CurrentItems => _currentItems;
 
         /// <summary>当前随机重刷价格</summary>
-        public int CurrentRerollPrice => rerollBasePrice + _rerollCount * rerollPriceIncrement;
+        public int CurrentRerollPrice
+        {
+            get
+            {
+                if (_rerollCount <= 0)
+                    return rerollBasePrice;
+
+                float multiplier = Mathf.Max(1f, rerollPriceMultiplier);
+                float price = rerollBasePrice * Mathf.Pow(multiplier, _rerollCount);
+                return Mathf.Max(1, Mathf.RoundToInt(price));
+            }
+        }
 
         private void Awake()
         {
@@ -146,12 +157,22 @@ namespace EggRogue
             bool hasWeapons = weaponDatabase != null && weaponDatabase.weapons != null && weaponDatabase.weapons.Length > 0;
             bool hasItems = itemDatabase != null && itemDatabase.items != null && itemDatabase.items.Length > 0;
 
+            // 按当前关卡进度取武器等级权重；幸运值提升高等级武器出现概率
+            LevelData levelData = LevelManager.Instance != null ? LevelManager.Instance.GetCurrentLevelData() : null;
+            float[] weaponLevelWeights = (levelData != null && levelData.weaponLevelWeights != null && levelData.weaponLevelWeights.Length > 0)
+                ? levelData.weaponLevelWeights
+                : null;
+            var playerStats = FindObjectOfType<CharacterStats>();
+            float luck = playerStats != null ? playerStats.CurrentLuck : 0f;
+
             foreach (int idx in slotsToFill)
             {
                 bool pickWeapon = (!hasItems || (hasWeapons && Random.value < 0.5f));
                 if (pickWeapon && hasWeapons)
                 {
-                    var w = weaponDatabase.GetRandomWeapons(1);
+                    var w = weaponLevelWeights != null
+                        ? weaponDatabase.GetRandomWeaponsWithLevelWeights(1, weaponLevelWeights, luck)
+                        : weaponDatabase.GetRandomWeapons(1);
                     if (w != null && w.Length > 0 && w[0] != null)
                         _currentItems[idx] = ShopItemData.CreateWeapon(w[0], w[0].basePrice);
                 }
@@ -163,7 +184,9 @@ namespace EggRogue
                 }
                 else if (hasWeapons)
                 {
-                    var w = weaponDatabase.GetRandomWeapons(1);
+                    var w = weaponLevelWeights != null
+                        ? weaponDatabase.GetRandomWeaponsWithLevelWeights(1, weaponLevelWeights, luck)
+                        : weaponDatabase.GetRandomWeapons(1);
                     if (w != null && w.Length > 0 && w[0] != null)
                         _currentItems[idx] = ShopItemData.CreateWeapon(w[0], w[0].basePrice);
                 }

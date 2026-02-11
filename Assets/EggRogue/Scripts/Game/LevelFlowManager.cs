@@ -79,6 +79,9 @@ public class LevelFlowManager : MonoBehaviour
             if (levelData != null)
             {
                 victoryReward = levelData.victoryRewardGold;
+                var stats = FindObjectOfType<CharacterStats>();
+                if (stats != null)
+                    victoryReward += stats.CurrentRewardBonus;
                 //debug.log($"LevelFlowManager: 胜利奖励 = {victoryReward} (来自 LevelData)");
             }
             else

@@ -259,9 +259,10 @@ public class EnemySpawner : MonoBehaviour
         }
 
         Vector3 spawnPosition = GetRandomSpawnPosition();
-        GameObject enemy = Instantiate(prefabToUse, spawnPosition, Quaternion.identity);
-        // 确保敌人生成在 GameScene（附加加载时活动场景可能仍为 PersistentScene）
-        UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(enemy, gameObject.scene);
+        Transform enemyParent = GameplayRoot.EnemiesParent;
+        GameObject enemy = Instantiate(prefabToUse, spawnPosition, Quaternion.identity, enemyParent);
+        if (enemyParent == null)
+            UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(enemy, gameObject.scene);
 
         // 记录本关已生成数量
         spawnedThisLevel++;

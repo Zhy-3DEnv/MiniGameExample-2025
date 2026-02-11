@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemId: item_lightning
   itemName: "\u7535\u5854"
-  description: "\u8303\u56F4\u5185\u6BCF3\u79D2\u96F7\u51FB\u968F\u673A\u654C\u4EBA\uFF0C\u9020\u6210\u89D2\u827250%\u6700\u5927\u8840\u91CF\u4F24\u5BB3"
+  description: 
   icon: {fileID: 21300000, guid: da9b15c4413693e4498a0db4e76f13f4, type: 3}
   basePrice: 3
   effectType: 1

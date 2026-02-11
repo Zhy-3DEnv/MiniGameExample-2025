@@ -25,6 +25,8 @@ MonoBehaviour:
   bulletLifeTime: 5
   bulletPrefab: {fileID: 0}
   meleeHitPrefab: {fileID: 0}
+  meleeSwingClip: {fileID: 8300000, guid: 854e6c21834df2a409f548ab0875d543, type: 3}
+  meleeSwingVolume: 0.5
   modelPrefab: {fileID: 2750633297595489994, guid: 7a9a2a9c5694c5146a9723f714e34fd5,
     type: 3}
   nextLevelWeapon: {fileID: 11400000, guid: f9861940f126a1647b8a5e052ff7f757, type: 2}

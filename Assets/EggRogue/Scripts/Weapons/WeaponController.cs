@@ -167,10 +167,12 @@ public class WeaponController : MonoBehaviour
             ? _characterStats.GetBaseAttackDamage(weapon)
             : weapon.damage;
 
-        var bullet = Instantiate(weapon.bulletPrefab, fp.position, Quaternion.LookRotation(shootDir));
+        float speed = weapon.bulletSpeed * (_characterStats != null ? _characterStats.CurrentBulletSpeed : 1f);
+        Transform bulletParent = GameplayRoot.BulletsParent;
+        var bullet = Instantiate(weapon.bulletPrefab, fp.position, Quaternion.LookRotation(shootDir), bulletParent);
         var proj = bullet.GetComponent<Projectile>();
         if (proj != null)
-            proj.Initialize(shootDir, baseDamage, weapon.bulletSpeed, weapon.bulletLifeTime);
+            proj.Initialize(shootDir, baseDamage, speed, weapon.bulletLifeTime);
 
         return true;
     }
@@ -208,6 +210,10 @@ public class WeaponController : MonoBehaviour
     {
         try
         {
+            // 挥砍开始时播放音效（限流：短时间窗口内最多播 2 次，多武器同时挥砍不会叠成一片）
+            if (weapon.meleeSwingClip != null && EggRogueAudioManager.Instance != null)
+                EggRogueAudioManager.Instance.PlayMeleeSwing(weapon.meleeSwingClip, weapon.meleeSwingVolume);
+
             Transform slotRoot = GetSlotRoot(slotIndex);
             if (slotRoot == null)
                 slotRoot = transform;

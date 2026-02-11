@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemId: item_thorns
   itemName: "\u8346\u68D8\u7532"
-  description: "\u53D7\u5230\u653B\u51FB\u65F6\u53CD\u5F3920%\u4F24\u5BB3"
+  description: 
   icon: {fileID: 21300000, guid: 9a234f2264ab5154d810cd190d784af7, type: 3}
   basePrice: 3
   effectType: 10

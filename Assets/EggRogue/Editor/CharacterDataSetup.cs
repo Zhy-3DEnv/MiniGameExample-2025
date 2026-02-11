@@ -32,8 +32,15 @@ public static class CharacterDataSetup
         defaultChar.baseFireRate = 2f;
         defaultChar.baseMaxHealth = 100f;
         defaultChar.baseMoveSpeed = 5f;
-        defaultChar.baseBulletSpeed = 20f;
         defaultChar.baseAttackRange = 10f;
+        defaultChar.basePickupRange = 0.5f;
+        defaultChar.baseArmorPercent = 0f;
+        defaultChar.baseDodgePercent = 0f;
+        defaultChar.baseRewardBonus = 0;
+        defaultChar.baseCritRatePercent = 0f;
+        defaultChar.baseCritDamageMultiplier = 1.2f;
+        defaultChar.baseLuck = 0f;
+        defaultChar.baseKnockback = 0f;
 
         string path = $"{CharactersDir}/DefaultCharacter.asset";
         AssetDatabase.CreateAsset(defaultChar, path);

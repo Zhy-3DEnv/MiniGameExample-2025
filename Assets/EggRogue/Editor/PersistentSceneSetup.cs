@@ -55,7 +55,6 @@ public static class PersistentSceneSetup
         if (wsmComp != null)
         {
             wsmComp.weaponDatabase = AssetDatabase.LoadAssetAtPath<WeaponDatabase>("Assets/EggRogue/Configs/WeaponDatabase.asset");
-            wsmComp.defaultStarterWeapon = AssetDatabase.LoadAssetAtPath<WeaponData>("Assets/EggRogue/Configs/Weapons/Weapon_Gun_Lv1.asset");
             if (wsmComp.weaponDatabase == null)
                 Debug.LogWarning("PersistentSceneSetup: 请先运行 EggRogue/创建默认武器和 WeaponDatabase");
         }

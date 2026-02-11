@@ -91,6 +91,11 @@ public class Health : MonoBehaviour
         if (damage <= 0f)
             return;
 
+        // 闪避判定（仅对拥有 CharacterStats 的对象，如玩家）
+        var stats = GetComponent<CharacterStats>();
+        if (stats != null && stats.CurrentDodgePercent > 0.0001f && Random.value < stats.CurrentDodgePercent)
+            return;
+
         if (DamageModifier != null)
             damage = DamageModifier(damage, damageSource);
 

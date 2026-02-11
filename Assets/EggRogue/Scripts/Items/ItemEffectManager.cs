@@ -17,6 +17,7 @@ namespace EggRogue
         private float _iceTimer;
         private float _regenTimer;
         private readonly Dictionary<EnemyController, float> _icedEnemies = new Dictionary<EnemyController, float>();
+        private float _itemArmorPercent;
 
         private void Awake()
         {
@@ -24,6 +25,15 @@ namespace EggRogue
             _playerStats = GetComponent<CharacterStats>();
             _characterController = GetComponent<CharacterController>();
             SetupHealthCallbacks();
+            RecalculateItemStatBonuses();
+        }
+
+        private void OnEnable()
+        {
+            if (ItemInventoryManager.Instance != null)
+                ItemInventoryManager.Instance.OnItemsChanged += OnItemsChanged;
+            // 进入场景或重新启用时，基于当前道具重新计算一次属性加成
+            RecalculateItemStatBonuses();
         }
 
         private void SetupHealthCallbacks()
@@ -32,14 +42,24 @@ namespace EggRogue
 
             _playerHealth.DamageModifier = (dmg, source) =>
             {
-                var item = GetItem(ItemEffectType.ShieldGenerator);
-                if (item != null)
+                float factor = 1f;
+
+                // 护盾发生器：受到伤害减少若干百分比，上限 90%
+                var shieldItem = GetItem(ItemEffectType.ShieldGenerator);
+                if (shieldItem != null)
                 {
                     int n = GetItemCount(ItemEffectType.ShieldGenerator);
-                    float totalReduce = Mathf.Min(90f, item.effectPercent * n) / 100f;
-                    return dmg * (1f - totalReduce);
+                    float totalReduce = Mathf.Min(90f, shieldItem.effectPercent * n) / 100f;
+                    factor *= (1f - totalReduce);
                 }
-                return dmg;
+
+                // 护甲属性：卡片/被动汇总在 CharacterStats.CurrentArmorPercent，道具护甲在 _itemArmorPercent，上限合计 80%
+                float armorFromStats = (_playerStats != null) ? Mathf.Clamp01(_playerStats.CurrentArmorPercent) : 0f;
+                float armorTotal = Mathf.Clamp(armorFromStats + _itemArmorPercent, 0f, 0.8f);
+                if (armorTotal > 0f)
+                    factor *= (1f - armorTotal);
+
+                return dmg * factor;
             };
 
             _playerHealth.OnDamageFrom = (dmg, source) =>
@@ -63,6 +83,13 @@ namespace EggRogue
                 _playerHealth.DamageModifier = null;
                 _playerHealth.OnDamageFrom = null;
             }
+            if (ItemInventoryManager.Instance != null)
+                ItemInventoryManager.Instance.OnItemsChanged -= OnItemsChanged;
+        }
+
+        private void OnItemsChanged()
+        {
+            RecalculateItemStatBonuses();
         }
 
         private ItemData GetItem(ItemEffectType type)
@@ -78,6 +105,55 @@ namespace EggRogue
         private int GetItemCount(ItemEffectType type)
         {
             return ItemInventoryManager.Instance != null ? ItemInventoryManager.Instance.GetItemCount(type) : 0;
+        }
+
+        /// <summary>
+        /// 将道具带来的持续属性加成汇总进 CharacterStats（目前包括：生命恢复%、生命偷取%、护甲减伤%），便于统一显示与管理。
+        /// 初始化/切关后若调用了 CharacterStats.InitializeStats，需再调用本方法以恢复道具护甲等数值。
+        /// </summary>
+        public void RecalculateItemStatBonuses()
+        {
+            if (_playerStats == null) return;
+
+            float regenPercent = 0f;
+            float lifestealPercent = 0f;
+            float armorPercent = 0f;
+
+            // 生命恢复道具：每秒按最大生命值百分比恢复，可叠加
+            var regenItem = GetItem(ItemEffectType.HealthRegen);
+            if (regenItem != null)
+            {
+                int n = GetItemCount(ItemEffectType.HealthRegen);
+                regenPercent += (regenItem.effectPercent / 100f) * n;
+            }
+
+            // 吸血戒指：造成伤害的若干百分比转化为治疗，可叠加
+            var lifeItem = GetItem(ItemEffectType.Lifesteal);
+            if (lifeItem != null)
+            {
+                int n = GetItemCount(ItemEffectType.Lifesteal);
+                lifestealPercent += (lifeItem.effectPercent / 100f) * n;
+            }
+
+            _playerStats.CurrentHealthRegenPercent = regenPercent;
+            _playerStats.CurrentLifestealPercent = lifestealPercent;
+
+            // 荆棘甲：增加护甲属性，减少受到的伤害，上限 80%（仅道具部分）
+            var thornsItem = GetItem(ItemEffectType.Thorns);
+            if (thornsItem != null)
+            {
+                int n = GetItemCount(ItemEffectType.Thorns);
+                float totalArmor = thornsItem.effectPercent * n; // 例如 20% * n
+                armorPercent += Mathf.Min(80f, totalArmor) / 100f;
+            }
+
+            // 先还原角色（卡片/被动）基础护甲，再叠加最新道具护甲
+            if (_playerStats != null)
+            {
+                float baseArmor = Mathf.Clamp01(_playerStats.CurrentArmorPercent - _itemArmorPercent);
+                _itemArmorPercent = Mathf.Clamp01(armorPercent); // 道具部分单独缓存
+                _playerStats.CurrentArmorPercent = Mathf.Clamp01(baseArmor + _itemArmorPercent);
+            }
         }
 
         private void Update()
@@ -168,19 +244,15 @@ namespace EggRogue
 
         private void TickHealthRegen()
         {
-            var item = GetItem(ItemEffectType.HealthRegen);
-            if (item == null) return;
+            if (_playerHealth == null || _playerHealth.IsDead) return;
+            if (_playerStats == null || _playerStats.CurrentHealthRegenPercent <= 0f) return;
 
             _regenTimer += Time.deltaTime;
             if (_regenTimer < 1f) return;
             _regenTimer = 0f;
 
-            if (_playerHealth != null && !_playerHealth.IsDead)
-            {
-                int n = GetItemCount(ItemEffectType.HealthRegen);
-                float heal = (_playerStats != null ? _playerStats.CurrentMaxHealth * (item.effectPercent / 100f) : 2f) * n;
-                _playerHealth.Heal(heal);
-            }
+            float heal = _playerStats.CurrentMaxHealth * _playerStats.CurrentHealthRegenPercent;
+            _playerHealth.Heal(heal);
         }
 
         private void TickSpeedBoots()
@@ -198,43 +270,50 @@ namespace EggRogue
         }
 
         /// <summary>
-        /// 玩家对敌人造成伤害时调用，处理暴击、燃烧、毒、吸血
+        /// 玩家对敌人造成伤害时调用，处理暴击、击退、燃烧、毒、吸血
         /// </summary>
         public static float ProcessPlayerDamage(Health enemyHealth, float baseDamage)
         {
-            if (ItemInventoryManager.Instance == null) return baseDamage;
-
             float dmg = baseDamage;
 
-            var critItem = ItemInventoryManager.Instance.GetFirstItemOfType(ItemEffectType.CritChip);
-            int critCount = ItemInventoryManager.Instance.GetItemCount(ItemEffectType.CritChip);
-            float critChance = Mathf.Min(100f, critItem != null ? critItem.effectPercent * critCount : 0f) / 100f;
-            if (critChance > 0f && Random.value < critChance)
-                dmg *= 2f;
+            var player = GameObject.FindGameObjectWithTag("Player") ?? Object.FindObjectOfType<CharacterController>()?.gameObject;
+            var stats = player != null ? player.GetComponent<CharacterStats>() : null;
+
+            // 暴击：角色暴击率/暴击伤害 + 道具暴击率，一次判定
+            float totalCritChance = stats != null ? stats.CurrentCritRatePercent : 0f;
+            if (ItemInventoryManager.Instance != null)
+            {
+                var critItem = ItemInventoryManager.Instance.GetFirstItemOfType(ItemEffectType.CritChip);
+                int critCount = ItemInventoryManager.Instance.GetItemCount(ItemEffectType.CritChip);
+                totalCritChance += Mathf.Min(100f, critItem != null ? critItem.effectPercent * critCount : 0f) / 100f;
+            }
+            totalCritChance = Mathf.Clamp01(totalCritChance);
+            float critMult = (stats != null) ? stats.CurrentCritDamageMultiplier : 2f;
+            if (totalCritChance > 0.0001f && Random.value < totalCritChance)
+                dmg *= critMult;
 
             if (enemyHealth != null)
             {
                 var enemy = enemyHealth.GetComponent<EnemyController>();
                 if (enemy != null)
                 {
-                    var burnItem = ItemInventoryManager.Instance.GetFirstItemOfType(ItemEffectType.Burning);
-                    int burnCount = ItemInventoryManager.Instance.GetItemCount(ItemEffectType.Burning);
+                    var burnItem = ItemInventoryManager.Instance?.GetFirstItemOfType(ItemEffectType.Burning);
+                    int burnCount = ItemInventoryManager.Instance?.GetItemCount(ItemEffectType.Burning) ?? 0;
                     if (burnItem != null && burnCount > 0)
                         EnemyBuff.ApplyBurn(enemy.gameObject, burnItem.effectValue * burnCount, burnItem.effectDuration);
 
-                    var poisonItem = ItemInventoryManager.Instance.GetFirstItemOfType(ItemEffectType.Poison);
-                    int poisonCount = ItemInventoryManager.Instance.GetItemCount(ItemEffectType.Poison);
+                    var poisonItem = ItemInventoryManager.Instance?.GetFirstItemOfType(ItemEffectType.Poison);
+                    int poisonCount = ItemInventoryManager.Instance?.GetItemCount(ItemEffectType.Poison) ?? 0;
                     if (poisonItem != null && poisonCount > 0)
                         EnemyBuff.ApplyPoison(enemy.gameObject, poisonItem.effectValue * poisonCount, poisonItem.effectDuration);
                 }
             }
 
-            var lifeItem = ItemInventoryManager.Instance.GetFirstItemOfType(ItemEffectType.Lifesteal);
-            int lifeCount = ItemInventoryManager.Instance.GetItemCount(ItemEffectType.Lifesteal);
+            var lifeItem = ItemInventoryManager.Instance?.GetFirstItemOfType(ItemEffectType.Lifesteal);
+            int lifeCount = ItemInventoryManager.Instance?.GetItemCount(ItemEffectType.Lifesteal) ?? 0;
             if (lifeItem != null && lifeCount > 0 && dmg > 0f)
             {
                 float heal = dmg * (lifeItem.effectPercent * lifeCount / 100f);
-                var player = GameObject.FindGameObjectWithTag("Player") ?? Object.FindObjectOfType<CharacterController>()?.gameObject;
                 if (player != null)
                 {
                     var ph = player.GetComponent<Health>();
@@ -243,7 +322,20 @@ namespace EggRogue
                 }
             }
 
+            ApplyKnockback(enemyHealth, stats);
             return dmg;
+        }
+
+        private static void ApplyKnockback(Health enemyHealth, CharacterStats stats)
+        {
+            if (enemyHealth == null || stats == null || stats.CurrentKnockback <= 0f) return;
+            var player = GameObject.FindGameObjectWithTag("Player") ?? Object.FindObjectOfType<CharacterController>()?.gameObject;
+            if (player == null) return;
+            Vector3 dir = (enemyHealth.transform.position - player.transform.position);
+            dir.y = 0f;
+            if (dir.sqrMagnitude < 0.0001f) return;
+            dir.Normalize();
+            enemyHealth.transform.position += dir * stats.CurrentKnockback;
         }
 
         /// <summary>

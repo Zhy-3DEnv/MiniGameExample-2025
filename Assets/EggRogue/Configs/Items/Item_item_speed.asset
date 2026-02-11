@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemId: item_speed
   itemName: "\u52A0\u901F\u9774"
-  description: "\u79FB\u901F+20%"
+  description: 
   icon: {fileID: 21300000, guid: 37e9b57e3dd47ab4ab3bafe615597c37, type: 3}
   basePrice: 3
   effectType: 9

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemId: item_regen
   itemName: "\u751F\u547D\u6062\u590D\u5668"
-  description: "\u6BCF\u79D2\u6062\u590D\u6700\u5927\u8840\u91CF1%"
+  description: 
   icon: {fileID: 21300000, guid: fa9485ff75740d6459bb20c161857670, type: 3}
   basePrice: 3
   effectType: 5

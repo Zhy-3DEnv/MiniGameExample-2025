@@ -50,6 +50,14 @@ public static class EggRogueBalanceImporter
         ImportLevelCardWeightFromCsv(path, "Assets/EggRogue/Configs/Levels");
     }
 
+    [MenuItem("EggRogue/Excel/导入关卡配置(CSV)/Level-WeaponWeight")]
+    public static void ImportLevelWeaponWeightMenu()
+    {
+        string path = EditorUtility.OpenFilePanel("选择 Level-WeaponWeight CSV 文件", "", "csv");
+        if (string.IsNullOrEmpty(path)) return;
+        ImportLevelWeaponWeightFromCsv(path, "Assets/EggRogue/Configs/Levels");
+    }
+
     [MenuItem("EggRogue/Excel/导入怪物配置(CSV)")]
     public static void ImportEnemiesMenu()
     {
@@ -98,6 +106,12 @@ public static class EggRogueBalanceImporter
     {
         if (string.IsNullOrEmpty(csvPath)) return;
         ImportLevelCardWeightFromCsv(csvPath, levelsFolder);
+    }
+
+    public static void ImportLevelWeaponWeightFromCsvPath(string csvPath, string levelsFolder = "Assets/EggRogue/Configs/Levels")
+    {
+        if (string.IsNullOrEmpty(csvPath)) return;
+        ImportLevelWeaponWeightFromCsv(csvPath, levelsFolder);
     }
 
     /// <summary>
@@ -471,6 +485,74 @@ public static class EggRogueBalanceImporter
         }
     }
 
+    /// <summary>
+    /// 从 Level-WeaponWeight.csv 导入商店武器等级权重。
+    /// 表头：关卡编号,W_WeaponLv1,W_WeaponLv2,W_WeaponLv3,W_WeaponLv4,W_WeaponLv5（兼容 W_Lv1~5）
+    /// </summary>
+    private static void ImportLevelWeaponWeightFromCsv(string csvPath, string levelsFolder)
+    {
+        if (!File.Exists(csvPath))
+        {
+            Debug.LogError($"[EggRogueBalanceImporter] Level-WeaponWeight CSV 不存在：{csvPath}");
+            return;
+        }
+        try
+        {
+            string fileContent = ReadCsvFile(csvPath);
+            string[] lines = fileContent.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+            if (lines.Length < 2)
+            {
+                Debug.LogError("[EggRogueBalanceImporter] Level-WeaponWeight CSV 至少需要 2 行。");
+                return;
+            }
+            string[] headers = ParseCsvLine(lines[0]);
+            var headerIndex = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            for (int i = 0; i < headers.Length; i++)
+            {
+                string h = headers[i].Trim();
+                if (!string.IsNullOrEmpty(h) && !headerIndex.ContainsKey(h)) headerIndex[h] = i;
+            }
+            if (!headerIndex.ContainsKey("关卡编号"))
+            {
+                Debug.LogError("[EggRogueBalanceImporter] Level-WeaponWeight 缺少表头：关卡编号");
+                return;
+            }
+            int success = 0;
+            var inv = CultureInfo.InvariantCulture;
+            for (int row = 1; row < lines.Length; row++)
+            {
+                if (string.IsNullOrWhiteSpace(lines[row])) continue;
+                string[] cols = ParseCsvLine(lines[row]);
+                if (cols.Length == 0) continue;
+                if (!int.TryParse(GetColumn(cols, headerIndex["关卡编号"]), out int levelNumber) || levelNumber <= 0) continue;
+
+                LevelData levelData = GetOrCreateLevelData(levelsFolder, levelNumber);
+                if (levelData.weaponLevelWeights == null || levelData.weaponLevelWeights.Length < 5)
+                    levelData.weaponLevelWeights = new float[5];
+                for (int i = 1; i <= 5; i++)
+                {
+                    string keyWeapon = $"W_WeaponLv{i}";
+                    string keyLv = $"W_Lv{i}";
+                    int idx = -1;
+                    if (headerIndex.TryGetValue(keyWeapon, out idx) || headerIndex.TryGetValue(keyLv, out idx))
+                    {
+                        if (float.TryParse(GetColumn(cols, idx), NumberStyles.Float, inv, out float w))
+                            levelData.weaponLevelWeights[i - 1] = w;
+                    }
+                }
+                EditorUtility.SetDirty(levelData);
+                success++;
+            }
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            Debug.Log($"[EggRogueBalanceImporter] Level-WeaponWeight 导入完成：成功 {success} 条");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"[EggRogueBalanceImporter] Level-WeaponWeight 导入失败：{e.Message}\n{e.StackTrace}");
+        }
+    }
+
     #endregion
 
     #region 怪物导入
@@ -649,9 +731,15 @@ public static class EggRogueBalanceImporter
     /// - 基础攻速        -> baseFireRate
     /// - 基础生命        -> baseMaxHealth
     /// - 基础移速        -> baseMoveSpeed
-    /// - 基础子弹速度    -> baseBulletSpeed
     /// - 基础攻击范围    -> baseAttackRange
     /// - 基础拾取范围    -> basePickupRange
+    /// - 基础护甲        -> baseArmorPercent
+    /// - 基础闪避        -> baseDodgePercent
+    /// - 基础奖励加成    -> baseRewardBonus
+    /// - 基础暴击率      -> baseCritRatePercent
+    /// - 基础暴击伤害    -> baseCritDamageMultiplier
+    /// - 幸运值          -> baseLuck
+    /// - 击退            -> baseKnockback
     /// </summary>
     private static void ImportCharactersFromCsv(string csvPath, string charactersFolder)
     {
@@ -756,13 +844,6 @@ public static class EggRogueBalanceImporter
                             character.baseMoveSpeed = ms;
                     }
 
-                    if (headerIndex.TryGetValue("基础子弹速度", out int bsIdx))
-                    {
-                        string v = GetColumn(cols, bsIdx);
-                        if (float.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out float bs))
-                            character.baseBulletSpeed = bs;
-                    }
-
                     if (headerIndex.TryGetValue("基础攻击范围", out int arIdx))
                     {
                         string v = GetColumn(cols, arIdx);
@@ -775,6 +856,49 @@ public static class EggRogueBalanceImporter
                         string v = GetColumn(cols, prIdx);
                         if (float.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out float pr))
                             character.basePickupRange = pr;
+                    }
+
+                    if (headerIndex.TryGetValue("基础护甲", out int armorIdx))
+                    {
+                        string v = GetColumn(cols, armorIdx);
+                        if (float.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out float val))
+                            character.baseArmorPercent = Mathf.Clamp(val, 0f, 80f);
+                    }
+                    if (headerIndex.TryGetValue("基础闪避", out int dodgeIdx))
+                    {
+                        string v = GetColumn(cols, dodgeIdx);
+                        if (float.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out float val))
+                            character.baseDodgePercent = Mathf.Clamp(val, 0f, 80f);
+                    }
+                    if (headerIndex.TryGetValue("基础奖励加成", out int rewardIdx))
+                    {
+                        string v = GetColumn(cols, rewardIdx);
+                        if (int.TryParse(v, out int val))
+                            character.baseRewardBonus = val;
+                    }
+                    if (headerIndex.TryGetValue("基础暴击率", out int critRateIdx))
+                    {
+                        string v = GetColumn(cols, critRateIdx);
+                        if (float.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out float val))
+                            character.baseCritRatePercent = Mathf.Clamp(val, 0f, 100f);
+                    }
+                    if (headerIndex.TryGetValue("基础暴击伤害", out int critDmgIdx))
+                    {
+                        string v = GetColumn(cols, critDmgIdx);
+                        if (float.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out float val))
+                            character.baseCritDamageMultiplier = Mathf.Clamp(val, 1f, 2.5f);
+                    }
+                    if (headerIndex.TryGetValue("幸运值", out int luckIdx))
+                    {
+                        string v = GetColumn(cols, luckIdx);
+                        if (float.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out float val))
+                            character.baseLuck = val;
+                    }
+                    if (headerIndex.TryGetValue("击退", out int knockIdx))
+                    {
+                        string v = GetColumn(cols, knockIdx);
+                        if (float.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out float val))
+                            character.baseKnockback = Mathf.Max(0f, val);
                     }
 
                     EditorUtility.SetDirty(character);
@@ -1147,8 +1271,8 @@ public static class EggRogueBalanceImporter
                         bonus.maxHealthBonus = hp;
                     if (headerIndex.TryGetValue("移速加成", out int msIdx) && float.TryParse(GetColumn(cols, msIdx), NumberStyles.Float, inv, out float ms))
                         bonus.moveSpeedBonus = ms;
-                    if (headerIndex.TryGetValue("子弹速度加成", out int bsIdx) && float.TryParse(GetColumn(cols, bsIdx), NumberStyles.Float, inv, out float bs))
-                        bonus.bulletSpeedBonus = bs;
+                    if (headerIndex.TryGetValue("护甲减伤加成", out int armorIdx) && float.TryParse(GetColumn(cols, armorIdx), NumberStyles.Float, inv, out float armor))
+                        bonus.armorPercentBonus = armor;
                     if (headerIndex.TryGetValue("攻击范围加成", out int arIdx) && float.TryParse(GetColumn(cols, arIdx), NumberStyles.Float, inv, out float ar))
                         bonus.attackRangeBonus = ar;
                     if (headerIndex.TryGetValue("拾取范围加成", out int prIdx) && float.TryParse(GetColumn(cols, prIdx), NumberStyles.Float, inv, out float pr))

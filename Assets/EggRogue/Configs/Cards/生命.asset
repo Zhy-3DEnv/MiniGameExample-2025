@@ -10,57 +10,56 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e140ea7640047f24596a59b02f776892, type: 3}
-  m_Name: "\u79FB\u901F\u63D0\u5347"
+  m_Name: "\u751F\u547D"
   m_EditorClassIdentifier: 
-  cardTypeId: "\u79FB\u901F\u63D0\u5347"
-  cardName: "\u79FB\u901F\u63D0\u5347"
-  description: "\u79FB\u52A8\u901F\u5EA6 +1"
-  icon: {fileID: 21300000, guid: 7720ed897d6e0b742881d60b6ba279f7, type: 3}
+  cardTypeId: "\u751F\u547D\u63D0\u5347"
+  cardName: "\u751F\u547D\u63D0\u5347"
+  description: 
+  icon: {fileID: 21300000, guid: 75875c9e9dccbe348b67e85237dd87cd, type: 3}
   starBonuses:
   - star: 1
     damageBonus: 0
     fireRateBonus: 0
-    maxHealthBonus: 0
-    moveSpeedBonus: 1
-    bulletSpeedBonus: 0
+    maxHealthBonus: 2
+    moveSpeedBonus: 0
+    armorPercentBonus: 0
     attackRangeBonus: 0
     pickupRangeBonus: 0
   - star: 2
     damageBonus: 0
     fireRateBonus: 0
-    maxHealthBonus: 0
-    moveSpeedBonus: 2
-    bulletSpeedBonus: 0
+    maxHealthBonus: 4
+    moveSpeedBonus: 0
+    armorPercentBonus: 0
     attackRangeBonus: 0
     pickupRangeBonus: 0
   - star: 3
     damageBonus: 0
     fireRateBonus: 0
-    maxHealthBonus: 0
-    moveSpeedBonus: 3
-    bulletSpeedBonus: 0
+    maxHealthBonus: 6
+    moveSpeedBonus: 0
+    armorPercentBonus: 0
     attackRangeBonus: 0
     pickupRangeBonus: 0
   - star: 4
     damageBonus: 0
     fireRateBonus: 0
-    maxHealthBonus: 0
-    moveSpeedBonus: 4
-    bulletSpeedBonus: 0
+    maxHealthBonus: 8
+    moveSpeedBonus: 0
+    armorPercentBonus: 0
     attackRangeBonus: 0
     pickupRangeBonus: 0
   - star: 5
     damageBonus: 0
     fireRateBonus: 0
-    maxHealthBonus: 0
-    moveSpeedBonus: 5
-    bulletSpeedBonus: 0
+    maxHealthBonus: 12
+    moveSpeedBonus: 0
+    armorPercentBonus: 0
     attackRangeBonus: 0
     pickupRangeBonus: 0
   damageBonus: 0
   fireRateBonus: 0
-  maxHealthBonus: 0
-  moveSpeedBonus: 1
-  bulletSpeedBonus: 0
+  maxHealthBonus: 20
+  moveSpeedBonus: 0
   attackRangeBonus: 0
   pickupRangeBonus: 0

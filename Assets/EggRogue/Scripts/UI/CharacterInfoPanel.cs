@@ -40,8 +40,12 @@ public class CharacterInfoPanel : BaseUIPanel
     [Tooltip("说明文本字体大小")]
     public int itemTooltipFontSize = 12;
 
+    [Tooltip("道具说明提示预制体（可选；留空则使用默认样式）")]
+    public RectTransform itemTooltipPrefab;
+
     private RectTransform _itemTooltipRoot;
     private Text _itemTooltipText;
+    private RectTransform _lastTooltipSlot;
     private bool wasActiveOnAwake = false;
     private bool openingViaShow = false;
 
@@ -88,8 +92,22 @@ public class CharacterInfoPanel : BaseUIPanel
 
     private void OnEnable()
     {
+        if (Application.isPlaying && ItemInventoryManager.Instance != null)
+            ItemInventoryManager.Instance.OnItemsChanged += RefreshOwnedItemsWhenNeeded;
         if (!Application.isPlaying && gameObject.activeInHierarchy)
             UpdateAttributes();
+    }
+
+    private void OnDisable()
+    {
+        if (Application.isPlaying && ItemInventoryManager.Instance != null)
+            ItemInventoryManager.Instance.OnItemsChanged -= RefreshOwnedItemsWhenNeeded;
+    }
+
+    private void RefreshOwnedItemsWhenNeeded()
+    {
+        if (itemsContainer != null && IsVisible())
+            RefreshOwnedItems();
     }
 
     /// <summary>
@@ -109,7 +127,7 @@ public class CharacterInfoPanel : BaseUIPanel
     }
 
     /// <summary>
-    /// 更新属性显示
+    /// 更新属性显示（等级、属性列表）。道具列表仅在 OnShow 与背包变化时刷新，避免每帧重建导致点击失效。
     /// </summary>
     private void UpdateAttributes()
     {
@@ -117,7 +135,7 @@ public class CharacterInfoPanel : BaseUIPanel
             UpdateAttributesDynamic();
 
         RefreshPlayerLevel();
-        RefreshOwnedItems();
+        // 不再每帧刷新道具列表，见 RefreshOwnedItemsWhenNeeded / OnShow / OnItemsChanged
     }
 
     /// <summary>
@@ -194,6 +212,10 @@ public class CharacterInfoPanel : BaseUIPanel
             var btn = slot.GetComponent<Button>();
             if (btn == null)
                 btn = slot.AddComponent<Button>();
+            // 确保 Button 有可点击目标（否则点击可能无效）
+            var slotImage = slot.GetComponent<Image>();
+            if (slotImage != null && btn.targetGraphic != slotImage)
+                btn.targetGraphic = slotImage;
             var capturedItem = item;
             var slotRt = slot.GetComponent<RectTransform>();
             btn.onClick.RemoveAllListeners();
@@ -219,66 +241,145 @@ public class CharacterInfoPanel : BaseUIPanel
     {
         if (item == null || slotRect == null) return;
 
-        if (_itemTooltipRoot != null && _itemTooltipRoot.gameObject.activeSelf && _itemTooltipRoot.parent == slotRect)
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        if (Application.isPlaying) Debug.Log($"[CharacterInfoPanel] 点击道具: {item.itemName}, 描述长度: {(ShopItemData.GetItemDescription(item) ?? "").Length}");
+#endif
+
+        // 再次点击同一槽位则关闭说明
+        if (_itemTooltipRoot != null && _itemTooltipRoot.gameObject.activeSelf && _lastTooltipSlot == slotRect)
         {
             HideItemTooltip();
+            _lastTooltipSlot = null;
             return;
         }
-
-        HideItemTooltip();
 
         var tooltip = GetOrCreateItemTooltip();
         if (tooltip == null) return;
 
         string desc = ShopItemData.GetItemDescription(item);
-        _itemTooltipText.text = string.IsNullOrEmpty(desc) ? item.itemName : $"{item.itemName}\n{desc}";
+        string displayText = string.IsNullOrEmpty(desc) ? item.itemName : $"{item.itemName}\n{desc}";
+        _itemTooltipText.text = displayText;
 
-        tooltip.SetParent(slotRect, false);
+        // 以面板根（或其父 Canvas）作为 tooltip 父节点，使用世界坐标精确对齐
+        RectTransform tooltipParent = GetTooltipParent();
+        if (tooltipParent == null) return;
+        tooltip.SetParent(tooltipParent, false);
         tooltip.SetAsLastSibling();
-        tooltip.anchorMin = new Vector2(1f, 0.5f);
-        tooltip.anchorMax = new Vector2(1f, 0.5f);
-        tooltip.pivot = new Vector2(0f, 0.5f);
-        tooltip.anchoredPosition = new Vector2(8f, 0f);
 
+        // 一排 4 个：左两格右侧，右两格左侧
+        int columnIndex = 0;
+        var grid = itemsContainer != null ? itemsContainer.GetComponent<GridLayoutGroup>() : null;
+        if (grid != null && itemsContainer != null)
+        {
+            for (int i = 0; i < itemsContainer.childCount; i++)
+            {
+                if (itemsContainer.GetChild(i) == slotRect)
+                {
+                    columnIndex = i % Mathf.Max(1, grid.constraintCount);
+                    break;
+                }
+            }
+        }
+
+        int columns = grid != null ? Mathf.Max(1, grid.constraintCount) : 4;
+        int half = columns / 2;
+        bool showOnRight = columnIndex < half;
+
+        // 槽位四个世界坐标角：0 左下、1 左上、2 右上、3 右下
+        Vector3[] corners = new Vector3[4];
+        slotRect.GetWorldCorners(corners);
+
+        if (showOnRight)
+        {
+            // 左两格：描述框左上角对齐到图标右下角
+            Vector3 attachWorld = corners[3]; // 右下角
+            tooltip.pivot = new Vector2(0f, 1f);
+            tooltip.anchorMin = new Vector2(0f, 1f);
+            tooltip.anchorMax = new Vector2(0f, 1f);
+            tooltip.position = attachWorld;
+        }
+        else
+        {
+            // 右两格：描述框右上角对齐到图标左下角
+            Vector3 attachWorld = corners[0]; // 左下角
+            tooltip.pivot = new Vector2(1f, 1f);
+            tooltip.anchorMin = new Vector2(1f, 1f);
+            tooltip.anchorMax = new Vector2(1f, 1f);
+            tooltip.position = attachWorld;
+        }
+
+        _lastTooltipSlot = slotRect;
         tooltip.gameObject.SetActive(true);
+    }
+
+    /// <summary>Tooltip 必须挂在 RectTransform 下，否则 UI 布局会错乱、文字可能不显示。</summary>
+    private RectTransform GetTooltipParent()
+    {
+        var rt = transform as RectTransform;
+        if (rt != null) return rt;
+        return GetComponentInParent<RectTransform>();
     }
 
     private RectTransform GetOrCreateItemTooltip()
     {
         if (_itemTooltipRoot != null) return _itemTooltipRoot;
 
-        if (itemsContainer == null) return null;
+        RectTransform parent = GetTooltipParent();
+        if (parent == null) return null;
 
-        var root = new GameObject("ItemTooltip");
-        root.transform.SetParent(transform, false);
+        RectTransform rt;
+        Text text;
 
-        var rt = root.AddComponent<RectTransform>();
-        rt.sizeDelta = new Vector2(itemTooltipWidth, 80f);
+        if (itemTooltipPrefab != null)
+        {
+            // 使用自定义预制体
+            rt = Instantiate(itemTooltipPrefab, parent);
+            text = rt.GetComponentInChildren<Text>(true);
+            if (text == null)
+            {
+                var textTr = rt.Find("Text");
+                if (textTr != null) text = textTr.GetComponent<Text>();
+            }
+        }
+        else
+        {
+            // 默认动态创建样式
+            var root = new GameObject("ItemTooltip");
+            root.transform.SetParent(parent, false);
 
-        var img = root.AddComponent<Image>();
-        img.color = new Color(0.12f, 0.1f, 0.18f, 0.95f);
+            rt = root.AddComponent<RectTransform>();
+            rt.sizeDelta = new Vector2(itemTooltipWidth, 80f);
 
-        var textGo = new GameObject("Text");
-        textGo.transform.SetParent(root.transform, false);
-        var textRt = textGo.AddComponent<RectTransform>();
-        textRt.anchorMin = Vector2.zero;
-        textRt.anchorMax = Vector2.one;
-        textRt.offsetMin = new Vector2(6f, 6f);
-        textRt.offsetMax = new Vector2(-6f, -6f);
+            // 若父节点是 GridLayoutGroup，忽略布局，避免被限制大小和位置
+            var le = root.AddComponent<LayoutElement>();
+            le.ignoreLayout = true;
 
-        var text = textGo.AddComponent<Text>();
-        text.fontSize = itemTooltipFontSize;
-        text.supportRichText = true;
-        text.horizontalOverflow = HorizontalWrapMode.Wrap;
-        text.verticalOverflow = VerticalWrapMode.Overflow;
-        text.alignment = TextAnchor.UpperLeft;
-        text.color = Color.white;
-        if (GameFont.GetDefault() != null) text.font = GameFont.GetDefault();
+            var img = root.AddComponent<Image>();
+            img.color = new Color(0.12f, 0.1f, 0.18f, 0.95f);
+            img.raycastTarget = false;
+
+            var textGo = new GameObject("Text");
+            textGo.transform.SetParent(root.transform, false);
+            var textRt = textGo.AddComponent<RectTransform>();
+            textRt.anchorMin = Vector2.zero;
+            textRt.anchorMax = Vector2.one;
+            textRt.offsetMin = new Vector2(6f, 6f);
+            textRt.offsetMax = new Vector2(-6f, -6f);
+
+            text = textGo.AddComponent<Text>();
+            text.fontSize = itemTooltipFontSize;
+            text.supportRichText = true;
+            text.horizontalOverflow = HorizontalWrapMode.Wrap;
+            text.verticalOverflow = VerticalWrapMode.Overflow;
+            text.alignment = TextAnchor.UpperLeft;
+            text.color = Color.white;
+            GameFont.ApplyTo(text);
+        }
 
         _itemTooltipRoot = rt;
         _itemTooltipText = text;
 
-        root.SetActive(false);
+        rt.gameObject.SetActive(false);
         return rt;
     }
 
@@ -286,9 +387,11 @@ public class CharacterInfoPanel : BaseUIPanel
     {
         if (_itemTooltipRoot != null)
         {
-            _itemTooltipRoot.SetParent(transform, false);
+            if (itemsContainer != null)
+                _itemTooltipRoot.SetParent(itemsContainer, false);
             _itemTooltipRoot.gameObject.SetActive(false);
         }
+        _lastTooltipSlot = null;
     }
 
     public void HideItemDescriptionPopup()
@@ -325,6 +428,11 @@ public class CharacterInfoPanel : BaseUIPanel
         if (stats == null)
             return;
 
+        // 先按当前背包重新汇总道具加成（护甲/生命恢复/吸血），避免显示为 0
+        var itemEffect = stats.GetComponent<ItemEffectManager>();
+        if (itemEffect != null)
+            itemEffect.RecalculateItemStatBonuses();
+
         var data = stats.characterData;
         Health health = stats.GetComponent<Health>();
 
@@ -338,9 +446,17 @@ public class CharacterInfoPanel : BaseUIPanel
         {
             ("伤害", GetStatDisplay(stats.CurrentDamage, data?.baseDamage ?? 0f)),
             ("生命值", GetHealthDisplay(stats, health)),
+            ("生命恢复", GetHealthRegenDisplay(stats)),
+            ("护甲", GetArmorDisplay(stats)),
+            ("闪避", GetDodgeDisplay(stats)),
+            ("生命偷取", GetLifestealDisplay(stats)),
+            ("暴击率", GetCritRateDisplay(stats)),
+            ("暴击伤害", GetCritDamageDisplay(stats)),
+            ("关卡奖励加成", GetRewardBonusDisplay(stats)),
+            ("幸运", GetLuckDisplay(stats)),
+            ("击退", GetKnockbackDisplay(stats)),
             ("攻击速度", GetStatDisplay(stats.CurrentFireRate, data?.baseFireRate ?? 0f) + " 发/秒"),
             ("移动速度", GetStatDisplay(stats.CurrentMoveSpeed, data?.baseMoveSpeed ?? 0f)),
-            ("子弹速度", GetStatDisplay(stats.CurrentBulletSpeed, data?.baseBulletSpeed ?? 0f)),
             ("攻击范围", GetStatDisplay(stats.CurrentAttackRange, data?.baseAttackRange ?? 0f)),
             ("拾取范围", GetStatDisplay(stats.CurrentPickupRange, data?.basePickupRange ?? 0.5f))
         };
@@ -359,13 +475,12 @@ public class CharacterInfoPanel : BaseUIPanel
         }
     }
 
+    /// <summary>
+    /// 只显示最终数值，不显示基础与加成拆开格式。
+    /// </summary>
     private string GetStatDisplay(float current, float baseVal)
     {
-        if (Mathf.Approximately(current, baseVal))
-            return current.ToString("F1");
-        float bonus = current - baseVal;
-        string sign = bonus >= 0 ? "+" : "";
-        return $"{current:F1} ({sign}{bonus:F1})";
+        return current.ToString("F1");
     }
 
     private string GetHealthDisplay(CharacterStats stats, Health health)
@@ -373,6 +488,77 @@ public class CharacterInfoPanel : BaseUIPanel
         float max = stats.CurrentMaxHealth;
         float current = health != null ? health.CurrentHealth : max;
         return $"{current:F0}/{max:F0}";
+    }
+
+    private string GetHealthRegenDisplay(CharacterStats stats)
+    {
+        if (stats == null) return "0";
+        float percent = Mathf.Max(0f, stats.CurrentHealthRegenPercent * 100f);
+        if (percent <= 0.001f)
+            return "0";
+
+        float perSec = stats.CurrentMaxHealth * stats.CurrentHealthRegenPercent;
+        return $"{perSec:F1}/秒 ({percent:F1}%)";
+    }
+
+    private string GetLifestealDisplay(CharacterStats stats)
+    {
+        if (stats == null) return "0%";
+        float percent = Mathf.Max(0f, stats.CurrentLifestealPercent * 100f);
+        if (percent <= 0.001f)
+            return "0%";
+        return $"{percent:F1}%";
+    }
+
+    private string GetArmorDisplay(CharacterStats stats)
+    {
+        if (stats == null) return "0%";
+        float percent = Mathf.Max(0f, stats.CurrentArmorPercent * 100f);
+        if (percent <= 0.001f)
+            return "0%";
+        return $"{percent:F1}%";
+    }
+
+    private string GetDodgeDisplay(CharacterStats stats)
+    {
+        if (stats == null) return "0%";
+        float percent = Mathf.Max(0f, stats.CurrentDodgePercent * 100f);
+        if (percent <= 0.001f) return "0%";
+        return $"{percent:F1}%";
+    }
+
+    private string GetRewardBonusDisplay(CharacterStats stats)
+    {
+        if (stats == null) return "0";
+        return stats.CurrentRewardBonus > 0 ? $"+{stats.CurrentRewardBonus}" : "0";
+    }
+
+    private string GetCritRateDisplay(CharacterStats stats)
+    {
+        if (stats == null) return "0%";
+        float percent = Mathf.Max(0f, stats.CurrentCritRatePercent * 100f);
+        if (percent <= 0.001f) return "0%";
+        return $"{percent:F1}%";
+    }
+
+    private string GetCritDamageDisplay(CharacterStats stats)
+    {
+        if (stats == null) return "120%";
+        float mult = stats.CurrentCritDamageMultiplier;
+        return $"{(mult * 100f):F0}%";
+    }
+
+    private string GetLuckDisplay(CharacterStats stats)
+    {
+        if (stats == null) return "0";
+        return stats.CurrentLuck.ToString("F1");
+    }
+
+    private string GetKnockbackDisplay(CharacterStats stats)
+    {
+        if (stats == null) return "0";
+        if (stats.CurrentKnockback <= 0.001f) return "0";
+        return stats.CurrentKnockback.ToString("F1");
     }
 
     protected override void OnShow()
@@ -385,6 +571,7 @@ public class CharacterInfoPanel : BaseUIPanel
         }
 
         UpdateAttributes();
+        RefreshOwnedItems();
 
         if (GameplayPauseManager.Instance != null)
         {

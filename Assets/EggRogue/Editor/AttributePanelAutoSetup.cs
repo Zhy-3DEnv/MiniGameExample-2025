@@ -137,9 +137,15 @@ public static class CharacterInfoPanelAutoSetup
             case "baseFireRate":    return "攻击速度";
             case "baseMaxHealth":   return "最大生命值";
             case "baseMoveSpeed":   return "移动速度";
-            case "baseBulletSpeed": return "子弹速度";
             case "baseAttackRange": return "攻击范围";
-            case "basePickupRange":  return "拾取范围";
+            case "basePickupRange": return "拾取范围";
+            case "baseArmorPercent":     return "护甲";
+            case "baseDodgePercent":     return "闪避";
+            case "baseRewardBonus":      return "关卡奖励加成";
+            case "baseCritRatePercent":  return "暴击率";
+            case "baseCritDamageMultiplier": return "暴击伤害";
+            case "baseLuck":             return "幸运值";
+            case "baseKnockback":        return "击退";
             default:
                 if (fieldName.StartsWith("base"))
                     return fieldName.Substring("base".Length);
