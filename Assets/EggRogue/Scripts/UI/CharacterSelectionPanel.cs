@@ -417,7 +417,10 @@ public class CharacterSelectionPanel : BaseUIPanel
             System.Text.StringBuilder sb = new System.Text.StringBuilder();
             sb.AppendLine("基础属性：");
             sb.AppendLine($"伤害: {_selectedCharacter.baseDamage}");
-            sb.AppendLine($"射速: {_selectedCharacter.baseFireRate} 发/秒");
+
+            // 基础攻速：直接显示整数点数，方便数值加成与成长预期
+            sb.AppendLine($"攻速: {_selectedCharacter.baseFireRate}");
+
             sb.AppendLine($"生命: {_selectedCharacter.baseMaxHealth}");
             sb.AppendLine($"移速: {_selectedCharacter.baseMoveSpeed}");
             sb.AppendLine($"攻击范围: {_selectedCharacter.baseAttackRange}");

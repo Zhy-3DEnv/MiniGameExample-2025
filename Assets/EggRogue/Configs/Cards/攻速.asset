@@ -10,21 +10,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e140ea7640047f24596a59b02f776892, type: 3}
-  m_Name: "\u62FE\u53D6\u8303\u56F4"
+  m_Name: "\u653B\u901F"
   m_EditorClassIdentifier: 
-  cardTypeId: "\u62FE\u53D6\u8303\u56F4"
-  cardName: "\u62FE\u53D6\u8303\u56F4"
+  cardTypeId: "\u653B\u901F"
+  cardName: "\u653B\u901F"
   description: 
-  icon: {fileID: 21300000, guid: 1972abcb8fe679a4fa74dbff8ca6167d, type: 3}
+  icon: {fileID: 21300000, guid: 37fa0ef1188a01e48ac40430817407d4, type: 3}
   starBonuses:
   - star: 1
     damageBonus: 0
-    fireRateBonus: 0
+    fireRateBonus: 1
     maxHealthBonus: 0
     moveSpeedBonus: 0
     armorPercentBonus: 0
     attackRangeBonus: 0
-    pickupRangeBonus: 1
+    pickupRangeBonus: 0
     dodgePercentBonus: 0
     rewardBonus: 0
     critRatePercentBonus: 0
@@ -33,12 +33,12 @@ MonoBehaviour:
     knockbackBonus: 0
   - star: 2
     damageBonus: 0
-    fireRateBonus: 0
+    fireRateBonus: 2
     maxHealthBonus: 0
     moveSpeedBonus: 0
     armorPercentBonus: 0
     attackRangeBonus: 0
-    pickupRangeBonus: 2
+    pickupRangeBonus: 0
     dodgePercentBonus: 0
     rewardBonus: 0
     critRatePercentBonus: 0
@@ -47,12 +47,12 @@ MonoBehaviour:
     knockbackBonus: 0
   - star: 3
     damageBonus: 0
-    fireRateBonus: 0
+    fireRateBonus: 3
     maxHealthBonus: 0
     moveSpeedBonus: 0
     armorPercentBonus: 0
     attackRangeBonus: 0
-    pickupRangeBonus: 3
+    pickupRangeBonus: 0
     dodgePercentBonus: 0
     rewardBonus: 0
     critRatePercentBonus: 0
@@ -61,12 +61,12 @@ MonoBehaviour:
     knockbackBonus: 0
   - star: 4
     damageBonus: 0
-    fireRateBonus: 0
+    fireRateBonus: 4
     maxHealthBonus: 0
     moveSpeedBonus: 0
     armorPercentBonus: 0
     attackRangeBonus: 0
-    pickupRangeBonus: 4
+    pickupRangeBonus: 0
     dodgePercentBonus: 0
     rewardBonus: 0
     critRatePercentBonus: 0
@@ -75,12 +75,12 @@ MonoBehaviour:
     knockbackBonus: 0
   - star: 5
     damageBonus: 0
-    fireRateBonus: 0
+    fireRateBonus: 5
     maxHealthBonus: 0
     moveSpeedBonus: 0
     armorPercentBonus: 0
     attackRangeBonus: 0
-    pickupRangeBonus: 5
+    pickupRangeBonus: 0
     dodgePercentBonus: 0
     rewardBonus: 0
     critRatePercentBonus: 0
@@ -88,7 +88,7 @@ MonoBehaviour:
     luckBonus: 0
     knockbackBonus: 0
   damageBonus: 0
-  fireRateBonus: 0
+  fireRateBonus: 1
   maxHealthBonus: 0
   moveSpeedBonus: 0
   attackRangeBonus: 0

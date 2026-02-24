@@ -54,6 +54,11 @@ public class CharacterStats : MonoBehaviour
         // 若使用 WeaponController， combatController 可能被禁用，但引用仍可用（用于卡片加成等）
     }
 
+    /// <summary>
+    /// 攻速点数换算系数：10 点攻速 ≈ 每秒 +0.1 次攻击。
+    /// </summary>
+    private const float AttackSpeedScale = 100f;
+
     private void Start()
     {
         // 初始化属性（从 CharacterData 读取基础值）
@@ -373,8 +378,13 @@ public class CharacterStats : MonoBehaviour
     /// </summary>
     public float GetBaseFireRate(WeaponData weapon)
     {
-        float charBase = CurrentFireRate;                 // 角色当前攻速（含等级/卡牌/被动）
-        float weaponBase = weapon != null ? weapon.fireRate : 0f; // 武器自身攻速
+        // 角色当前攻速点数（含等级/卡牌/被动）
+        float charPoints = CurrentFireRate;
+        // 换算为“每秒额外攻击次数”：例如 10 点 ≈ 10/25 = 0.4 次/秒
+        float charRate = charPoints / AttackSpeedScale;
+
+        // 武器自身攻速（每秒攻击次数）
+        float weaponBase = weapon != null ? weapon.fireRate : 0f;
 
         float charFactor = 1f;
         float weaponFactor = 1f;
@@ -386,7 +396,7 @@ public class CharacterStats : MonoBehaviour
         //     weaponFactor = 0.8f;
         // }
 
-        float rate = charBase * charFactor + weaponBase * weaponFactor;
+        float rate = charRate * charFactor + weaponBase * weaponFactor;
         return Mathf.Max(0.1f, rate); // 防止除零
     }
 

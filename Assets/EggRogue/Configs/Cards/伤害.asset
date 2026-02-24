@@ -10,55 +10,85 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e140ea7640047f24596a59b02f776892, type: 3}
-  m_Name: "\u653B\u901F\u63D0\u5347"
+  m_Name: "\u4F24\u5BB3"
   m_EditorClassIdentifier: 
-  cardTypeId: "\u653B\u901F\u63D0\u5347"
-  cardName: "\u653B\u901F\u63D0\u5347"
-  description: 
+  cardTypeId: "\u4F24\u5BB3"
+  cardName: "\u4F24\u5BB3"
+  description: "\u589E\u52A0\u57FA\u7840\u4F24\u5BB3"
   icon: {fileID: 21300000, guid: 37fa0ef1188a01e48ac40430817407d4, type: 3}
   starBonuses:
   - star: 1
-    damageBonus: 0
-    fireRateBonus: 0.2
+    damageBonus: 1
+    fireRateBonus: 0
     maxHealthBonus: 0
     moveSpeedBonus: 0
     armorPercentBonus: 0
     attackRangeBonus: 0
     pickupRangeBonus: 0
+    dodgePercentBonus: 0
+    rewardBonus: 0
+    critRatePercentBonus: 0
+    critDamageMultiplierBonus: 0
+    luckBonus: 0
+    knockbackBonus: 0
   - star: 2
-    damageBonus: 0
-    fireRateBonus: 0.3
+    damageBonus: 2
+    fireRateBonus: 0
     maxHealthBonus: 0
     moveSpeedBonus: 0
     armorPercentBonus: 0
     attackRangeBonus: 0
     pickupRangeBonus: 0
+    dodgePercentBonus: 0
+    rewardBonus: 0
+    critRatePercentBonus: 0
+    critDamageMultiplierBonus: 0
+    luckBonus: 0
+    knockbackBonus: 0
   - star: 3
-    damageBonus: 0
-    fireRateBonus: 0.4
+    damageBonus: 3
+    fireRateBonus: 0
     maxHealthBonus: 0
     moveSpeedBonus: 0
     armorPercentBonus: 0
     attackRangeBonus: 0
     pickupRangeBonus: 0
+    dodgePercentBonus: 0
+    rewardBonus: 0
+    critRatePercentBonus: 0
+    critDamageMultiplierBonus: 0
+    luckBonus: 0
+    knockbackBonus: 0
   - star: 4
-    damageBonus: 0
-    fireRateBonus: 0.5
+    damageBonus: 4
+    fireRateBonus: 0
     maxHealthBonus: 0
     moveSpeedBonus: 0
     armorPercentBonus: 0
     attackRangeBonus: 0
     pickupRangeBonus: 0
+    dodgePercentBonus: 0
+    rewardBonus: 0
+    critRatePercentBonus: 0
+    critDamageMultiplierBonus: 0
+    luckBonus: 0
+    knockbackBonus: 0
   - star: 5
-    damageBonus: 0
-    fireRateBonus: 0.6
+    damageBonus: 5
+    fireRateBonus: 0
     maxHealthBonus: 0
     moveSpeedBonus: 0
     armorPercentBonus: 0
     attackRangeBonus: 0
     pickupRangeBonus: 0
-  damageBonus: 0
-  fireRateBonus: 1
+    dodgePercentBonus: 0
+    rewardBonus: 0
+    critRatePercentBonus: 0
+    critDamageMultiplierBonus: 0
+    luckBonus: 0
+    knockbackBonus: 0
+  damageBonus: 1
+  fireRateBonus: 0
   maxHealthBonus: 0
   moveSpeedBonus: 0
   attackRangeBonus: 0

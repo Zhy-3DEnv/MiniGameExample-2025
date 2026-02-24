@@ -234,11 +234,11 @@ public static class CharacterBatchCreator
 
     private static void SetBaseStats(CharacterData c, float damage, float fireRate, float maxHealth, float moveSpeed, float attackRange)
     {
-        c.baseDamage = damage;
-        c.baseFireRate = fireRate;
-        c.baseMaxHealth = maxHealth;
-        c.baseMoveSpeed = moveSpeed;
-        c.baseAttackRange = attackRange;
+        c.baseDamage = Mathf.RoundToInt(damage);
+        c.baseFireRate = Mathf.RoundToInt(fireRate);
+        c.baseMaxHealth = Mathf.RoundToInt(maxHealth);
+        c.baseMoveSpeed = Mathf.RoundToInt(moveSpeed);
+        c.baseAttackRange = Mathf.RoundToInt(attackRange);
     }
 
     /// <summary>
@@ -393,11 +393,11 @@ public static class CharacterBatchCreator
         {
             c.characterName = "力量之蛋";
             c.description = "专注于伤害输出的角色，所有伤害加成效果提升 50%";
-            c.baseDamage = 12f;
-            c.baseFireRate = 2f;
-            c.baseMaxHealth = 80f;
-            c.baseMoveSpeed = 5f;
-            c.baseAttackRange = 10f;
+            c.baseDamage = 12;
+            c.baseFireRate = 2;
+            c.baseMaxHealth = 80;
+            c.baseMoveSpeed = 5;
+            c.baseAttackRange = 10;
             c.passiveAbilities = new[] { passives[0] };
         });
 
@@ -406,11 +406,11 @@ public static class CharacterBatchCreator
         {
             c.characterName = "奶大力";
             c.description = "血牛型角色，将最大生命值转化为攻击力";
-            c.baseDamage = 8f;
-            c.baseFireRate = 2f;
-            c.baseMaxHealth = 150f;
-            c.baseMoveSpeed = 4.5f;
-            c.baseAttackRange = 10f;
+            c.baseDamage = 8;
+            c.baseFireRate = 2;
+            c.baseMaxHealth = 150;
+            c.baseMoveSpeed = 5;
+            c.baseAttackRange = 10;
             c.passiveAbilities = new[] { passives[1] };
         });
 
@@ -419,11 +419,11 @@ public static class CharacterBatchCreator
         {
             c.characterName = "疾风蛋";
             c.description = "快速射击的角色，攻速提升 50%";
-            c.baseDamage = 8f;
-            c.baseFireRate = 3f;
-            c.baseMaxHealth = 90f;
-            c.baseMoveSpeed = 5.5f;
-            c.baseAttackRange = 9f;
+            c.baseDamage = 8;
+            c.baseFireRate = 3;
+            c.baseMaxHealth = 90;
+            c.baseMoveSpeed = 6;
+            c.baseAttackRange = 9;
             c.passiveAbilities = new[] { passives[2] };
         });
 
@@ -432,11 +432,11 @@ public static class CharacterBatchCreator
         {
             c.characterName = "闪电侠蛋";
             c.description = "极速移动的角色，移速提升 40%";
-            c.baseDamage = 9f;
-            c.baseFireRate = 2f;
-            c.baseMaxHealth = 85f;
-            c.baseMoveSpeed = 7f;
-            c.baseAttackRange = 10f;
+            c.baseDamage = 9;
+            c.baseFireRate = 2;
+            c.baseMaxHealth = 85;
+            c.baseMoveSpeed = 7;
+            c.baseAttackRange = 10;
             c.passiveAbilities = new[] { passives[3] };
         });
 
@@ -445,11 +445,11 @@ public static class CharacterBatchCreator
         {
             c.characterName = "铁壁蛋";
             c.description = "高生命值的防御型角色，最大生命值提升 50%";
-            c.baseDamage = 8f;
-            c.baseFireRate = 1.8f;
-            c.baseMaxHealth = 120f;
-            c.baseMoveSpeed = 4.5f;
-            c.baseAttackRange = 9f;
+            c.baseDamage = 8;
+            c.baseFireRate = 2;
+            c.baseMaxHealth = 120;
+            c.baseMoveSpeed = 5;
+            c.baseAttackRange = 9;
             c.passiveAbilities = new[] { passives[4] };
         });
 
@@ -458,11 +458,11 @@ public static class CharacterBatchCreator
         {
             c.characterName = "玻璃蛋";
             c.description = "极高伤害但非常脆弱的角色，伤害翻倍但生命减半";
-            c.baseDamage = 15f;
-            c.baseFireRate = 2.5f;
-            c.baseMaxHealth = 60f;
-            c.baseMoveSpeed = 5.5f;
-            c.baseAttackRange = 11f;
+            c.baseDamage = 15;
+            c.baseFireRate = 3;
+            c.baseMaxHealth = 60;
+            c.baseMoveSpeed = 6;
+            c.baseAttackRange = 11;
             c.passiveAbilities = new[] { passives[5] };
         });
 
@@ -471,11 +471,11 @@ public static class CharacterBatchCreator
         {
             c.characterName = "坦克蛋";
             c.description = "超级肉盾角色，生命翻倍但移动缓慢";
-            c.baseDamage = 10f;
-            c.baseFireRate = 1.5f;
-            c.baseMaxHealth = 100f;
-            c.baseMoveSpeed = 5f;
-            c.baseAttackRange = 8f;
+            c.baseDamage = 10;
+            c.baseFireRate = 2;
+            c.baseMaxHealth = 100;
+            c.baseMoveSpeed = 5;
+            c.baseAttackRange = 8;
             c.passiveAbilities = new[] { passives[6] };
         });
 
@@ -484,11 +484,11 @@ public static class CharacterBatchCreator
         {
             c.characterName = "狂战士蛋";
             c.description = "近战输出型角色，高伤害高攻速但攻击范围小";
-            c.baseDamage = 12f;
-            c.baseFireRate = 2.5f;
-            c.baseMaxHealth = 100f;
-            c.baseMoveSpeed = 5.5f;
-            c.baseAttackRange = 12f;
+            c.baseDamage = 12;
+            c.baseFireRate = 3;
+            c.baseMaxHealth = 100;
+            c.baseMoveSpeed = 6;
+            c.baseAttackRange = 12;
             c.passiveAbilities = new[] { passives[7] };
         });
 

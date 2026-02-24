@@ -820,35 +820,35 @@ public static class EggRogueBalanceImporter
                     {
                         string v = GetColumn(cols, dmgIdx);
                         if (float.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out float dmg))
-                            character.baseDamage = dmg;
+                            character.baseDamage = Mathf.RoundToInt(dmg);
                     }
 
                     if (headerIndex.TryGetValue("基础攻速", out int frIdx))
                     {
                         string v = GetColumn(cols, frIdx);
                         if (float.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out float fr))
-                            character.baseFireRate = fr;
+                            character.baseFireRate = Mathf.RoundToInt(fr);
                     }
 
                     if (headerIndex.TryGetValue("基础生命", out int hpIdx))
                     {
                         string v = GetColumn(cols, hpIdx);
                         if (float.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out float hp))
-                            character.baseMaxHealth = hp;
+                            character.baseMaxHealth = Mathf.RoundToInt(hp);
                     }
 
                     if (headerIndex.TryGetValue("基础移速", out int msIdx))
                     {
                         string v = GetColumn(cols, msIdx);
                         if (float.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out float ms))
-                            character.baseMoveSpeed = ms;
+                            character.baseMoveSpeed = Mathf.RoundToInt(ms);
                     }
 
                     if (headerIndex.TryGetValue("基础攻击范围", out int arIdx))
                     {
                         string v = GetColumn(cols, arIdx);
                         if (float.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out float ar))
-                            character.baseAttackRange = ar;
+                            character.baseAttackRange = Mathf.RoundToInt(ar);
                     }
 
                     if (headerIndex.TryGetValue("基础拾取范围", out int prIdx))
@@ -862,13 +862,13 @@ public static class EggRogueBalanceImporter
                     {
                         string v = GetColumn(cols, armorIdx);
                         if (float.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out float val))
-                            character.baseArmorPercent = Mathf.Clamp(val, 0f, 80f);
+                            character.baseArmorPercent = Mathf.Clamp(Mathf.RoundToInt(val), 0, 80);
                     }
                     if (headerIndex.TryGetValue("基础闪避", out int dodgeIdx))
                     {
                         string v = GetColumn(cols, dodgeIdx);
                         if (float.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out float val))
-                            character.baseDodgePercent = Mathf.Clamp(val, 0f, 80f);
+                            character.baseDodgePercent = Mathf.Clamp(Mathf.RoundToInt(val), 0, 80);
                     }
                     if (headerIndex.TryGetValue("基础奖励加成", out int rewardIdx))
                     {
@@ -880,7 +880,7 @@ public static class EggRogueBalanceImporter
                     {
                         string v = GetColumn(cols, critRateIdx);
                         if (float.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out float val))
-                            character.baseCritRatePercent = Mathf.Clamp(val, 0f, 100f);
+                            character.baseCritRatePercent = Mathf.Clamp(Mathf.RoundToInt(val), 0, 100);
                     }
                     if (headerIndex.TryGetValue("基础暴击伤害", out int critDmgIdx))
                     {
@@ -892,13 +892,13 @@ public static class EggRogueBalanceImporter
                     {
                         string v = GetColumn(cols, luckIdx);
                         if (float.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out float val))
-                            character.baseLuck = val;
+                            character.baseLuck = Mathf.RoundToInt(val);
                     }
                     if (headerIndex.TryGetValue("击退", out int knockIdx))
                     {
                         string v = GetColumn(cols, knockIdx);
                         if (float.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out float val))
-                            character.baseKnockback = Mathf.Max(0f, val);
+                            character.baseKnockback = Mathf.Max(0, Mathf.RoundToInt(val));
                     }
 
                     EditorUtility.SetDirty(character);

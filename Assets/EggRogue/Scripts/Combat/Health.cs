@@ -94,10 +94,16 @@ public class Health : MonoBehaviour
         // 闪避判定（仅对拥有 CharacterStats 的对象，如玩家）
         var stats = GetComponent<CharacterStats>();
         if (stats != null && stats.CurrentDodgePercent > 0.0001f && Random.value < stats.CurrentDodgePercent)
+        {
+            ShowDamageOrDodgePopup(true, 0f);
             return;
+        }
 
         if (DamageModifier != null)
             damage = DamageModifier(damage, damageSource);
+
+        // 护甲减伤后最低受到 1 点伤害，避免出现 -0 的飘字
+        damage = Mathf.Max(1f, damage);
 
         if (damage <= 0f)
             return;
@@ -116,37 +122,41 @@ public class Health : MonoBehaviour
         OnTakeDamage?.Invoke(damage);
 
         // 受击飘字（如果配置了预制体）
-        if (damagePopupPrefab != null)
-        {
-            try
-            {
-                GameObject popup = Instantiate(damagePopupPrefab);
-
-                // 兼容 FlappyBird.ScorePopup 的接口
-                var popupScript = popup.GetComponent<FlappyBird.ScorePopup>();
-                if (popupScript != null)
-                {
-                    // 位置：略高于当前对象
-                    Vector3 worldPos = transform.position + Vector3.up * 1.0f;
-                    popupScript.SetPosition(worldPos);
-                    popupScript.SetDamage(Mathf.RoundToInt(damage));
-                }
-                else
-                {
-                    Destroy(popup);
-                }
-            }
-            catch
-            {
-                // 如果预制体缺组件，避免在受击时抛异常影响游戏流程
-            }
-        }
+        ShowDamageOrDodgePopup(false, damage);
 
         if (IsDead)
             OnDeath?.Invoke();
 
         if (damageSource != null && OnDamageFrom != null)
             OnDamageFrom.Invoke(damage, damageSource);
+    }
+
+    /// <summary>
+    /// 显示受击飘字：闪避时显示「闪避」，受伤时显示伤害数值。
+    /// </summary>
+    private void ShowDamageOrDodgePopup(bool isDodge, float damage)
+    {
+        if (damagePopupPrefab == null) return;
+        try
+        {
+            GameObject popup = Instantiate(damagePopupPrefab);
+            var popupScript = popup.GetComponent<FlappyBird.ScorePopup>();
+            if (popupScript == null)
+            {
+                Destroy(popup);
+                return;
+            }
+            Vector3 worldPos = transform.position + Vector3.up * 1.0f;
+            popupScript.SetPosition(worldPos);
+            if (isDodge)
+                popupScript.SetCustomText("闪避");
+            else
+                popupScript.SetDamage(Mathf.RoundToInt(damage));
+        }
+        catch
+        {
+            // 预制体缺组件时不抛异常
+        }
     }
 
     /// <summary>

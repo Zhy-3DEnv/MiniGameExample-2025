@@ -19,10 +19,17 @@ MonoBehaviour:
     type: 3}
   baseLevel: 1
   baseDamage: 10
-  baseFireRate: 0.5
+  baseFireRate: 1
   baseMaxHealth: 10
   baseMoveSpeed: 10
   baseAttackRange: 2
   basePickupRange: 1.5
+  baseArmorPercent: 0
+  baseDodgePercent: 0
+  baseRewardBonus: 0
+  baseCritRatePercent: 0
+  baseCritDamageMultiplier: 1.2
+  baseLuck: 0
+  baseKnockback: 0
   passiveAbilities:
   - {fileID: 11400000, guid: 2be8d46b05951bf44acfb508aa263a3e, type: 2}

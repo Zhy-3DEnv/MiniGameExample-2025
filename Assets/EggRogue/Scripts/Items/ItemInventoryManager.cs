@@ -12,8 +12,6 @@ namespace EggRogue
         private static ItemInventoryManager _instance;
         public static ItemInventoryManager Instance => _instance;
 
-        public const int MaxSlots = 50;
-
         private readonly List<ItemData> _items = new List<ItemData>();
 
         /// <summary>道具变化时触发（用于 UI 刷新）</summary>
@@ -38,7 +36,7 @@ namespace EggRogue
 
         public bool TryAddItem(ItemData item)
         {
-            if (item == null || _items.Count >= MaxSlots) return false;
+            if (item == null) return false;
             _items.Add(item);
             OnItemsChanged?.Invoke();
             return true;
