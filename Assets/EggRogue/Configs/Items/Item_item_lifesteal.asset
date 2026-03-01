@@ -21,4 +21,4 @@ MonoBehaviour:
   effectRange: 0
   effectDuration: 0
   effectValue: 0
-  effectPercent: 8
+  effectPercent: 1

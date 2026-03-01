@@ -10,21 +10,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e140ea7640047f24596a59b02f776892, type: 3}
-  m_Name: "\u79FB\u901F\u63D0\u5347"
+  m_Name: "\u62FE\u53D6"
   m_EditorClassIdentifier: 
-  cardTypeId: "\u79FB\u901F\u63D0\u5347"
-  cardName: "\u79FB\u901F\u63D0\u5347"
-  description: "\u589E\u52A0\u4F24\u5BB3"
-  icon: {fileID: 0}
+  cardTypeId: "\u62FE\u53D6\u8303\u56F4"
+  cardName: "\u62FE\u53D6\u8303\u56F4"
+  description: 
+  icon: {fileID: 21300000, guid: 1972abcb8fe679a4fa74dbff8ca6167d, type: 3}
   starBonuses:
   - star: 1
     damageBonus: 0
     fireRateBonus: 0
     maxHealthBonus: 0
-    moveSpeedBonus: 1
+    moveSpeedBonus: 0
     armorPercentBonus: 0
     attackRangeBonus: 0
-    pickupRangeBonus: 0
+    pickupRangeBonus: 1
     dodgePercentBonus: 0
     rewardBonus: 0
     critRatePercentBonus: 0
@@ -35,10 +35,10 @@ MonoBehaviour:
     damageBonus: 0
     fireRateBonus: 0
     maxHealthBonus: 0
-    moveSpeedBonus: 2
+    moveSpeedBonus: 0
     armorPercentBonus: 0
     attackRangeBonus: 0
-    pickupRangeBonus: 0
+    pickupRangeBonus: 2
     dodgePercentBonus: 0
     rewardBonus: 0
     critRatePercentBonus: 0
@@ -49,10 +49,10 @@ MonoBehaviour:
     damageBonus: 0
     fireRateBonus: 0
     maxHealthBonus: 0
-    moveSpeedBonus: 3
+    moveSpeedBonus: 0
     armorPercentBonus: 0
     attackRangeBonus: 0
-    pickupRangeBonus: 0
+    pickupRangeBonus: 3
     dodgePercentBonus: 0
     rewardBonus: 0
     critRatePercentBonus: 0
@@ -63,10 +63,10 @@ MonoBehaviour:
     damageBonus: 0
     fireRateBonus: 0
     maxHealthBonus: 0
-    moveSpeedBonus: 4
+    moveSpeedBonus: 0
     armorPercentBonus: 0
     attackRangeBonus: 0
-    pickupRangeBonus: 0
+    pickupRangeBonus: 4
     dodgePercentBonus: 0
     rewardBonus: 0
     critRatePercentBonus: 0
@@ -77,10 +77,10 @@ MonoBehaviour:
     damageBonus: 0
     fireRateBonus: 0
     maxHealthBonus: 0
-    moveSpeedBonus: 5
+    moveSpeedBonus: 0
     armorPercentBonus: 0
     attackRangeBonus: 0
-    pickupRangeBonus: 0
+    pickupRangeBonus: 5
     dodgePercentBonus: 0
     rewardBonus: 0
     critRatePercentBonus: 0
